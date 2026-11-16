@@ -6,6 +6,7 @@ export interface Aparencia {
   cabelo: string; // cor
   estilo: 'curto' | 'longo' | 'careca' | 'coque' | 'cacheado';
   oculos: boolean;
+  modelo?: string; // aparência 3D escolhida na matrícula (voce1 a voce8)
 }
 
 export interface Posicao {

@@ -1,15 +1,16 @@
 // Telas fora da história: início, criação, castelo (hub), mapa, coleções, boletim, ajustes.
 import type { Lugar, PassoAula } from '../conteudo/tipos';
 import { ANOS, CRIATURAS, FEITICOS, FIGURINHAS, ITENS, LUGARES, PERSONAGENS } from '../conteudo/index';
-import { ATRIBUTOS, apagar, carregar, estado, exportar, importar, novoEstado, salvar, type Aparencia } from '../motor/estado';
+import { ATRIBUTOS, apagar, carregar, estado, exportar, importar, novoEstado, salvar } from '../motor/estado';
 import { lugaresVisiveis, nivel, nivelAmizade, NIVEIS_AMIZADE, ranking, titulo, xpDoNivel } from '../motor/progresso';
 import { CASA_INFO, esc, fmt, personaliza } from '../motor/texto';
-import { brasao, retrato, retratoVoce } from '../arte/retrato';
+import { brasao } from '../arte/brasao';
 import { aviso, botao, h } from './dom';
 import { aoSair, jogarCapitulo, revisarAula } from './historia';
 import { abrirMundo, pararMundo } from './mundo';
 import * as C3 from '../tres/cena3d';
 import { M } from '../tres/motor3d';
+import { imgFoto } from '../tres/foto';
 
 function mundo() {
   abrirMundo(app, { menu: () => castelo(), historia: () => historia() });
@@ -31,8 +32,9 @@ export function iniciar(raiz: HTMLElement) {
 function tela(classe: string, ...filhos: (Node | string | null)[]) {
   pararMundo();
   app.innerHTML = '';
-  app.className = classe === 'inicio' ? 'modo-tela transparente' : 'modo-tela';
-  M.ativo = classe === 'inicio';
+  const em3d = classe === 'inicio' || classe === 'criacao';
+  app.className = em3d ? `modo-tela transparente ${classe}` : 'modo-tela';
+  M.ativo = em3d;
   window.scrollTo(0, 0);
   const el = h('main', { class: `tela ${classe}` }, ...filhos);
   app.append(el);
@@ -69,32 +71,13 @@ function inicio() {
 
 // ---------------------------------------------------------------- criação
 
-const PELES = ['#fbe4d5', '#f1c9a5', '#e0ac69', '#c68642', '#8d5524', '#5c3a21'];
-const CABELOS = ['#1f1a1c', '#3d2a1f', '#7a5136', '#b4492a', '#e3bb6a', '#ebe7e1', '#ef7fb3', '#3f7bd8', '#7c4cc4'];
-const ESTILOS: [Aparencia['estilo'], string][] = [['curto', 'Curto'], ['longo', 'Longo'], ['cacheado', 'Cacheado'], ['coque', 'Coque'], ['careca', 'Careca']];
+const APARENCIAS = ['voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
+const OURO = 0xd9a520;
 
-function criacao() {
-  const ap: Aparencia = { pele: PELES[3], cabelo: CABELOS[0], estilo: 'cacheado', oculos: false };
+async function criacao() {
+  let modelo = APARENCIAS[0];
   let pronome: 0 | 1 | 2 = 1;
   let nome = '';
-  const preview = h('div', { class: 'preview' });
-  const desenha = () => {
-    preview.innerHTML = retratoVoce(0, ap);
-  };
-  const cores = (lista: string[], k: 'pele' | 'cabelo') => {
-    const box = h('div', { class: 'cores' });
-    for (const c of lista) {
-      const b = h('button', { class: 'cor' + (ap[k] === c ? ' sel' : ''), type: 'button', style: `background:${c}`, 'aria-label': `cor ${c}` });
-      b.addEventListener('click', () => {
-        ap[k] = c;
-        box.querySelectorAll('.cor').forEach((x) => x.classList.remove('sel'));
-        b.classList.add('sel');
-        desenha();
-      });
-      box.append(b);
-    }
-    return box;
-  };
   const grupo = <T,>(ops: [T, string][], atual: T, f: (v: T) => void) => {
     const box = h('div', { class: 'grupo' });
     for (const [v, t] of ops) {
@@ -103,35 +86,48 @@ function criacao() {
         box.querySelectorAll('.chip').forEach((x) => x.classList.remove('sel'));
         b.classList.add('sel');
         f(v);
-        desenha();
       });
       box.append(b);
     }
     return box;
   };
+  const opcoes = h('div', { class: 'aparencias' });
+  APARENCIAS.forEach((id, i) => {
+    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, imgFoto(id, 'foto', OURO));
+    b.addEventListener('click', () => {
+      modelo = id;
+      opcoes.querySelectorAll('.aparencia').forEach((x) => x.classList.remove('sel'));
+      b.classList.add('sel');
+      C3.vitrine(id, OURO);
+    });
+    opcoes.append(b);
+  });
   const inp = h('input', { type: 'text', maxlength: '20', placeholder: 'Seu nome', 'aria-label': 'nome', autocomplete: 'off' }) as HTMLInputElement;
   inp.addEventListener('input', () => (nome = inp.value.trim()));
+  await C3.irPara('dormitorio');
   tela('criacao',
-    h('h1', {}, 'Ficha de matrícula'),
-    h('p', { class: 'dica' }, 'A Secretaria pediu em três vias. A gente aceita uma.'),
-    preview,
-    h('label', {}, 'Nome', inp),
-    h('label', {}, 'Como devemos falar de você?', grupo<0 | 1 | 2>([[0, 'Ele'], [1, 'Ela'], [2, 'Elu']], pronome, (v) => (pronome = v))),
-    h('label', {}, 'Tom de pele', cores(PELES, 'pele')),
-    h('label', {}, 'Cabelo', grupo(ESTILOS, ap.estilo, (v) => (ap.estilo = v))),
-    h('label', {}, 'Cor do cabelo', cores(CABELOS, 'cabelo')),
-    h('label', {}, 'Óculos', grupo<boolean>([[false, 'Sem'], [true, 'Com']], ap.oculos, (v) => (ap.oculos = v))),
-    h('div', { class: 'acoes-col' }, botao('Matricular', () => {
-      if (!nome) {
-        aviso('Escreve seu nome. Até a Vó Cida tem nome de usuário.');
-        inp.focus();
-        return;
-      }
-      novoEstado(nome, pronome, { ...ap });
-      historia();
-    }, 'primario'), botao('Voltar', () => inicio(), 'secundario')),
+    h('div', { class: 'ficha' },
+      h('h1', {}, 'Ficha de matrícula'),
+      h('p', { class: 'dica' }, 'A Secretaria pediu em três vias. A gente aceita uma.'),
+      h('label', {}, 'Nome', inp),
+      h('label', {}, 'Como devemos falar de você?', grupo<0 | 1 | 2>([[0, 'Ele'], [1, 'Ela'], [2, 'Elu']], pronome, (v) => (pronome = v))),
+      h('label', {}, 'Sua aparência', opcoes),
+      h('p', { class: 'dica' }, 'A capa ganha a cor da sua casa depois da seleção.'),
+      h('div', { class: 'acoes-col' }, botao('Matricular', () => {
+        if (!nome) {
+          aviso('Escreve seu nome. Até a Vó Cida tem nome de usuário.');
+          inp.focus();
+          return;
+        }
+        C3.vitrine(null);
+        novoEstado(nome, pronome, { pele: '', cabelo: '', estilo: 'curto', oculos: false, modelo });
+        historia();
+      }, 'primario'), botao('Voltar', () => {
+        C3.vitrine(null);
+        inicio();
+      }, 'secundario'))),
   );
-  desenha();
+  C3.vitrine(modelo, OURO);
 }
 
 // ---------------------------------------------------------------- castelo (hub)
@@ -170,7 +166,7 @@ function castelo() {
   tela('castelo',
     h('div', { class: 'acoes-linha' }, botao('← Voltar ao castelo', () => mundo(), 'primario')),
     h('section', { class: 'perfil', style: casa ? `--casa:${casa.cor};--casa2:${casa.cor2}` : '' },
-      h('div', { class: 'perfil-ret', html: retratoVoce() }),
+      h('div', { class: 'perfil-ret' }, imgFoto(s.aparencia.modelo ?? 'voce1', 'foto', C3.tintaDe('voce'))),
       h('div', { class: 'perfil-info' },
         h('h1', {}, s.nome),
         h('div', { class: 'titulo' }, personaliza(titulo(s.xp))),
@@ -261,7 +257,7 @@ function amizades() {
     ...conhecidos.map((p) => {
       const v = s.amizade[p.id];
       const nv = nivelAmizade(v);
-      return h('div', { class: 'item amigo' }, h('div', { class: 'mini-ret', html: retrato(p.id) }),
+      return h('div', { class: 'item amigo' }, h('div', { class: 'mini-ret' }, imgFoto(p.id, 'foto', C3.tintaDe(p.id))),
         h('div', {}, h('b', { style: `color:${p.cor}` }, personaliza(p.nome)), h('div', { class: 'coracoes' }, '♥'.repeat(nv) + '♡'.repeat(4 - nv) + ' ' + personaliza(NIVEIS_AMIZADE[nv])), h('p', {}, personaliza(p.papel))));
     }));
 }

@@ -19,7 +19,7 @@ iniciar(document.getElementById('app')!);
 
 if (import.meta.env.DEV) {
   // gancho de teste (só no modo dev)
-  Promise.all([import('./tres/cena3d'), import('./tres/jogador'), import('./motor/estado'), import('./tres/motor3d')]).then(([C3, jg, es, m3]) => {
-    (window as unknown as Record<string, unknown>).__pnp = { C3, J: jg.J, es, M: m3.M };
+  Promise.all([import('./tres/cena3d'), import('./tres/jogador'), import('./motor/estado'), import('./tres/motor3d'), import('./tres/humanos')]).then(([C3, jg, es, m3, hu]) => {
+    (window as unknown as Record<string, unknown>).__pnp = { C3, J: jg.J, es, M: m3.M, hu };
   });
 }

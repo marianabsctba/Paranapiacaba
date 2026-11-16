@@ -4,10 +4,11 @@ import { ANOS, FEITICOS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { estado, salvar } from '../motor/estado';
 import { aplicar, lugaresVisiveis, nivel, titulo, xpDoNivel } from '../motor/progresso';
 import { CASA_INFO, fmt, personaliza } from '../motor/texto';
-import { brasao } from '../arte/retrato';
+import { brasao } from '../arte/brasao';
 import * as C3 from '../tres/cena3d';
 import { J, soltarMouse, travado } from '../tres/jogador';
 import { M } from '../tres/motor3d';
+import { imgFoto } from '../tres/foto';
 import { aviso, botao, h } from './dom';
 
 interface Acoes {
@@ -77,8 +78,8 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
   const casa = s.casa ? CASA_INFO[s.casa] : null;
   const nomeLugar = h('div', { class: 'hud-lugar' }, LUGARES.get(C3.C.lugarId)?.nome ?? '');
   const perfil = h('div', { class: 'hud-perfil hud-painel' },
-    s.casa ? h('span', { html: brasao(s.casa, 34) }) : null,
-    h('div', {}, h('b', {}, s.nome), h('div', { class: 'hud-titulo' }, personaliza(titulo(s.xp))),
+    h('div', { class: 'hud-foto' }, imgFoto(s.aparencia.modelo ?? 'voce1', 'foto', C3.tintaDe('voce'))),
+    h('div', {}, h('b', {}, s.nome, s.casa ? h('span', { class: 'hud-brasao', html: brasao(s.casa, 18) }) : null), h('div', { class: 'hud-titulo' }, personaliza(titulo(s.xp))),
       h('div', { class: 'nivel' }, h('span', {}, `Nv ${n}`), h('div', { class: 'barra' }, h('div', { style: `width:${pct.toFixed(1)}%` }))),
       casa ? h('div', { class: 'hud-casa' }, `${casa.nome} · ${s.pontosCasa[s.casa!]} pts`) : null));
   const botoes = h('div', { class: 'hud-botoes' },

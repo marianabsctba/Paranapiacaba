@@ -7,7 +7,8 @@ import { CASA_INFO, esc, fmt, personaliza } from '../motor/texto';
 import * as C3 from '../tres/cena3d';
 import { J, soltarMouse } from '../tres/jogador';
 import { M } from '../tres/motor3d';
-import { brasao, retrato } from '../arte/retrato';
+import { imgFoto } from '../tres/foto';
+import { brasao } from '../arte/brasao';
 import { aviso, botao, espera, h } from './dom';
 import { mostrarExercicio } from './exercicio';
 
@@ -146,7 +147,7 @@ export async function aula(p: PassoAula, g: number, revisao = false): Promise<vo
   const prof = PERSONAGENS.get(p.professor);
   painel.append(
     h('div', { class: 'aula-capa' },
-      h('div', { class: 'aula-ret', html: retrato(p.professor) }),
+      h('div', { class: 'aula-ret' }, imgFoto(p.professor, 'foto', C3.tintaDe(p.professor))),
       h('div', {}, h('div', { class: 'materia' }, p.materia), h('h2', {}, personaliza(p.titulo)), h('div', { class: 'prof' }, prof ? personaliza(prof.nome) : ''),
         h('div', { class: 'estrelas', html: estrelasHtml(estado().aulas[p.id] ?? 0) }))),
   );

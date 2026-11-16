@@ -26,9 +26,10 @@ function corCasa(c: CasaId) {
 }
 
 /** casa de cada aluno, para pintar a capa e o cachecol */
-function tintaDe(id: string): number | undefined {
+export function tintaDe(id: string): number | undefined {
   if (!temPartida()) return undefined;
   const minha = estado().casa ?? 'capivarias';
+  if (id === 'voce') return estado().casa ? corCasa(minha) : 0xd9a520;
   if (AMIGOS.includes(id)) return corCasa(minha);
   if (id === 'enzo') return corCasa(minha === 'jararacas' ? 'oncarina' : 'jararacas');
   const m = /^aluno(\d)$/.exec(id);
@@ -264,7 +265,31 @@ export function raio(ida: boolean, oponente: string): Promise<void> {
   });
 }
 
-M.atualizar.add((dt) => {
+// vitrine da matrícula: a aparência escolhida em pé na sua frente
+let vitrineH: Humano | null = null;
+export async function vitrine(id: string | null, tinta?: number) {
+  vitrineH?.raiz.removeFromParent();
+  vitrineH = null;
+  const a = C.area;
+  if (!id || !a) return;
+  const h = new Humano(id, tinta);
+  const x = a.entrada.x;
+  const z = a.entrada.z - 1.9;
+  h.raiz.position.set(x, 0, z);
+  a.grupo.add(h.raiz);
+  vitrineH = h;
+  await Promise.race([h.pronto, new Promise((ok) => setTimeout(ok, 10000))]);
+  if (vitrineH !== h) return;
+  const estreito = innerWidth < innerHeight;
+  // no computador a ficha fica à esquerda, então a câmera mira um pouco ao lado para a pessoa aparecer à direita
+  J.alvoOlhar = new THREE.Vector3(estreito ? x : x - 0.55, h.altura * (estreito ? 0.3 : 0.6), z);
+}
+
+M.atualizar.add((dt, t) => {
+  if (vitrineH) {
+    vitrineH.update(dt);
+    vitrineH.raiz.rotation.y = Math.sin(t * 0.45) * 0.55;
+  }
   for (const h of C.npcs.values()) h.update(dt);
   for (const h of C.figurantes) h.update(dt);
   C.area?.atualizar?.(dt, M.relogio.elapsedTime);

@@ -24,7 +24,8 @@ ws.onmessage = (ev) => {
 };
 await new Promise((r) => { ws.onopen = r; });
 await env('Page.enable'); await env('Runtime.enable');
-await env('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: 1, mobile: false });
+const LARG = Number(process.env.LARG || 1280), ALT = Number(process.env.ALT || 720);
+await env('Emulation.setDeviceMetricsOverride', { width: LARG, height: ALT, deviceScaleFactor: 1, mobile: LARG < 700 });
 await env('Page.navigate', { url });
 const inicio = Date.now();
 for (;;) {

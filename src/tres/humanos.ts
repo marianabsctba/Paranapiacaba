@@ -7,8 +7,12 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { PERSONAGENS } from '../conteudo/index';
 
 const BASE = import.meta.env.BASE_URL;
-export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2'];
+export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
 
+const DEDO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])\./;
+const DEDO_OSSO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])$/;
+// sinal da curva dos dedos (ajustado olhando as fotos)
+export const CURVA = { sinal: 1, eixo: 'z' as 'x' | 'y' | 'z' };
 const carregados = new Map<string, Promise<THREE.Object3D | null>>();
 const clipes: Record<string, THREE.AnimationClip> = {};
 let loader: GLTFLoader | null = null;
@@ -28,7 +32,8 @@ export function carregarAnimacoes(): Promise<void> {
     .loadAsync(`${BASE}modelos/gente/animacoes.glb`)
     .then((g: GLTF) => {
       for (const a of g.animations) {
-        a.tracks = a.tracks.filter((t) => !/^Root\.position/.test(t.name));
+        // dedos ficam fora das animações: a curva do arquivo dobra os dedos para trás
+        a.tracks = a.tracks.filter((t) => !/^Root\.position/.test(t.name) && !DEDO.test(t.name));
         clipes[a.name] = a;
       }
     })
@@ -140,6 +145,7 @@ export class Humano {
   private fimCaminho: (() => void) | null = null;
   vel = 1.2;
   altura = 1.6;
+  private dedos: { osso: THREE.Object3D; repouso: THREE.Quaternion; ang: number }[] = [];
   pronto: Promise<void>;
 
   constructor(public id: string, tinta?: number) {
@@ -174,9 +180,11 @@ export class Humano {
           mt.alphaTest = fio ? 0.45 : /low-poly/i.test(mt.name) ? 0.5 : 0;
           if (!fio) mt.side = THREE.FrontSide;
           if (/^(roupa_|capa)/.test(me.name)) {
+            // a camisa fica por cima da calça na cintura; sem isso as duas brigam pelo mesmo pixel
+            const prio = /^roupa_(camisa|terno)/.test(me.name) ? -12 : -2;
             mt.polygonOffset = true;
-            mt.polygonOffsetFactor = -2;
-            mt.polygonOffsetUnits = -2;
+            mt.polygonOffsetFactor = prio;
+            mt.polygonOffsetUnits = prio;
           }
           if (/^capa/.test(mt.name) || /^capa/.test(me.name)) mt.side = THREE.DoubleSide;
           if (tinta !== undefined && /^(capa_borda|cachecol)/.test(mt.name)) {
@@ -191,10 +199,28 @@ export class Humano {
       this.raiz.add(modelo);
       const caixa = new THREE.Box3().setFromObject(modelo);
       this.altura = caixa.max.y - caixa.min.y;
+      modelo.traverse((o) => {
+        const m = DEDO_OSSO.exec(o.name);
+        if (!m) return;
+        const seg = Number(m[2]);
+        const ang = m[1] === 'thumb' ? [0, 0.1, 0.15, 0.1][seg] : [0, 0.25, 0.4, 0.3][seg];
+        this.dedos.push({ osso: o, repouso: o.quaternion.clone(), ang });
+      });
+      this.curvarDedos();
       this.mixer = new THREE.AnimationMixer(modelo);
       this.tocar('parado', 0);
       this.mixer.update(Math.random() * 3);
     });
+  }
+
+  /** mão relaxada: dedos levemente dobrados para dentro */
+  curvarDedos() {
+    const eixo = new THREE.Vector3(CURVA.eixo === 'x' ? 1 : 0, CURVA.eixo === 'y' ? 1 : 0, CURVA.eixo === 'z' ? 1 : 0);
+    const q = new THREE.Quaternion();
+    for (const d of this.dedos) {
+      q.setFromAxisAngle(eixo, d.ang * CURVA.sinal);
+      d.osso.quaternion.copy(d.repouso).multiply(q);
+    }
   }
 
   tocar(estado: string, fade = 0.3) {
@@ -229,8 +255,14 @@ export class Humano {
     return new Promise((r) => (this.fimCaminho = r));
   }
 
-  /** ponto da cabeça em coordenadas do mundo, para a câmera mirar */
+  /** ponto do rosto em coordenadas do mundo, para a câmera mirar (pelo osso da cabeça) */
   cabeca(alvo = new THREE.Vector3()) {
+    const osso = this.raiz.getObjectByName('head');
+    if (osso) {
+      osso.getWorldPosition(alvo);
+      alvo.y += 0.06;
+      return alvo;
+    }
     return this.raiz.getWorldPosition(alvo).setY(this.raiz.position.y + this.altura * 0.92);
   }
 

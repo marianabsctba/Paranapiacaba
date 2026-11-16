@@ -46,6 +46,15 @@ SPECS = [
     dict(id="aluno2", f=1, anos=12, raca={"african": 0.8, "caucasian": 0.2, "asian": 0.0}, peso=0.45, musc=0.45, alt=0.45, cabelo="ponytail01", roupas=ALUNA_F, capa=1, pele="young_african_female"),
     dict(id="aluno3", f=0, anos=13, raca="caucasian", peso=0.55, musc=0.5, alt=0.6, cabelo="short01", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
     dict(id="aluno4", f=1, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.4, cabelo="bob01", roupas=ALUNA_F, capa=1, pele="young_caucasian_female"),
+    # aparências que a pessoa escolhe na matrícula (o pronome é escolhido à parte)
+    dict(id="voce1", f=1, anos=12, raca="african", peso=0.42, musc=0.45, alt=0.45, cabelo="afro01", roupas=ALUNA_CALCA, capa=1, pele="young_african_female"),
+    dict(id="voce2", f=1, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.5, cabelo="long01", roupas=ALUNA_F, capa=1, pele="young_caucasian_female"),
+    dict(id="voce3", f=1, anos=12, raca="asian", peso=0.4, musc=0.4, alt=0.4, cabelo="bob01", roupas=ALUNA_CALCA, capa=1, pele="young_asian_female"),
+    dict(id="voce4", f=1, anos=12, raca=PARDO, peso=0.45, musc=0.45, alt=0.45, cabelo="braid01", roupas=ALUNA_F, capa=1, pele="young_caucasian_female"),
+    dict(id="voce5", f=0, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.5, cabelo="short04", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
+    dict(id="voce6", f=0, anos=12, raca="african", peso=0.45, musc=0.5, alt=0.5, cabelo="short01", roupas=ALUNO_M, capa=1, pele="young_african_male"),
+    dict(id="voce7", f=0, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.45, cabelo="short03", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
+    dict(id="voce8", f=0, anos=12, raca="asian", peso=0.4, musc=0.45, alt=0.45, cabelo="ponytail01", roupas=ALUNA_CALCA, capa=1, pele="young_asian_male"),
     # adultos da escola
     dict(id="iolanda", f=1, anos=66, raca="african", peso=0.55, musc=0.4, alt=0.45, cabelo="bob02", roupas=["female_elegantsuit01", "toigo_ankle_boots_female"], capa=2, pele="old_african_female"),
     dict(id="otavio", f=0, anos=62, raca="caucasian", peso=0.45, musc=0.35, alt=0.55, cabelo=None, roupas=["toigo_male_suit_3", "shoes01"], capa=2, pele="old_caucasian_male"),
