@@ -10,7 +10,7 @@ function tex(arquivo: string, rep: [number, number], cor: boolean): THREE.Textur
   const chave = `${arquivo}|${rep.join('x')}`;
   let t = cache.get(chave);
   if (!t) {
-    t = tl.load(BASE + arquivo + '.webp');
+    t = tl.load(BASE + arquivo + '.webp?v=' + __VERSAO__);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(rep[0], rep[1]);
     t.anisotropy = 8;

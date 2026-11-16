@@ -17,7 +17,7 @@ function carregar(id: Movel) {
   let p = cache.get(id);
   if (!p) {
     p = L()
-      .loadAsync(BASE + id + '.glb')
+      .loadAsync(BASE + id + '.glb?v=' + __VERSAO__)
       .then((g) => {
         g.scene.traverse((o) => {
           const m = o as THREE.Mesh;

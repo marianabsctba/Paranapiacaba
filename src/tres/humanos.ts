@@ -32,7 +32,7 @@ export function L(): GLTFLoader {
 
 export function carregarAnimacoes(): Promise<void> {
   animacoes ??= L()
-    .loadAsync(`${BASE}modelos/gente/animacoes.glb`)
+    .loadAsync(`${BASE}modelos/gente/animacoes.glb?v=${__VERSAO__}`)
     .then((g: GLTF) => {
       for (const a of g.animations) {
         // dedos ficam fora das animações: a curva do arquivo dobra os dedos para trás
@@ -48,7 +48,7 @@ function carregarModelo(id: string): Promise<THREE.Object3D | null> {
   let p = carregados.get(id);
   if (!p) {
     p = L()
-      .loadAsync(`${BASE}modelos/gente/${id}.glb`)
+      .loadAsync(`${BASE}modelos/gente/${id}.glb?v=${__VERSAO__}`)
       .then((g) => g.scene)
       .catch(() => null);
     carregados.set(id, p);
