@@ -4,7 +4,7 @@ Jogo gratuito para o navegador que ensina segurança cibernética do zero, em se
 
 **Jogar:** https://marianabsctba.github.io/Paranapiacaba/
 
-Funciona no celular e no computador. Sem cadastro, sem anúncio, sem paywall (a energia é infinita, a Diretora vetou). O progresso fica salvo no seu navegador e pode ser exportado como código para continuar em outro aparelho.
+Jogo em 3D, em primeira pessoa, num castelo inspirado na arquitetura ferroviária da vila real de Paranapiacaba. Funciona no celular (joystick na tela) e no computador (WASD e mouse). Sem cadastro, sem anúncio, sem paywall (a energia é infinita, a Diretora vetou). O progresso fica salvo no seu navegador e pode ser exportado como código para continuar em outro aparelho.
 
 ## O que tem
 
@@ -18,6 +18,13 @@ Funciona no celular e no computador. Sem cadastro, sem anúncio, sem paywall (a 
 - **Amizades** que mudam com as suas escolhas.
 
 Enredo e personagens são originais. Toda técnica ofensiva aparece só em laboratório autorizado e sempre junto da defesa.
+
+## Créditos
+
+- Pessoas em 3D geradas com [MakeHuman](http://www.makehumancommunity.org/) via MPFB no Blender, com assets CC0.
+- Animações da Universal Animation Library, de [Quaternius](https://quaternius.com/) (CC0), adaptadas ao esqueleto do MPFB.
+- Motor 3D: [Three.js](https://threejs.org/) (MIT). Cenários e texturas gerados no próprio código.
+- O gerador do elenco está em `ferramentas/makehuman/gerar.py`.
 
 ## Desenvolvimento
 

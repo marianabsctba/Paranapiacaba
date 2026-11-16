@@ -1,0 +1,295 @@
+# Gera o elenco de Paranapiacaba com MakeHuman (MPFB, assets CC0) no Blender.
+# Uso: blender -b --factory-startup -P gerar.py -- <saida> [ids...]
+# Uniforme da escola: roupa base do MPFB + capa e cachecol gerados aqui.
+# A barra da capa ("capa_borda") e o cachecol ("cachecol") são pintados no jogo com a cor da casa.
+import bpy, bmesh, sys, os, glob
+from mathutils import Vector
+import addon_utils
+
+addon_utils.enable("bl_ext.user_default.mpfb", default_set=True)
+from bl_ext.user_default.mpfb.services.humanservice import HumanService
+from bl_ext.user_default.mpfb.services.locationservice import LocationService
+
+args = sys.argv[sys.argv.index("--") + 1:]
+SAIDA = args[0]
+SO = set(args[1:])
+os.makedirs(SAIDA, exist_ok=True)
+DADOS = LocationService.get_user_data()
+
+
+def achar(tipo, nome, ext="mhclo"):
+    r = glob.glob(os.path.join(DADOS, tipo, nome, "*." + ext)) or glob.glob(os.path.join(DADOS, tipo, nome + "*", "*." + ext))
+    if not r:
+        raise RuntimeError(f"não achei {tipo}/{nome}")
+    return r[0]
+
+
+def idade(anos):
+    return 0.1875 + (anos - 11) / 14 * 0.3125 if anos <= 25 else 0.5 + (anos - 25) / 65 * 0.5
+
+
+# raca: 'african' | 'caucasian' | 'asian' ou dict com pesos (Brasil é mistura)
+PARDO = {"african": 0.45, "caucasian": 0.45, "asian": 0.1}
+ALUNO_M = ["toigo_fisherman_sweater", "toigo_wool_pants", "shoes02"]
+ALUNA_F = ["toigo_fisherman_sweater", "toigo_long_full_skirt", "toigo_flats"]
+ALUNA_CALCA = ["toigo_fisherman_sweater", "toigo_wool_pants", "toigo_ankle_boots_female"]
+
+# capa: 0 sem, 1 capa de aluno, 2 capa de professor (mais longa)
+SPECS = [
+    # turma (12 anos no primeiro ano)
+    dict(id="tati", f=1, anos=12, raca="asian", peso=0.4, musc=0.4, alt=0.4, cabelo="long01", roupas=ALUNA_CALCA, capa=1, pele="young_asian_female"),
+    dict(id="caua", f=0, anos=12, raca={"african": 0.55, "caucasian": 0.25, "asian": 0.2}, peso=0.42, musc=0.5, alt=0.45, cabelo="afro01", roupas=ALUNO_M, capa=1, pele="young_african_male"),
+    dict(id="bia", f=1, anos=12, raca="caucasian", peso=0.45, musc=0.55, alt=0.55, cabelo="braid01", roupas=ALUNA_CALCA, capa=1, pele="young_caucasian_female"),
+    dict(id="jonas", f=0, anos=12, raca=PARDO, peso=0.4, musc=0.45, alt=0.4, cabelo="short04", roupas=ALUNO_M, capa=1, pele="young_african_male"),
+    dict(id="enzo", f=0, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.55, cabelo="short02", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
+    dict(id="aluno1", f=0, anos=12, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="short03", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
+    dict(id="aluno2", f=1, anos=12, raca={"african": 0.8, "caucasian": 0.2, "asian": 0.0}, peso=0.45, musc=0.45, alt=0.45, cabelo="ponytail01", roupas=ALUNA_F, capa=1, pele="young_african_female"),
+    dict(id="aluno3", f=0, anos=13, raca="caucasian", peso=0.55, musc=0.5, alt=0.6, cabelo="short01", roupas=ALUNO_M, capa=1, pele="young_caucasian_male"),
+    dict(id="aluno4", f=1, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.4, cabelo="bob01", roupas=ALUNA_F, capa=1, pele="young_caucasian_female"),
+    # adultos da escola
+    dict(id="iolanda", f=1, anos=66, raca="african", peso=0.55, musc=0.4, alt=0.45, cabelo="bob02", roupas=["female_elegantsuit01", "toigo_ankle_boots_female"], capa=2, pele="old_african_female"),
+    dict(id="otavio", f=0, anos=62, raca="caucasian", peso=0.45, musc=0.35, alt=0.55, cabelo=None, roupas=["toigo_male_suit_3", "shoes01"], capa=2, pele="old_caucasian_male"),
+    dict(id="ruth", f=1, anos=54, raca=PARDO, peso=0.55, musc=0.5, alt=0.45, cabelo="ponytail01", roupas=["toigo_fisherman_sweater", "toigo_wool_pants", "toigo_ankle_boots_female"], capa=2, pele="middleage_caucasian_female"),
+    dict(id="heitor", f=0, anos=44, raca="caucasian", peso=0.4, musc=0.45, alt=0.7, cabelo="short02", roupas=["toigo_male_double-breasted_suit", "shoes02"], capa=2, pele="middleage_caucasian_male"),
+    dict(id="nanda", f=1, anos=41, raca="african", peso=0.6, musc=0.5, alt=0.5, cabelo="afro01", roupas=["female_casualsuit01", "toigo_ankle_boots_female"], capa=2, pele="middleage_african_female"),
+    dict(id="baltazar", f=0, anos=58, raca=PARDO, peso=0.85, musc=0.7, alt=0.8, cabelo="short01", roupas=["male_worksuit01", "toigo_ankle_boots_male"], capa=0, pele="old_african_male"),
+    dict(id="zuleica", f=1, anos=60, raca="caucasian", peso=0.5, musc=0.35, alt=0.4, cabelo="bob01", roupas=["toigo_fisherman_sweater", "toigo_tiered_skirt", "toigo_ballet_flats"], capa=0, pele="old_caucasian_female"),
+    dict(id="seu_ze", f=0, anos=63, raca=PARDO, peso=0.6, musc=0.5, alt=0.4, cabelo=None, roupas=["namuhekam_male_polo_shirt", "toigo_wool_pants", "shoes03"], capa=0, pele="old_caucasian_male"),
+    # família e mundo de fora
+    dict(id="vo_cida", f=1, anos=72, raca="african", peso=0.75, musc=0.35, alt=0.3, cabelo="bob02", roupas=["toigo_fisherman_sweater", "toigo_long_full_skirt", "toigo_ballet_flats"], capa=0, pele="old_african_female"),
+    dict(id="deputado", f=0, anos=57, raca="caucasian", peso=0.8, musc=0.4, alt=0.5, cabelo="short01", roupas=["toigo_male_suit_tie_and_jacket", "shoes02"], capa=0, pele="old_caucasian_male"),
+    dict(id="marlene", f=1, anos=46, raca="caucasian", peso=0.4, musc=0.45, alt=0.6, cabelo="long01", roupas=["toigo_female_double-breasted_suit", "toigo_stiletto_booties"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="nulo", f=0, anos=38, raca="caucasian", peso=0.38, musc=0.45, alt=0.72, cabelo="short03", roupas=["toigo_suit_with_dinner_jacket", "shoes01"], capa=2, pele="middleage_caucasian_male"),
+    # figurantes adultos para personagens de cada ano
+    dict(id="adulto1", f=0, anos=40, raca=PARDO, peso=0.6, musc=0.5, alt=0.55, cabelo="short04", roupas=["male_casualsuit03", "shoes02"], capa=0, pele="middleage_african_male"),
+    dict(id="adulta1", f=1, anos=38, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="long01", roupas=["female_casualsuit02", "toigo_wool_pants", "toigo_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="adulta2", f=1, anos=50, raca="caucasian", peso=0.55, musc=0.4, alt=0.45, cabelo="bob01", roupas=["toigo_female_suit", "toigo_flats"], capa=2, pele="middleage_caucasian_female"),
+]
+
+
+def limpar():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    addon_utils.enable("bl_ext.user_default.mpfb", default_set=True)
+
+
+def papel(nome):
+    for k, v in {"shirt": "camisa", "sweater": "camisa", "top": "camisa", "pants": "calca", "skirt": "calca", "shoes": "sapato", "flats": "sapato", "boots": "sapato", "booties": "sapato", "suit": "terno"}.items():
+        if k in nome:
+            return v
+    return "roupa"
+
+
+def criar(s):
+    if isinstance(s["raca"], dict):
+        raca = dict(s["raca"])
+    else:
+        raca = {"asian": 0.05, "caucasian": 0.05, "african": 0.05}
+        raca[s["raca"]] = 0.9
+    macro = {"gender": 0.0 if s["f"] else 1.0, "age": idade(s["anos"]), "muscle": s["musc"], "weight": s["peso"], "proportions": 0.55,
+             "height": s["alt"], "cupsize": 0.5 if s["anos"] > 16 else 0.2, "firmness": 0.5, "race": raca}
+    base = HumanService.create_human(macro_detail_dict=macro, feet_on_ground=True, scale=0.1)
+    HumanService.set_character_skin(achar("skins", s["pele"], "mhmat"), base, skin_type="GAMEENGINE")
+    rig = HumanService.add_builtin_rig(base, "game_engine", import_weights=True)
+    rig = rig or next(o for o in bpy.data.objects if o.type == "ARMATURE")
+    HumanService.add_mhclo_asset(achar("eyes", "low-poly"), base, asset_type="Eyes", subdiv_levels=0)
+    HumanService.add_mhclo_asset(achar("eyebrows", "eyebrow001" if s["f"] else "eyebrow006"), base, asset_type="Eyebrows", subdiv_levels=0)
+    HumanService.add_mhclo_asset(achar("eyelashes", "eyelashes01"), base, asset_type="Eyelashes", subdiv_levels=0)
+    if s["cabelo"]:
+        h = HumanService.add_mhclo_asset(achar("hair", s["cabelo"]), base, asset_type="Hair", subdiv_levels=0)
+        if h:
+            h.name = "cabelo"
+    for r in s["roupas"]:
+        c = HumanService.add_mhclo_asset(achar("clothes", r), base, asset_type="Clothes", subdiv_levels=0)
+        if c:
+            c.name = "roupa_" + papel(r)
+    base.name = "corpo"
+    erodir_mascara(base, aneis=3)
+    if s["capa"]:
+        capa(base, rig, longa=s["capa"] == 2, cachecol=s["capa"] == 1)
+    return base, rig
+
+
+def suave(t):
+    t = max(0.0, min(1.0, t))
+    return t * t * (3 - 2 * t)
+
+
+def mat_simples(nome, cor, metal=0.0, rug=0.8):
+    m = bpy.data.materials.get(nome) or bpy.data.materials.new(nome)
+    m.use_nodes = True
+    p = m.node_tree.nodes["Principled BSDF"]
+    p.inputs["Base Color"].default_value = (*cor, 1); p.inputs["Metallic"].default_value = metal; p.inputs["Roughness"].default_value = rug
+    return m
+
+
+def tira(nome, pontos, raio):
+    cu = bpy.data.curves.new(nome, "CURVE"); cu.dimensions = "3D"
+    cu.bevel_depth = raio; cu.bevel_resolution = 2; cu.resolution_u = 12
+    sp = cu.splines.new("NURBS"); sp.points.add(len(pontos) - 1)
+    for p, c in zip(sp.points, pontos):
+        p.co = (c.x, c.y, c.z, 1)
+    sp.use_endpoint_u = True; sp.order_u = 3
+    ob = bpy.data.objects.new(nome, cu); bpy.context.scene.collection.objects.link(ob)
+    bpy.ops.object.select_all(action="DESELECT"); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.convert(target="MESH")
+    return bpy.context.view_layer.objects.active
+
+
+def erodir_mascara(base, aneis=3):
+    """Mantém uma faixa de pele sob as bordas da roupa: sem buraco quando o corpo se mexe."""
+    for g in base.vertex_groups:
+        if not any(m.type == "MASK" and m.vertex_group == g.name for m in base.modifiers):
+            continue
+        idx = g.index
+        apagar = {v.index for v in base.data.vertices if any(x.group == idx and x.weight > 0.5 for x in v.groups)}
+        viz = {}
+        for e in base.data.edges:
+            a, b = e.vertices
+            viz.setdefault(a, []).append(b); viz.setdefault(b, []).append(a)
+        for _ in range(aneis):
+            borda = {v for v in apagar if any(n not in apagar for n in viz.get(v, []))}
+            apagar -= borda
+        g.remove([v.index for v in base.data.vertices])
+        g.add(list(apagar), 1.0, "REPLACE")
+
+
+def superficie_alvo():
+    dg = bpy.context.evaluated_depsgraph_get()
+    junto = bmesh.new()
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and (o.name.startswith("roupa_") or o.name == "corpo")]:
+        me_ev = bpy.data.meshes.new_from_object(o.evaluated_get(dg))
+        me_ev.transform(o.matrix_world)
+        junto.from_mesh(me_ev)
+        bpy.data.meshes.remove(me_ev)
+    me_alvo = bpy.data.meshes.new("alvo_tmp"); junto.to_mesh(me_alvo); junto.free()
+    alvo = bpy.data.objects.new("alvo_tmp", me_alvo); bpy.context.scene.collection.objects.link(alvo)
+    return alvo, [v.co.copy() for v in me_alvo.vertices]
+
+
+def pesos_do_corpo(ob, base, rig, manter):
+    dt = ob.modifiers.new("pesos", "DATA_TRANSFER")
+    dt.object = base; dt.use_vert_data = True; dt.data_types_verts = {"VGROUP_WEIGHTS"}; dt.vert_mapping = "POLYINTERP_NEAREST"
+    dt.layers_vgroup_select_src = "ALL"; dt.layers_vgroup_select_dst = "NAME"
+    bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.datalayout_transfer(modifier="pesos")
+    bpy.ops.object.modifier_apply(modifier="pesos")
+    for g in list(ob.vertex_groups):
+        if g.name not in manter:
+            ob.vertex_groups.remove(g)
+    for nome in manter:
+        if nome not in ob.vertex_groups:
+            ob.vertex_groups.new(name=nome)
+    gp = ob.vertex_groups["spine_01" if "spine_01" in manter else "spine_03"]
+    for v in ob.data.vertices:
+        if sum(g.weight for g in v.groups) < 0.05:
+            gp.add([v.index], 1.0, "REPLACE")
+    ob.parent = rig
+    am = ob.modifiers.new("Armature", "ARMATURE"); am.object = rig
+
+
+def capa(base, rig, longa=False, cachecol=True):
+    """Capa nas costas (presa nos ombros, solta embaixo) e cachecol no pescoço."""
+    alvo, pts = superficie_alvo()
+    zmin = min(p.z for p in pts); zmax = max(p.z for p in pts); H = zmax - zmin
+    zo = zmin + 0.815 * H                       # linha dos ombros
+    zb = zmin + (0.07 if longa else 0.14) * H   # barra
+    costas = max(p.y for p in pts if zo - 0.30 * H < p.z < zo and abs(p.x) < 0.10 * H)
+    largo_ombro = max(abs(p.x) for p in pts if zo - 0.06 * H < p.z < zo - 0.02 * H) * 1.02
+    nx, nz = 22, 70
+    bm = bmesh.new()
+    linhas = []
+    for k in range(nz + 1):
+        t = k / nz                               # 0 barra, 1 ombro
+        z = zb + (zo - zb) * t
+        w = largo_ombro * t + 0.215 * H * (1 - t) + largo_ombro * 0.15 * (1 - t)
+        recuo = (1 - suave(t * 1.4)) * 0.075 * H  # a barra se afasta das pernas
+        linha = []
+        for i in range(nx + 1):
+            u = -1 + 2 * i / nx
+            x = w * u
+            y = costas + 0.03 + recuo - 0.06 * H * u * u * (0.4 + 0.6 * t)
+            linha.append(bm.verts.new((x, y, z)))
+        linhas.append(linha)
+    for k in range(nz):
+        for i in range(nx):
+            f = bm.faces.new((linhas[k][i], linhas[k + 1][i], linhas[k + 1][i + 1], linhas[k][i + 1]))
+            f.material_index = 1 if k < 3 else 0
+            f.smooth = True
+    me = bpy.data.meshes.new("capa"); bm.to_mesh(me); bm.free()
+    ob = bpy.data.objects.new("capa", me); bpy.context.scene.collection.objects.link(ob)
+    me.materials.append(mat_simples("capa_la", (0.018, 0.016, 0.03), 0.0, 0.92))
+    me.materials.append(mat_simples("capa_borda", (0.75, 0.55, 0.12), 0.3, 0.5))
+    # dupla face: a capa é vista dos dois lados
+    so = ob.modifiers.new("esp", "SOLIDIFY"); so.thickness = 0.004; so.offset = 1
+    vg = ob.vertex_groups.new(name="envolver")
+    for v in me.vertices:
+        vg.add([v.index], suave((v.co.z - (zo - 0.16 * H)) / (0.09 * H)), "REPLACE")
+    sw = ob.modifiers.new("sw", "SHRINKWRAP")
+    sw.target = alvo; sw.wrap_method = "PROJECT"; sw.use_project_y = True
+    sw.use_negative_direction = True; sw.use_positive_direction = False
+    sw.offset = 0.012; sw.project_limit = 0.35; sw.wrap_mode = "OUTSIDE_SURFACE"; sw.vertex_group = "envolver"
+    sm = ob.modifiers.new("suave", "CORRECTIVE_SMOOTH"); sm.iterations = 5; sm.use_only_smooth = True
+    bpy.context.view_layer.objects.active = ob
+    for m in ["sw", "suave", "esp"]:
+        bpy.ops.object.modifier_apply(modifier=m)
+    ob.vertex_groups.remove(ob.vertex_groups["envolver"])
+    partes = [ob]
+    pescoco = rig.matrix_world @ rig.data.bones["neck_01"].head_local
+    if cachecol:
+        # volta no pescoço e duas pontas caindo na frente
+        r = 0.052 * H / 1.0
+        cz = pescoco.z - 0.012 * H
+        volta = [Vector((r * __import__("math").sin(a), pescoco.y + r * __import__("math").cos(a) * 0.95, cz)) for a in [i * 0.5236 for i in range(13)]]
+        cc = tira("cachecol", volta, 0.011 * H / 1.0)
+        ponta1 = tira("ponta1", [Vector((0.02 * H, pescoco.y - r, cz)), Vector((0.03 * H, pescoco.y - r - 0.02 * H, cz - 0.08 * H)), Vector((0.035 * H, pescoco.y - r - 0.025 * H, cz - 0.17 * H))], 0.010 * H)
+        ponta2 = tira("ponta2", [Vector((-0.01 * H, pescoco.y - r, cz)), Vector((-0.02 * H, pescoco.y - r - 0.02 * H, cz - 0.07 * H)), Vector((-0.018 * H, pescoco.y - r - 0.026 * H, cz - 0.14 * H))], 0.010 * H)
+        mc = mat_simples("cachecol", (0.75, 0.55, 0.12), 0.0, 0.95)
+        for t in (cc, ponta1, ponta2):
+            s2 = t.modifiers.new("sw", "SHRINKWRAP"); s2.target = alvo; s2.wrap_method = "NEAREST_SURFACEPOINT"
+            s2.offset = 0.012 * H; s2.wrap_mode = "OUTSIDE_SURFACE"
+            bpy.context.view_layer.objects.active = t
+            bpy.ops.object.modifier_apply(modifier="sw")
+            t.data.materials.clear(); t.data.materials.append(mc)
+            for f in t.data.polygons:
+                f.use_smooth = True
+            pesos_do_corpo(t, base, rig, {"spine_03", "neck_01", "clavicle_l", "clavicle_r", "spine_02"})
+    bpy.data.objects.remove(alvo)
+    pesos_do_corpo(ob, base, rig, {"pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "clavicle_l", "clavicle_r"})
+
+
+def encolher_texturas():
+    for img in bpy.data.images:
+        n = img.name.lower()
+        lado = 1024 if ("skin" in n or "body" in n or "litsphere" in n) else 256 if ("eye" in n or "brow" in n or "lash" in n) else 512
+        if img.size[0] > lado or img.size[1] > lado:
+            try:
+                img.scale(min(lado, img.size[0]), min(lado, img.size[1]))
+            except Exception as e:
+                print("textura", img.name, e)
+
+
+def exportar(caminho, objetos):
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in objetos:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = objetos[0]
+    bpy.ops.export_scene.gltf(filepath=caminho, export_format="GLB", use_selection=True, export_apply=True,
+                              export_animations=False, export_image_format="WEBP", export_image_quality=78, export_yup=True,
+                              export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6,
+                              export_morph=False, export_skins=True, export_def_bones=True)
+
+
+for s in SPECS:
+    if SO and s["id"] not in SO:
+        continue
+    try:
+        limpar()
+        base, rig = criar(s)
+        encolher_texturas()
+        objs = [rig] + [o for o in bpy.data.objects if o.type == "MESH"]
+        exportar(os.path.join(SAIDA, s["id"] + ".glb"), objs)
+        print("ok", s["id"])
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print("FALHOU", s["id"], e)

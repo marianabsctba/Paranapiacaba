@@ -2,24 +2,37 @@
 import type { Lugar, PassoAula } from '../conteudo/tipos';
 import { ANOS, CRIATURAS, FEITICOS, FIGURINHAS, ITENS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { ATRIBUTOS, apagar, carregar, estado, exportar, importar, novoEstado, salvar, type Aparencia } from '../motor/estado';
-import { aplicar, lugaresVisiveis, nivel, nivelAmizade, NIVEIS_AMIZADE, ranking, titulo, xpDoNivel } from '../motor/progresso';
+import { lugaresVisiveis, nivel, nivelAmizade, NIVEIS_AMIZADE, ranking, titulo, xpDoNivel } from '../motor/progresso';
 import { CASA_INFO, esc, fmt, personaliza } from '../motor/texto';
-import { cenario } from '../arte/cenario';
 import { brasao, retrato, retratoVoce } from '../arte/retrato';
 import { aviso, botao, h } from './dom';
 import { aoSair, jogarCapitulo, revisarAula } from './historia';
+import { abrirMundo, pararMundo } from './mundo';
+import * as C3 from '../tres/cena3d';
+import { M } from '../tres/motor3d';
+
+function mundo() {
+  abrirMundo(app, { menu: () => castelo(), historia: () => historia() });
+}
+function historia() {
+  pararMundo();
+  jogarCapitulo(app);
+}
 
 let app: HTMLElement;
 
 export function iniciar(raiz: HTMLElement) {
   app = raiz;
-  aoSair(() => castelo());
-  if (carregar()) castelo();
+  aoSair(() => mundo());
+  if (carregar()) mundo();
   else inicio();
 }
 
 function tela(classe: string, ...filhos: (Node | string | null)[]) {
+  pararMundo();
   app.innerHTML = '';
+  app.className = classe === 'inicio' ? 'modo-tela transparente' : 'modo-tela';
+  M.ativo = classe === 'inicio';
   window.scrollTo(0, 0);
   const el = h('main', { class: `tela ${classe}` }, ...filhos);
   app.append(el);
@@ -27,26 +40,27 @@ function tela(classe: string, ...filhos: (Node | string | null)[]) {
 }
 
 function cabecalho(tituloTela: string) {
-  return h('header', { class: 'cabecalho' }, botao('← Castelo', () => castelo(), 'mini'), h('h1', {}, tituloTela));
+  return h('header', { class: 'cabecalho' }, botao('← Menu', () => castelo(), 'mini'), h('h1', {}, tituloTela));
 }
 
 // ---------------------------------------------------------------- início
 
 function inicio() {
   const tem = carregar();
+  C3.irPara('patio', true);
   tela('inicio',
-    h('div', { class: 'capa', html: cenario('castelo') }),
+    h('div', { class: 'capa' }),
     h('div', { class: 'logo' }, h('h1', {}, 'Paranapiacaba'), h('p', {}, 'Escola de Bruxaria Cibernética')),
     h('p', { class: 'chamada' }, 'Sete anos letivos para sair do zero e virar root. Na neblina da serra, com aula de terminal, criatura-malware no viveiro e duelo de feitiço que é comando de verdade.'),
     h('div', { class: 'acoes-col' },
-      tem ? botao('Continuar', () => castelo(), 'primario') : null,
+      tem ? botao('Continuar', () => mundo(), 'primario') : null,
       botao(tem ? 'Começar outra partida' : 'Abrir o convite', () => {
         if (tem && !confirm('Começar de novo apaga a partida salva neste navegador. Exporte o código antes se quiser guardar. Continuar?')) return;
         criacao();
       }, tem ? 'secundario' : 'primario'),
       botao('Tenho um código de save', () => {
         const c = prompt('Cole o código de save:');
-        if (c && importar(c)) castelo();
+        if (c && importar(c)) mundo();
         else if (c) alert('Código inválido. Confere se colou inteiro, igual chave Pix.');
       }, 'secundario')),
     h('p', { class: 'rodape' }, 'Grátis, sem anúncio, sem cadastro. Seu progresso fica só no seu navegador.'),
@@ -114,7 +128,7 @@ function criacao() {
         return;
       }
       novoEstado(nome, pronome, { ...ap });
-      jogarCapitulo(app);
+      historia();
     }, 'primario'), botao('Voltar', () => inicio(), 'secundario')),
   );
   desenha();
@@ -136,7 +150,7 @@ function castelo() {
   } else if (!cap) {
     continuar = h('div', { class: 'cartao-hist' }, h('h2', {}, `${s.pos.ano + 1}º ano em breve`), h('p', {}, 'O roteiro deste ano ainda está em revisão na Secretaria. Enquanto isso, explore o castelo, revise aulas e procure segredos.'));
   } else {
-    continuar = h('button', { class: 'cartao-hist', type: 'button', onclick: () => jogarCapitulo(app) },
+    continuar = h('button', { class: 'cartao-hist', type: 'button', onclick: () => historia() },
       h('div', { class: 'materia' }, `${ano.numero}º ano · ${cap.mes} · capítulo ${s.pos.cap + 1} de ${ano.capitulos.length}`),
       h('h2', {}, personaliza(cap.titulo)),
       h('span', { class: 'btn primario' }, s.pos.passo > 0 ? 'Continuar a história ▶' : 'Começar capítulo ▶'));
@@ -154,6 +168,7 @@ function castelo() {
     ['⚙️', 'Ajustes', ajustes],
   ];
   tela('castelo',
+    h('div', { class: 'acoes-linha' }, botao('← Voltar ao castelo', () => mundo(), 'primario')),
     h('section', { class: 'perfil', style: casa ? `--casa:${casa.cor};--casa2:${casa.cor2}` : '' },
       h('div', { class: 'perfil-ret', html: retratoVoce() }),
       h('div', { class: 'perfil-info' },
@@ -181,69 +196,8 @@ function mapa() {
     h('div', { class: 'grade' }, ...ls.map((l) => {
       const tot = l.segredos?.length ?? 0;
       const ach = (l.segredos ?? []).filter((_, i) => s.segredos.includes(`${l.id}#${i}`)).length;
-      return h('button', { class: 'card', type: 'button', onclick: () => sala(l) }, h('div', { class: 'ic grande' }, ICONE[l.cena]), h('b', {}, l.nome), tot ? h('small', {}, `segredos ${ach}/${tot}`) : h('small', {}, ' '));
+      return h('button', { class: 'card', type: 'button', onclick: () => { estado().onde = l.id; salvar(); mundo(); } }, h('div', { class: 'ic grande' }, ICONE[l.cena]), h('b', {}, l.nome), tot ? h('small', {}, `segredos ${ach}/${tot}`) : h('small', {}, ' '));
     })));
-}
-
-function sala(l: Lugar) {
-  const s = estado();
-  const prompt = `${s.nome.toLowerCase().replace(/[^a-z0-9]/g, '') || 'aluno'}@${l.id}:~$`;
-  const tela_ = h('div', { class: 'term grande' });
-  const saida = (t: string, classe = '') => tela_.insertBefore(h('pre', { class: classe }, t), linha);
-  const linha = h('form', { class: 'term-linha' });
-  const inp = h('input', { type: 'text', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'comando', enterkeyhint: 'go' }) as HTMLInputElement;
-  linha.append(h('span', { class: 'term-prompt' }, prompt + ' '), inp);
-  tela_.append(h('pre', { class: 'term-dica' }, `# Varinha conectada em ${l.nome}. Digite "ajuda".`), linha);
-  const aprendidos = s.feiticos.map((id) => FEITICOS.get(id)).filter((f) => f);
-  const base = (c: string) => c.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
-  linha.addEventListener('submit', (ev) => {
-    ev.preventDefault();
-    const cmd = inp.value.trim();
-    inp.value = '';
-    if (!cmd) return;
-    saida(`${prompt} ${cmd}`);
-    const b = base(cmd);
-    if (b === 'ajuda' || b === 'help') {
-      saida(aprendidos.length ? 'Feitiços que você sabe:\n' + aprendidos.map((f) => `  ${f!.comando.padEnd(22)} ${f!.nome}`).join('\n') : 'Você ainda não aprendeu feitiços. Vai pra aula, criatura.');
-      return;
-    }
-    if (b === 'clear' || b === 'cls') {
-      tela_.querySelectorAll('pre').forEach((p) => p.remove());
-      return;
-    }
-    if (b === 'whoami') return void saida(`${s.nome} (${s.casa ? CASA_INFO[s.casa].nome : 'sem casa'}), nível ${nivel(s.xp)}`);
-    if (b === 'sudo') return void saida(`${s.nome} não está no arquivo sudoers. Este incidente será reportado à Diretora Iolanda.`, 'term-erro');
-    if (/^rm\s+-rf\s+\/\s*$/.test(cmd)) return void saida('Seu Zé do Rack apareceu do nada, tirou o teclado da sua mão e saiu sem dizer uma palavra.', 'term-erro');
-    if (b === 'exit' || b === 'sair') return void mapa();
-    const f = aprendidos.find((x) => base(x!.comando) === b);
-    if (!f) {
-      const existe = [...FEITICOS.values()].some((x) => base(x.comando) === b);
-      return void saida(existe ? 'Você ainda não aprendeu esse feitiço. A varinha faz um barulhinho de erro do Windows 98.' : `${b}: comando não encontrado. O Bitu pisou no teclado?`, 'term-erro');
-    }
-    const segs = (l.segredos ?? []).map((sg, i) => ({ sg, i })).filter((x) => x.sg.feitico === f.id);
-    if (!segs.length) return void saida(`${f.nome}! O feitiço sai bonito, mas nada nesta sala reage.`);
-    for (const { sg, i } of segs) {
-      const k = `${l.id}#${i}`;
-      if (s.segredos.includes(k)) {
-        saida(`${f.nome}! (você já achou isto) ${personaliza(sg.texto)}`);
-        continue;
-      }
-      s.segredos.push(k);
-      salvar();
-      saida(`${f.nome}! ✦ ${personaliza(sg.texto)}`, 'term-saida');
-      aviso(aplicar({ xp: 20, ...(sg.efeito ?? {}) }));
-    }
-    tela_.scrollTop = tela_.scrollHeight;
-  });
-  const tot = l.segredos?.length ?? 0;
-  tela('sala',
-    h('header', { class: 'cabecalho' }, botao('← Mapa', () => mapa(), 'mini'), h('h1', {}, l.nome)),
-    h('div', { class: 'sala-fundo', html: cenario(l.cena) }),
-    h('p', { html: fmt(l.descricao) }),
-    h('p', { class: 'dica' }, tot ? `Algo aqui reage a feitiços. ${tot} segredo${tot > 1 ? 's' : ''} no total.` : 'Nada parece esconder segredo aqui. Parece.'),
-    tela_,
-  );
-  setTimeout(() => inp.focus({ preventScroll: true }), 50);
 }
 
 // ---------------------------------------------------------------- coleções
@@ -354,7 +308,7 @@ function ajustes() {
       }, 'secundario'),
       botao('Carregar outro código', () => {
         const c = prompt('Cole o código de save:');
-        if (c && importar(c)) castelo();
+        if (c && importar(c)) mundo();
         else if (c) alert('Código inválido.');
       }, 'secundario')),
     h('section', {}, h('h3', {}, 'Partida'), h('p', {}, `${esc(s.nome)}, criada em ${new Date(s.criadoEm).toLocaleDateString('pt-BR')}.`),

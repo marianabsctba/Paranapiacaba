@@ -4,13 +4,15 @@ import { ANOS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { CASAS, estado, salvar, zeraPontos } from '../motor/estado';
 import { aplicar, nivel, pontuarRivais, ranking, titulo } from '../motor/progresso';
 import { CASA_INFO, esc, fmt, personaliza } from '../motor/texto';
-import { cenario } from '../arte/cenario';
+import * as C3 from '../tres/cena3d';
+import { J, soltarMouse } from '../tres/jogador';
+import { M } from '../tres/motor3d';
 import { brasao, retrato } from '../arte/retrato';
 import { aviso, botao, espera, h } from './dom';
 import { mostrarExercicio } from './exercicio';
 
 let geracao = 0;
-let palco: { raiz: HTMLElement; fundo: HTMLElement; ret: HTMLElement; caixa: HTMLElement; painel: HTMLElement; local: HTMLElement } | null = null;
+let palco: { raiz: HTMLElement; ret: HTMLElement; caixa: HTMLElement; painel: HTMLElement; local: HTMLElement } | null = null;
 let voltar: () => void = () => {};
 
 export function aoSair(f: () => void) {
@@ -23,7 +25,10 @@ export function cancelarHistoria() {
 
 function montar(app: HTMLElement, cap: Capitulo, anoNum: number) {
   app.innerHTML = '';
-  const fundo = h('div', { class: 'fundo' });
+  app.className = 'modo-historia';
+  M.ativo = true;
+  J.livre = false;
+  soltarMouse();
   const ret = h('div', { class: 'retrato' });
   const caixa = h('div', { class: 'caixa' });
   const painel = h('div', { class: 'painel', hidden: true });
@@ -37,21 +42,16 @@ function montar(app: HTMLElement, cap: Capitulo, anoNum: number) {
     }, 'mini'),
     h('span', { class: 'cap-titulo' }, `Ano ${anoNum} · ${cap.mes} · ${cap.titulo}`),
   );
-  const raiz = h('div', { class: 'palco' }, fundo, topo, local, ret, caixa, painel);
+  const raiz = h('div', { class: 'palco' }, topo, local, ret, caixa, painel);
   app.append(raiz);
-  palco = { raiz, fundo, ret, caixa, painel, local };
+  palco = { raiz, ret, caixa, painel, local };
 }
 
-function lugar(id: string) {
+async function lugar(id: string) {
   if (!palco) return;
   const l = LUGARES.get(id);
-  palco.fundo.innerHTML = cenario(l?.cena);
   palco.local.textContent = l?.nome ?? '';
-  const s = estado();
-  if (l && !s.lugares.includes(id)) {
-    s.lugares.push(id);
-    salvar();
-  }
+  await C3.irPara(id);
 }
 
 /** espera um toque no palco ou Enter/Espaço */
@@ -85,9 +85,8 @@ async function falar(falas: Fala[], g: number) {
     if (g !== geracao || !palco) return;
     const p = PERSONAGENS.get(quem);
     const nome = quem === 'narrador' ? '' : personaliza(p?.nome ?? quem);
-    palco.ret.innerHTML = retrato(quem);
-    palco.ret.classList.toggle('vazio', quem === 'narrador');
-    palco.ret.classList.toggle('voce', quem === 'voce');
+    await C3.foco(quem);
+    if (!palco) return;
     palco.caixa.className = `caixa ${quem === 'narrador' ? 'narracao' : ''}`;
     palco.caixa.innerHTML = '';
     if (nome) palco.caixa.append(h('div', { class: 'nome', style: `color:${p?.cor ?? '#fff'}` }, nome));
@@ -118,7 +117,7 @@ const clique = (el: HTMLElement, texto: string, classe = 'primario') =>
 // ---------------------------------------------------------------- passos
 
 async function escolha(p: Extract<Passo, { tipo: 'escolha' }>, g: number) {
-  lugar(p.lugar);
+  await lugar(p.lugar);
   const painel = abrirPainel();
   painel.classList.add('escolha');
   painel.append(h('h3', { html: fmt(p.pergunta) }));
@@ -141,7 +140,7 @@ export function notaEstrelas(acertos: number, total: number): number {
 
 /** roda uma aula. Em modo revisão (do boletim) só melhora a nota. */
 export async function aula(p: PassoAula, g: number, revisao = false): Promise<void> {
-  lugar(p.lugar);
+  await lugar(p.lugar);
   let painel = abrirPainel();
   painel.classList.add('escolha');
   const prof = PERSONAGENS.get(p.professor);
@@ -154,6 +153,7 @@ export async function aula(p: PassoAula, g: number, revisao = false): Promise<vo
   await clique(painel, revisao ? 'Refazer aula' : 'Entrar na sala');
   painel.classList.remove('escolha');
   fecharPainel();
+  await C3.modoAula(p);
   await falar(p.abertura, g);
   if (g !== geracao) return;
 
@@ -198,10 +198,11 @@ export async function aula(p: PassoAula, g: number, revisao = false): Promise<vo
   );
   await clique(painel, 'Continuar');
   fecharPainel();
+  C3.fimAula();
 }
 
 async function desafio(p: Extract<Passo, { tipo: 'desafio' }>, g: number) {
-  lugar(p.lugar);
+  await lugar(p.lugar);
   await falar(p.antes, g);
   if (g !== geracao) return;
   const painel = abrirPainel();
@@ -218,9 +219,10 @@ const TEMPO: Record<Exercicio['tipo'], number> = { multipla: 30, lacuna: 45, ter
 const FEITICOS_DUELO = ['Firewallus!', 'Patchum Imediatum!', 'Rate Limitus!', 'Revogare Tokenum!', 'Multifatorium!', 'Isolare Hostus!'];
 
 async function duelo(p: PassoDuelo, cap: Capitulo, idx: number, g: number) {
-  lugar(p.lugar);
+  await lugar(p.lugar);
   await falar(p.antes, g);
   if (g !== geracao) return;
+  await C3.modoDuelo(p.oponente);
   let vidaVc = 100;
   let vidaOp = 100;
   const dano = Math.ceil(100 / Math.max(2, Math.ceil(p.rodadas.length * 0.6)));
@@ -228,14 +230,17 @@ async function duelo(p: PassoDuelo, cap: Capitulo, idx: number, g: number) {
   for (let i = 0; i < p.rodadas.length && vidaVc > 0 && vidaOp > 0; i++) {
     const painel = abrirPainel();
     const barras = h('div', { class: 'duelo' },
-      h('div', { class: 'duelista' }, h('div', { class: 'mini-ret', html: retrato('voce') }), h('div', { class: 'vida' }, h('div', { class: 'vida-fill', style: `width:${vidaVc}%` })), h('span', {}, personaliza('{nome}'))),
+      h('div', { class: 'duelista' }, h('div', { class: 'vida' }, h('div', { class: 'vida-fill', style: `width:${vidaVc}%` })), h('span', {}, personaliza('{nome}'))),
       h('div', { class: 'raio', id: 'raio' }),
-      h('div', { class: 'duelista op' }, h('div', { class: 'mini-ret', html: retrato(p.oponente) }), h('div', { class: 'vida' }, h('div', { class: 'vida-fill', style: `width:${vidaOp}%` })), h('span', {}, personaliza(op?.nome ?? ''))));
+      h('div', { class: 'duelista op' }, h('div', { class: 'vida' }, h('div', { class: 'vida-fill', style: `width:${vidaOp}%` })), h('span', {}, personaliza(op?.nome ?? ''))));
     painel.append(h('div', { class: 'desafio-titulo' }, `⚔ ${personaliza(p.titulo)} · Rodada ${i + 1}`), barras);
     const alvo = h('div');
     painel.append(alvo);
     const ok = await mostrarExercicio(alvo, p.rodadas[i], { tempo: TEMPO[p.rodadas[i].tipo], rotuloContinuar: 'Lançar' });
     if (g !== geracao) return;
+    painel.classList.add('transparente');
+    await C3.raio(ok, p.oponente);
+    painel.classList.remove('transparente');
     const raio = barras.querySelector('#raio') as HTMLElement;
     raio.textContent = ok ? FEITICOS_DUELO[i % FEITICOS_DUELO.length] : 'Ai!';
     raio.className = `raio ${ok ? 'vai' : 'volta'}`;
@@ -255,6 +260,7 @@ async function duelo(p: PassoDuelo, cap: Capitulo, idx: number, g: number) {
   aplicar(venceu ? { xp: 60, pontosCasa: 15, atributos: { [p.atributo]: 2 } } : { xp: 20 }).forEach((t) => painel.querySelector('.resultado')!.append(h('div', { class: 'ganho' }, t)));
   await clique(painel, 'Continuar');
   fecharPainel();
+  C3.fimDuelo(p.oponente);
   await falar(venceu ? p.vitoria : p.derrota, g);
 }
 
@@ -308,7 +314,7 @@ const PERGUNTAS_SELECAO: { q: string; r: [string, CasaId][] }[] = [
 ];
 
 async function selecao(g: number) {
-  lugar('refeitorio');
+  await lugar('refeitorio');
   await falar([
     ['narrador', 'O refeitório fica em silêncio. Em cima de um banquinho de madeira, um capacete de obra amarelo pisca dois LEDs azuis.'],
     ['chapeu', 'Boa noite, calouros. Eu sou o Capacete Classificador. Fui treinado em 1997 com 14 alunos e um disquete. Minha acurácia é de 100%, segundo eu mesmo.'],
@@ -319,7 +325,7 @@ async function selecao(g: number) {
     if (g !== geracao) return;
     const painel = abrirPainel();
     painel.classList.add('escolha');
-    painel.append(h('div', { class: 'mini-ret centro', html: retrato('chapeu') }), h('h3', {}, pr.q));
+    painel.append(h('h3', {}, pr.q));
     const c = await new Promise<CasaId>((r) => pr.r.forEach(([t, casa]) => painel.append(h('button', { class: 'opcao', type: 'button', onclick: () => r(casa) }, t))));
     painel.classList.remove('escolha');
     votos[c]++;
@@ -352,7 +358,7 @@ async function selecao(g: number) {
 
 async function fimDeAno(g: number) {
   const s = estado();
-  lugar('refeitorio');
+  await lugar('refeitorio');
   await falar([
     ['iolanda', 'Mais um ano letivo. Ninguém derrubou produção de propósito, o que já é um recorde.'],
     ['iolanda', 'Como dizia minha avó: quem tem backup tem tudo, e quem não tem, tem história para contar. Vamos à Taça das Casas.'],
@@ -394,7 +400,7 @@ async function fimDeAno(g: number) {
 async function executar(p: Passo, cap: Capitulo, idx: number, g: number) {
   switch (p.tipo) {
     case 'cena':
-      lugar(p.lugar);
+      await lugar(p.lugar);
       return falar(p.falas, g);
     case 'escolha':
       return escolha(p, g);
@@ -422,7 +428,7 @@ export async function jogarCapitulo(app: HTMLElement): Promise<void> {
   montar(app, cap, ano.numero);
   if (s.pos.passo === 0) {
     const primeiro = cap.passos.find((x) => 'lugar' in x) as { lugar?: string } | undefined;
-    if (primeiro?.lugar) lugar(primeiro.lugar);
+    if (primeiro?.lugar) await lugar(primeiro.lugar);
     const painel = abrirPainel();
     painel.classList.add('escolha');
     painel.append(h('div', { class: 'resultado abertura-cap' }, h('div', { class: 'materia' }, `Ano ${ano.numero} · ${cap.mes} · capítulo ${s.pos.cap + 1}`), h('h2', {}, personaliza(cap.titulo))));
@@ -434,7 +440,7 @@ export async function jogarCapitulo(app: HTMLElement): Promise<void> {
     if (g !== geracao) return;
     const passo = cap.passos[s.pos.passo];
     const l = 'lugar' in passo ? passo.lugar : undefined;
-    if (l) lugar(l);
+    if (l) await lugar(l);
     await executar(passo, cap, s.pos.passo, g);
     if (g !== geracao) return;
     s.pos.passo++;

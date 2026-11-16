@@ -25,9 +25,14 @@ export function personaliza(s: string): string {
 
 /** texto do conteúdo para HTML: personaliza, escapa e aplica `código`, **negrito** e quebras de linha */
 export function fmt(s: string): string {
-  const partes = esc(personaliza(s)).split('`');
-  return partes
-    .map((p, i) => (i % 2 === 1 ? `<code>${p}</code>` : p.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')))
-    .join('')
+  // código vira marcador primeiro, para o negrito poder envolver trechos com código
+  const codigos: string[] = [];
+  const semCodigo = esc(personaliza(s)).replace(/`([^`]*)`/g, (_m, c: string) => {
+    codigos.push(c);
+    return `\u0000${codigos.length - 1}\u0000`;
+  });
+  return semCodigo
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<b>$1</b>')
+    .replace(/\u0000(\d+)\u0000/g, (_m, i: string) => `<code>${codigos[Number(i)]}</code>`)
     .replace(/\n/g, '<br>');
 }

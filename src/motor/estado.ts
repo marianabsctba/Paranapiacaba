@@ -38,6 +38,7 @@ export interface Estado {
   enfeites: string[]; // itens colocados no dormitório
   formatura: boolean;
   criadoEm: number;
+  onde?: string; // lugar onde a pessoa está no castelo 3D
 }
 
 const CHAVE = 'paranapiacaba.v1';
