@@ -1,8 +1,9 @@
 import type { Ano } from './tipos';
+
 export const ano4: Ano = {
   "numero": 4,
   "titulo": "O Torneio das Bandeiras",
-  "resumo": "CTF web entre Paranapiacaba, Pelotas e Juazeiro. Enzo vira aliado na defesa da loja, um infiltrado altera o placar e a Camada 4 revela o Projeto CHAVE MESTRA.",
+  "resumo": "CTF web entre Paranapiacaba, Pelotas e Juazeiro. Enzo vira aliado na defesa da loja, um infiltrado altera o placar e a Camada 4 revela o Projeto CHAVE MESTRA. Agora são dez capítulos, com investigação e decisões adicionais antes do final.",
   "capitulos": [
     {
       "id": "a4c01",
@@ -1382,7 +1383,7 @@ export const ano4: Ano = {
     {
       "id": "a4c07",
       "titulo": "O cerco",
-      "mes": "Maio",
+      "mes": "Abril",
       "passos": [
         {
           "tipo": "cena",
@@ -1656,8 +1657,524 @@ export const ano4: Ano = {
     },
     {
       "id": "a4c08",
-      "titulo": "O último capítulo",
+      "titulo": "Os Logs das Três Escolas",
+      "mes": "Maio",
+      "passos": [
+        {
+          "tipo": "cena",
+          "lugar": "a4_arena",
+          "falas": [
+            [
+              "narrador",
+              "O placar foi congelado, mas o mesmo identificador de sessão aparece em registros das três escolas. Tati abre uma planilha e Enzo, pela primeira vez, pede para verificar os fatos antes de acusar alguém."
+            ],
+            [
+              "nanda",
+              "Vamos trabalhar com evidências. Herói de palco não recupera sistema."
+            ],
+            [
+              "enzo",
+              "Entendi. Sem adivinhar e sem culpar ninguém antes da hora."
+            ]
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a4_aula_17",
+          "materia": "Artes da Web",
+          "professor": "nanda",
+          "titulo": "Sessões não têm rosto",
+          "atributo": "web",
+          "lugar": "a4_arena",
+          "abertura": [
+            [
+              "nanda",
+              "Hoje: sessões não têm rosto. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Um identificador de sessão autentica uma requisição, mas não demonstra sozinho qual pessoa a realizou. Um invasor pode reutilizar uma sessão indevidamente. Investigue origem, horários e ações com cuidado.",
+            "Revogue sessões comprometidas no servidor, revalide credenciais e registre as evidências. Endereço IP, navegador ou cookie isolados não provam autoria humana."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual evidência prova sozinha quem usou uma sessão?",
+              "opcoes": [
+                "Nenhuma isoladamente",
+                "Um IP público",
+                "O nome do navegador"
+              ],
+              "correta": 0,
+              "explicacao": "É preciso correlacionar evidências."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "sessão"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é sessão."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a4_aula_18",
+          "materia": "Artes da Web",
+          "professor": "zuleica",
+          "titulo": "Linha do tempo entre fusos",
+          "atributo": "forense",
+          "lugar": "a4_arena",
+          "abertura": [
+            [
+              "zuleica",
+              "Hoje: linha do tempo entre fusos. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Uma linha do tempo reúne eventos de múltiplas fontes na ordem em que aconteceram. Logs em diferentes fusos devem ser normalizados em cópias de trabalho para UTC.",
+            "Preserve arquivos originais, calcule hashes e registre lacunas. Correlacione login, mudança de permissões, exportação e alteração do placar. Ausência de log não prova ausência de ação."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Como alinhar registros de três escolas?",
+              "opcoes": [
+                "Normalizar horários para UTC",
+                "Apagar os registros antigos",
+                "Usar o horário de um print"
+              ],
+              "correta": 0,
+              "explicacao": "UTC facilita correlação sem alterar os originais."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "UTC"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é UTC."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "desafio",
+          "lugar": "a4_arena",
+          "titulo": "Decidir a próxima ação",
+          "antes": [
+            [
+              "nanda",
+              "Qual decisão preserva a segurança e o trabalho da equipe?"
+            ]
+          ],
+          "exercicio": {
+            "tipo": "multipla",
+            "pergunta": "O que deve orientar nossa resposta?",
+            "opcoes": [
+              "Evidência, autorização e validação",
+              "Pressão do placar",
+              "Um palpite popular"
+            ],
+            "correta": 0,
+            "explicacao": "Procedimentos e fatos confirmados orientam a resposta."
+          },
+          "depois": [
+            [
+              "bia",
+              "Resposta registrada. Assim ninguém confunde pressa com competência."
+            ]
+          ],
+          "atributo": "defesa"
+        },
+        {
+          "tipo": "escolha",
+          "lugar": "a4_arena",
+          "pergunta": "A equipe precisa decidir como documentar esta etapa.",
+          "opcoes": [
+            {
+              "texto": "Registrar as hipóteses e os resultados separadamente",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "tati": 2
+                }
+              },
+              "resposta": [
+                [
+                  "tati",
+                  "Finalmente uma planilha que a equipe inteira quer preencher."
+                ]
+              ]
+            },
+            {
+              "texto": "Organizar uma revisão coletiva das evidências",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "enzo": 2
+                }
+              },
+              "resposta": [
+                [
+                  "enzo",
+                  "Eu vou ouvir antes de opinar. Sim, isso é novidade."
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tipo": "recompensa",
+          "texto": "Capítulo 8 concluído. A equipe domina mais uma etapa da investigação.",
+          "efeito": {
+            "xp": 50,
+            "atributos": {
+              "defesa": 1,
+              "forense": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a4c09",
+      "titulo": "O Arquivo que Sobrou",
       "mes": "Junho",
+      "passos": [
+        {
+          "tipo": "cena",
+          "lugar": "a4_arena",
+          "falas": [
+            [
+              "narrador",
+              "Um arquivo aparece na fila de uploads da loja simulada, mesmo depois da suspensão do torneio. Cauã quer abri-lo imediatamente. Bia aponta para o isolamento da bancada. Enzo concorda com ela."
+            ],
+            [
+              "nanda",
+              "Vamos trabalhar com evidências. Herói de palco não recupera sistema."
+            ],
+            [
+              "enzo",
+              "Entendi. Sem adivinhar e sem culpar ninguém antes da hora."
+            ]
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a4_aula_19",
+          "materia": "Artes da Web",
+          "professor": "otavio",
+          "titulo": "Uploads sob suspeita",
+          "atributo": "web",
+          "lugar": "a4_arena",
+          "abertura": [
+            [
+              "otavio",
+              "Hoje: uploads sob suspeita. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Extensão e tipo declarados pelo navegador não garantem que um arquivo seja seguro. O servidor precisa validar formato, tamanho e regras de autorização antes de aceitar uploads.",
+            "Armazene fora do diretório executável, gere nomes no servidor e examine amostras suspeitas apenas em ambiente isolado. Não execute arquivos recebidos como teste improvisado."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual é o cuidado correto com um arquivo recebido?",
+              "opcoes": [
+                "Guardar fora de área executável",
+                "Confiar só na extensão",
+                "Executar para descobrir o tipo"
+              ],
+              "correta": 0,
+              "explicacao": "Entrada de terceiros é sempre não confiável."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "upload"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é upload."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a4_aula_20",
+          "materia": "Artes da Web",
+          "professor": "nanda",
+          "titulo": "Corrigir, testar, documentar",
+          "atributo": "defesa",
+          "lugar": "a4_arena",
+          "abertura": [
+            [
+              "nanda",
+              "Hoje: corrigir, testar, documentar. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Uma correção só pode ser considerada validada após reteste no ambiente autorizado. Testes de regressão verificam se a mudança não interrompeu funções legítimas.",
+            "O relatório deve conter falha, impacto, evidência, responsável, mitigação aplicada, resultado de reteste e risco residual. Placar verde não significa sistema seguro."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Como comprovar o funcionamento de uma correção?",
+              "opcoes": [
+                "Reteste com evidências",
+                "Slide com selo de sucesso",
+                "Promessa do fornecedor"
+              ],
+              "correta": 0,
+              "explicacao": "A correção precisa ser validada tecnicamente."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "reteste"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é reteste."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "desafio",
+          "lugar": "a4_arena",
+          "titulo": "Decidir a próxima ação",
+          "antes": [
+            [
+              "nanda",
+              "Qual decisão preserva a segurança e o trabalho da equipe?"
+            ]
+          ],
+          "exercicio": {
+            "tipo": "multipla",
+            "pergunta": "O que deve orientar nossa resposta?",
+            "opcoes": [
+              "Evidência, autorização e validação",
+              "Pressão do placar",
+              "Um palpite popular"
+            ],
+            "correta": 0,
+            "explicacao": "Procedimentos e fatos confirmados orientam a resposta."
+          },
+          "depois": [
+            [
+              "bia",
+              "Resposta registrada. Assim ninguém confunde pressa com competência."
+            ]
+          ],
+          "atributo": "defesa"
+        },
+        {
+          "tipo": "escolha",
+          "lugar": "a4_arena",
+          "pergunta": "A equipe precisa decidir como documentar esta etapa.",
+          "opcoes": [
+            {
+              "texto": "Registrar as hipóteses e os resultados separadamente",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "tati": 2
+                }
+              },
+              "resposta": [
+                [
+                  "tati",
+                  "Finalmente uma planilha que a equipe inteira quer preencher."
+                ]
+              ]
+            },
+            {
+              "texto": "Organizar uma revisão coletiva das evidências",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "enzo": 2
+                }
+              },
+              "resposta": [
+                [
+                  "enzo",
+                  "Eu vou ouvir antes de opinar. Sim, isso é novidade."
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tipo": "recompensa",
+          "texto": "Capítulo 9 concluído. A equipe domina mais uma etapa da investigação.",
+          "efeito": {
+            "xp": 50,
+            "atributos": {
+              "defesa": 1,
+              "forense": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a4c10",
+      "titulo": "A Chave Mestra",
+      "mes": "Julho",
       "passos": [
         {
           "tipo": "cena",
@@ -1929,23 +2446,23 @@ export const ano4: Ano = {
   "personagens": [
     {
       "id": "a4_lia",
-      "nome": "Lia Moraes",
-      "papel": "organizadora do Torneio das Bandeiras e juíza do placar",
-      "cor": "#f4a261",
-      "pele": "#c68642",
-      "cabelo": "#2b1a10",
+      "nome": "Lia Amaral",
+      "papel": "Estudante do Colégio Pampa Digital",
+      "cor": "#7cc5db",
+      "pele": "#b77b55",
+      "cabelo": "#3a2018",
       "estilo": "coque",
-      "roupa": "#264653"
+      "roupa": "#19465c"
     },
     {
       "id": "a4_davi",
-      "nome": "Davi Nogueira",
-      "papel": "juiz técnico do Torneio das Bandeiras",
-      "cor": "#8ab17d",
+      "nome": "Davi Nascimento",
+      "papel": "Mentor da Academia do Sertão",
+      "cor": "#e0b45a",
       "pele": "#8d5524",
-      "cabelo": "#111",
-      "estilo": "barba",
-      "roupa": "#3d405b"
+      "cabelo": "#25150d",
+      "estilo": "curto",
+      "roupa": "#795c22"
     }
   ]
 };
