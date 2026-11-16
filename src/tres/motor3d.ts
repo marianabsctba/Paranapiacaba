@@ -12,6 +12,7 @@ export const M = {
   atualizar: new Set<(dt: number, t: number) => void>(),
   qualidade: 'alta' as Qualidade,
   ativo: false,
+  atualizarSombra: true,
 };
 
 export function lerQualidade(): Qualidade {
@@ -34,7 +35,7 @@ export function definirQualidade(q: Qualidade) {
     /* nada */
   }
   if (!M.renderer) return;
-  M.renderer.setPixelRatio(Math.min(devicePixelRatio, q === 'alta' ? 1.75 : 1));
+  M.renderer.setPixelRatio(Math.min(devicePixelRatio, q === 'alta' ? (matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5) : 0.85));
   M.renderer.shadowMap.enabled = q === 'alta';
   M.cena.traverse((o) => {
     const m = (o as THREE.Mesh).material as THREE.Material | undefined;
@@ -55,7 +56,9 @@ export function iniciar3d(alvo: HTMLElement): HTMLCanvasElement {
   r.toneMappingExposure = 1.3;
   r.shadowMap.enabled = M.qualidade === 'alta';
   r.shadowMap.type = THREE.PCFSoftShadowMap;
-  r.setPixelRatio(Math.min(devicePixelRatio, M.qualidade === 'alta' ? 1.75 : 1));
+  // sombra recalculada algumas vezes por segundo, não a cada quadro
+  r.shadowMap.autoUpdate = false;
+  r.setPixelRatio(Math.min(devicePixelRatio, M.qualidade === 'alta' ? (matchMedia('(pointer: coarse)').matches ? 1.25 : 1.5) : 0.85));
   r.domElement.className = 'tela3d';
   M.renderer = r;
   alvo.prepend(r.domElement);
@@ -66,11 +69,16 @@ export function iniciar3d(alvo: HTMLElement): HTMLCanvasElement {
   window.addEventListener('resize', redimensionar);
   redimensionar();
   M.ativo = true;
+  let quadro = 0;
   r.setAnimationLoop(() => {
     const dt = Math.min(M.relogio.getDelta(), 0.05);
     const t = M.relogio.elapsedTime;
     if (!M.ativo) return;
     for (const f of M.atualizar) f(dt, t);
+    if (++quadro % 6 === 0 || M.atualizarSombra) {
+      r.shadowMap.needsUpdate = true;
+      M.atualizarSombra = false;
+    }
     r.render(M.cena, M.camera);
   });
   return r.domElement;

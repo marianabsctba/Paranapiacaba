@@ -6,7 +6,7 @@ import type { Lugar } from '../conteudo/tipos';
 import * as T from './texturas';
 import { M } from './motor3d';
 import { pbr } from './pbr';
-import { movel } from './moveis';
+import { movel, repetir } from './moveis';
 import { comida, velasFlutuantes } from './banquete';
 import { brasaoSvg } from '../arte/brasao';
 import { CASA_INFO } from '../motor/texto';
@@ -333,10 +333,9 @@ function salao(colunas = false): Area {
   const r = rnd(9);
   if (!colunas) {
     void r;
+    const mesas: { x: number; z: number }[] = [];
     for (const x of [-4.2, -1.4, 1.4, 4.2]) {
-      for (let z = -12; z <= 8; z += 2.1) {
-        movel(g, 'dining_table', x, z, { alt: 0.78, ry: Math.PI / 2 });
-      }
+      for (let z = -12; z <= 8; z += 2.1) mesas.push({ x, z });
       // bancos corridos de refeitório, na altura do assento
       const banco = pbr('assoalho', [0.4, 8]);
       for (const lx of [x - 0.78, x + 0.78]) {
@@ -344,6 +343,7 @@ function salao(colunas = false): Area {
         for (let bz = -12.6; bz <= 8.6; bz += 2.8) caixa(g, 0.28, 0.42, 0.08, banco, lx, 0, bz);
       }
     }
+    repetir(g, 'dining_table', mesas, { alt: 0.78, ry: Math.PI / 2 });
     movel(g, 'vintage_grandfather_clock_01', -W / 2 + 0.5, -D / 2 + 0.8, { alt: 2.3, ry: Math.PI / 2 });
     comida(g, [-4.2, -1.4, 1.4, 4.2].map((x) => ({ x, z0: -13, z1: 9, y: 0.78 })));
     velas = velasFlutuantes(g, -W / 2 + 1, W / 2 - 1, -D / 2 + 1.5, D / 2 - 2, 5.2, 7.6);
@@ -402,27 +402,33 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
     const gab = std({ color: 0xcfc6b0, roughness: 0.6 });
     void tela;
     void gab;
+    const lugares: { x: number; z: number }[] = [];
     for (let fila = 0; fila < 3; fila++)
       for (const x of [-3.2, -1, 1.2, 3.4]) {
         const z = -2.4 + fila * 2.4;
-        movel(g, 'SchoolDesk_01', x, z, { alt: 0.76 });
-        movel(g, 'classic_laptop', x, z - 0.05, { larg: 0.34, y: 0.76, ry: Math.PI });
-        movel(g, 'SchoolChair_01', x, z + 0.62, { alt: 0.84 });
+        lugares.push({ x, z });
         obst.push([x - 0.5, x + 0.5, z - 0.4, z + 1]);
       }
+    repetir(g, 'SchoolDesk_01', lugares, { alt: 0.76 });
+    repetir(g, 'classic_laptop', lugares.map((p) => ({ x: p.x, z: p.z - 0.05 })), { larg: 0.34, y: 0.76, ry: Math.PI }, false);
+    repetir(g, 'SchoolChair_01', lugares.map((p) => ({ x: p.x, z: p.z + 0.62 })), { alt: 0.84, ry: Math.PI });
     movel(g, 'wooden_bookshelf_worn', -W / 2 + 0.45, 3.5, { alt: 2.2, ry: Math.PI / 2 });
     movel(g, 'potted_plant_01', W / 2 - 0.6, -D / 2 + 0.7, { alt: 1.1 });
     assento = { x: 0.1, z: 4.6, yaw: 0 };
   } else if (variante === 'biblioteca') {
     const livros = [0x7a2e2e, 0x2e4a7a, 0x2e6a3a, 0x8a6a2a, 0x5a2e6a, 0x3a3a3a];
     void livros;
+    const estantes: { x: number; z: number }[] = [];
+    const livrosPos: { x: number; z: number; y: number; ry: number }[] = [];
     for (const x of [-4.5, -1.5, 1.5, 4.5]) {
       for (const z of [-3, 1]) {
-        movel(g, 'wooden_bookshelf_worn', x, z, { alt: 2.6 });
-        for (const y of [0.1, 0.55, 1.0, 1.45, 1.9]) for (const dx of [-0.45, 0.45]) movel(g, 'book_encyclopedia_set_01', x + dx, z, { larg: 0.62, y, ry: Math.random() < 0.5 ? 0 : Math.PI });
+        estantes.push({ x, z });
+        for (const y of [0.1, 0.55, 1.0, 1.45, 1.9]) for (const dx of [-0.45, 0.45]) livrosPos.push({ x: x + dx, z, y, ry: r() < 0.5 ? 0 : Math.PI });
         obst.push([x - 1.1, x + 1.1, z - 0.4, z + 0.4]);
       }
     }
+    repetir(g, 'wooden_bookshelf_worn', estantes, { alt: 2.6 });
+    repetir(g, 'book_encyclopedia_set_01', livrosPos, { larg: 0.62 }, false);
     for (const x of [-2.8, 2.8]) {
       movel(g, 'painted_wooden_table', x, 4.3, { larg: 1.6 });
       movel(g, 'book_encyclopedia_set_01', x - 0.3, 4.3, { larg: 0.45, y: 0.76 });

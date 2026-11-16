@@ -75,7 +75,14 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   C.portas = [];
   const l = LUGARES.get(lugarId);
   const a = construir(modeloDoLugar(l));
+  // cada luz pontual encarece todas as superfícies: no máximo 4 (2 no modo leve); as outras lâmpadas só brilham
+  const pontos: THREE.PointLight[] = [];
+  a.grupo.traverse((o) => {
+    if ((o as THREE.PointLight).isPointLight) pontos.push(o as THREE.PointLight);
+  });
+  pontos.sort((p, q) => q.intensity - p.intensity).slice(M.qualidade === 'alta' ? 4 : 2).forEach((p) => p.removeFromParent());
   M.cena.add(a.grupo);
+  M.atualizarSombra = true;
   aplicarAmbiente(a);
   for (const p of a.portas) {
     const m = marcadorPorta(p.x, p.z, p.rotulo);
@@ -268,8 +275,6 @@ export function raio(ida: boolean, oponente: string): Promise<void> {
   const [a, b] = ida ? [de, ate] : [ate, M.camera.position.clone().add(new THREE.Vector3(0, -0.1, 0))];
   const cor = ida ? 0x7df9ff : 0xff3d5a;
   const bola = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), new THREE.MeshBasicMaterial({ color: cor }));
-  const luz = new THREE.PointLight(cor, 6, 5);
-  bola.add(luz);
   const rastro: THREE.Mesh[] = [];
   M.cena.add(bola);
   let t = 0;

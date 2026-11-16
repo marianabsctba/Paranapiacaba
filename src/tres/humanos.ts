@@ -5,6 +5,7 @@ import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { PERSONAGENS } from '../conteudo/index';
+import { criarBicho, type Bicho } from './bichos';
 
 const BASE = import.meta.env.BASE_URL;
 export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
@@ -88,53 +89,6 @@ const CLIPE: Record<string, string> = {
   apanhando: 'Hit_Head', mexendo: 'Interact', comemorando: 'Dance_Loop', formal: 'Walk_Formal_Loop',
 };
 
-// ---------------------------------------------------------------- bichos procedurais
-
-function bicho(id: string): THREE.Group {
-  const g = new THREE.Group();
-  const mat = (c: number, o: THREE.MeshStandardMaterialParameters = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8, ...o });
-  const add = (geo: THREE.BufferGeometry, m: THREE.Material, x: number, y: number, z: number) => {
-    const me = new THREE.Mesh(geo, m);
-    me.position.set(x, y, z);
-    me.castShadow = true;
-    g.add(me);
-    return me;
-  };
-  if (id === 'bitu') {
-    const pelo = mat(0x111111, { roughness: 0.6 });
-    const corpo = add(new THREE.SphereGeometry(0.16, 16, 12), pelo, 0, 0.2, 0);
-    corpo.scale.set(1, 0.9, 1.6);
-    add(new THREE.SphereGeometry(0.11, 16, 12), pelo, 0, 0.34, 0.2);
-    for (const x of [-0.06, 0.06]) {
-      add(new THREE.ConeGeometry(0.035, 0.08, 4), pelo, x, 0.45, 0.2);
-      add(new THREE.SphereGeometry(0.018, 8, 8), mat(0xe8d44d, { emissive: 0xe8d44d, emissiveIntensity: 0.6 }), x * 0.75, 0.36, 0.3);
-    }
-    for (const [x, z] of [[-0.07, 0.15], [0.07, 0.15], [-0.07, -0.15], [0.07, -0.15]]) add(new THREE.CylinderGeometry(0.025, 0.025, 0.14, 6), pelo, x, 0.07, z);
-    const rabo = add(new THREE.CylinderGeometry(0.018, 0.012, 0.32, 6), pelo, 0, 0.36, -0.28);
-    rabo.rotation.x = -0.5;
-  } else if (id === 'chapeu') {
-    add(new THREE.CylinderGeometry(0.22, 0.25, 0.75, 16), mat(0x5a3a20), 0, 0, 0).position.y = 0.375;
-    const casco = add(new THREE.SphereGeometry(0.2, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xf4d35e, { roughness: 0.4 }), 0, 0.78, 0);
-    casco.scale.set(1, 0.9, 1.1);
-    add(new THREE.CylinderGeometry(0.27, 0.27, 0.025, 24), mat(0xe0b92e, { roughness: 0.4 }), 0, 0.78, 0.02);
-    for (const x of [-0.07, 0.07]) add(new THREE.SphereGeometry(0.022, 8, 8), mat(0x000000, { emissive: 0x7df9ff, emissiveIntensity: 3 }), x, 0.84, 0.19);
-  } else if (/edite|pomb/i.test(id + (PERSONAGENS.get(id)?.nome ?? ''))) {
-    const pena = mat(0x8a8f99);
-    const corpo = add(new THREE.SphereGeometry(0.12, 16, 12), pena, 0, 1.1, 0);
-    corpo.scale.set(1, 0.9, 1.4);
-    add(new THREE.SphereGeometry(0.07, 12, 10), mat(0x6a7280), 0, 1.22, 0.12);
-    add(new THREE.ConeGeometry(0.02, 0.06, 6), mat(0xd9a040), 0, 1.22, 0.2).rotation.x = Math.PI / 2;
-    add(new THREE.CylinderGeometry(0.01, 0.01, 1, 4), mat(0x3a2a1a), 0, 0.5, 0);
-  } else {
-    const p = PERSONAGENS.get(id);
-    const cor = new THREE.Color(p?.roupa ?? '#7a5cff');
-    const corpo = add(new THREE.SphereGeometry(0.35, 24, 16), mat(cor.getHex(), { emissive: cor.getHex(), emissiveIntensity: 0.25, roughness: 0.4 }), 0, 0.8, 0);
-    corpo.scale.set(1, 1.2, 1);
-    for (const x of [-0.12, 0.12]) add(new THREE.SphereGeometry(0.06, 12, 10), mat(0xffffff), x, 0.95, 0.3);
-  }
-  return g;
-}
-
 // ---------------------------------------------------------------- humano
 
 export class Humano {
@@ -150,6 +104,8 @@ export class Humano {
   altura = 1.6;
   private dedos: { osso: THREE.Object3D; repouso: THREE.Quaternion; ang: number }[] = [];
   private pesoRelax = 1;
+  private bicho: Bicho | null = null;
+  private semente = Math.random() * 10;
   pronto: Promise<void>;
 
   constructor(public id: string, tinta?: number) {
@@ -157,15 +113,16 @@ export class Humano {
     this.raiz.name = `npc:${id}`;
     const m = modeloDe(id);
     if (!m) {
-      const b = bicho(id);
-      this.raiz.add(b);
-      this.altura = id === 'bitu' ? 0.45 : id === 'chapeu' ? 0.85 : 1.25;
+      this.bicho = criarBicho(id);
+      this.raiz.add(this.bicho.grupo);
+      this.altura = this.bicho.altura;
       this.pronto = Promise.resolve();
       return;
     }
     this.pronto = Promise.all([carregarModelo(m), carregarAnimacoes()]).then(([fonte]) => {
       if (!fonte) {
-        this.raiz.add(bicho(id));
+        this.bicho = criarBicho(id);
+        this.raiz.add(this.bicho.grupo);
         return;
       }
       const modelo = SkeletonUtils.clone(fonte);
@@ -213,6 +170,8 @@ export class Humano {
         const ang = m[1] === 'thumb' ? [0, 0.1, 0.15, 0.1][seg] : [0, 0.14, 0.24, 0.16][seg];
         this.dedos.push({ osso: o, repouso: o.quaternion.clone(), ang });
       });
+      // mãos um pouco menores: a proporção adulta nos corpos de 12 anos deixava as mãos enormes
+      for (const lado of ['l', 'r']) modelo.getObjectByName('hand_' + lado)?.scale.setScalar(0.86);
       this.curvarDedos();
       this.mixer = new THREE.AnimationMixer(modelo);
       this.tocar('parado', 0);
@@ -249,7 +208,8 @@ export class Humano {
       const fora = ombro.getWorldPosition(V4).sub(peito ? peito.getWorldPosition(V5) : r.position);
       fora.y = 0;
       fora.normalize();
-      const braco = V6.set(0, -1, 0).multiplyScalar(0.985).addScaledVector(fora, 0.13).addScaledVector(frente, 0.06).normalize();
+      // braço um pouco afastado do tronco: colado demais, o paletó repuxa e faz corcova no ombro
+      const braco = V6.set(0, -1, 0).multiplyScalar(0.94).addScaledVector(fora, 0.33).addScaledVector(frente, 0.07).normalize();
       this.alinhar(ombro, cot, braco, peso);
       const ante = V7.copy(braco).multiplyScalar(0.96).addScaledVector(frente, 0.26).normalize();
       this.alinhar(cot, mao, ante, peso);
@@ -258,11 +218,11 @@ export class Humano {
   }
 
   /** mão relaxada: dedos levemente dobrados para dentro */
-  curvarDedos() {
+  curvarDedos(fator = 1) {
     const eixo = new THREE.Vector3(CURVA.eixo === 'x' ? 1 : 0, CURVA.eixo === 'y' ? 1 : 0, CURVA.eixo === 'z' ? 1 : 0);
     const q = new THREE.Quaternion();
     for (const d of this.dedos) {
-      q.setFromAxisAngle(eixo, d.ang * CURVA.sinal);
+      q.setFromAxisAngle(eixo, d.ang * CURVA.sinal * fator);
       d.osso.quaternion.copy(d.repouso).multiply(q);
     }
   }
@@ -342,11 +302,13 @@ export class Humano {
       if (andando || ['parado', 'falando', 'feitico', 'apanhando', 'mexendo', 'comemorando'].includes(est)) this.tocarSemMudarEstado(est);
       this.mixer.update(dt);
       // parado: braços soltos; falando: só suaviza o gesto
-      const alvo = est === 'parado' ? 1 : est === 'falando' ? 0.45 : 0;
+      const alvo = est === 'parado' ? 0.75 : est === 'falando' ? 0.35 : 0;
       this.pesoRelax += (alvo - this.pesoRelax) * Math.min(1, dt * 4);
       if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
-    } else if (this.id === 'bitu') {
-      r.children[0].position.y = Math.abs(Math.sin(performance.now() / 600)) * 0.01;
+      // dedos se mexem de leve, como mão relaxada respirando
+      this.curvarDedos(1 + Math.sin(performance.now() / 900 + this.semente) * 0.18);
+    } else if (this.bicho) {
+      this.bicho.animar(performance.now() / 1000 + this.semente, this.estado === 'falando');
     }
   }
 
