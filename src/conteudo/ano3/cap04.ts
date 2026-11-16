@@ -1,0 +1,237 @@
+import type { Capitulo } from '../tipos';
+
+export const cap04: Capitulo = {
+  id: 'a3c04',
+  titulo: 'Natal com Diário de Bordo',
+  mes: 'Dezembro',
+  passos: [
+    {
+      tipo: 'cena',
+      lugar: 'sala_diretora',
+      falas: [
+        ['narrador', 'A cafeteira da Diretora anuncia: "café pronto, severidade info". A Profa. Dulce entra com um relatório preliminar.'],
+        ['a3_dulce', 'Diretora, o SSH está limpo. O ataque não veio por ele. Preciso dos logs do Windows e de mais prazo. Trinta dias não dá para fazer perícia séria.'],
+        ['iolanda', 'Eu liguei para o Secretário. Ele pediu um ofício. Mandei o ofício. Ele pediu o ofício em três vias. Mandei. Ele pediu protocolo. Consegui mais sessenta dias.'],
+        ['iolanda', 'Como diz o provérbio: devagar se vai ao longe, e com log se chega ao culpado.'],
+        ['a3_dulce', 'Então até lá eu quero essa turma lendo Linux de olho fechado e Windows de olho aberto.'],
+      ],
+    },
+    {
+      tipo: 'aula',
+      id: 'a3_journal_auth',
+      materia: 'Defesa e Vigilância',
+      professor: 'nanda',
+      titulo: 'O diário do systemd e a anatomia do auth.log',
+      atributo: 'defesa',
+      lugar: 'a3_sala_coletor',
+      abertura: [
+        ['nanda', 'Pergunta de plantão: o Linux novo do laboratório não tem auth.log. Alguém apagou?'],
+        ['bia', 'Provavelmente não. Mas eu desconfio de tudo por padrão. Sou de Blumenau, a gente desconfia até do chope sem colarinho.'],
+        ['nanda', 'Boa postura. Mas nesse caso o log está no journal. Hoje vocês aprendem o journalctl e a ler o auth.log como se fosse cardápio.'],
+      ],
+      explicacao: [
+        'Em muitos Linux modernos, quem coleta os logs primeiro é o **systemd-journald**, que guarda tudo num formato binário, o **journal**. Algumas distribuições ainda copiam para os arquivos de texto em `/var/log` (via rsyslog), outras não. Se não achar o arquivo, procure no journal. Para ler, use `journalctl`.',
+        'As opções que importam: `journalctl -u ssh` mostra só o serviço SSH (em algumas distribuições o nome é `sshd`); `--since` e `--until` filtram por data, aceitando coisas como `--since today`, `--since "2026-12-01 03:00"` ou `--since "1 hour ago"`; `-f` segue ao vivo, igual o tail; `-p err` mostra só severidade err ou pior; `--utc` mostra os horários em UTC; e `-o json` exporta em JSON para ferramentas de análise.',
+        'Agora o cardápio do auth.log. As linhas que todo analista reconhece de longe: `Failed password for zuleica` (senha errada para usuária que existe); `Failed password for invalid user admin` (o usuário nem existe na máquina, típico de robô); `Accepted password` ou `Accepted publickey` (entrou, com senha ou com chave); `session opened for user` e `session closed` (começo e fim da sessão); e as linhas do `sudo`, com quem, onde e qual comando.',
+        'Tem também as linhas de **criação de conta**, que são ouro para perícia: `useradd[4410]: new user: name=suporte2, UID=1005, GID=1005, home=/home/suporte2, shell=/bin/bash`. E de mudança de grupo: `usermod[4420]: add suporte2 to group sudo`. Conta nova criada de madrugada e colocada no grupo sudo é o jeito clássico de o invasor deixar uma porta para voltar. Isso se chama **persistência**.',
+        'Um padrão para decorar: **muitas falhas seguidas de um sucesso, do mesmo IP**. Isso costuma significar que a força bruta acertou. Cinquenta "Failed password for gavetec from 203.0.113.77" e depois um "Accepted password for gavetec from 203.0.113.77" é a frase "a senha caiu" escrita em log.',
+      ],
+      exercicios: [
+        {
+          tipo: 'terminal',
+          enunciado: 'Mostre o diário do serviço ssh só de hoje.',
+          aceitos: ['(sudo )?journalctl -u sshd? --since ["\']?today["\']?', '(sudo )?journalctl --since ["\']?today["\']? -u sshd?', '(sudo )?journalctl -u sshd?\\.service --since ["\']?today["\']?'],
+          exemplo: 'journalctl -u ssh --since today',
+          saida: 'dez 03 08:01:12 lab-07 sshd[901]: Server listening on 0.0.0.0 port 22.\ndez 03 09:44:30 lab-07 sshd[1220]: Accepted publickey for nanda from 10.0.1.9 port 51200 ssh2\ndez 03 09:44:30 lab-07 sshd[1220]: pam_unix(sshd:session): session opened for user nanda(uid=1001) by (uid=0)',
+          dica: 'journalctl, -u com o nome do serviço, --since today.',
+          explicacao: 'O auth.log não existia, mas o journal tinha tudo. Sempre confira os dois lugares.',
+        },
+        {
+          tipo: 'ligar',
+          enunciado: 'Ligue a opção do journalctl ao que ela faz.',
+          pares: [
+            ['-u ssh', 'só o serviço SSH'],
+            ['--since "1 hour ago"', 'só a última hora'],
+            ['-f', 'segue ao vivo'],
+            ['-p err', 'só severidade err ou pior'],
+            ['--utc', 'mostra os horários em UTC'],
+          ],
+          explicacao: 'Dá para juntar tudo: journalctl -u ssh --since today -p warning --utc.',
+        },
+        {
+          tipo: 'achar',
+          enunciado: 'Neste auth.log de um laboratório, toque nas linhas que mostram persistência: uma conta nova e a promoção dela a administradora.',
+          linhas: [
+            'Dec  4 02:10:44 lab-07 sshd[3001]: Accepted password for estagio from 198.51.100.80 port 40221 ssh2',
+            'Dec  4 02:11:02 lab-07 sudo:  estagio : TTY=pts/0 ; PWD=/home/estagio ; USER=root ; COMMAND=/usr/sbin/useradd -m suporte2',
+            'Dec  4 02:11:02 lab-07 useradd[3050]: new user: name=suporte2, UID=1005, GID=1005, home=/home/suporte2, shell=/bin/sh',
+            'Dec  4 02:11:20 lab-07 usermod[3061]: add suporte2 to group sudo',
+            'Dec  4 08:00:01 lab-07 CRON[3300]: pam_unix(cron:session): session opened for user root by (uid=0)',
+          ],
+          corretas: [2, 3],
+          explicacao: 'O useradd criou "suporte2" e o usermod a pôs no grupo sudo. A linha do sudo mostra o comando, e a do login às 2h de um IP externo é o começo da história, mas a persistência são as duas do meio. Num laboratório real, isso viraria incidente.',
+        },
+        {
+          tipo: 'multipla',
+          pergunta: 'Qual sequência no auth.log é o sinal mais forte de que uma força bruta deu certo?',
+          opcoes: [
+            'Muitos "Failed password" de vários IPs diferentes, sem nenhum sucesso',
+            'Muitos "Failed password" de um IP, seguidos de "Accepted password" do mesmo IP e usuário',
+            'Um "Accepted publickey" de um professor às 9h',
+            'Um "session closed" depois de um "session opened"',
+          ],
+          correta: 1,
+          explicacao: 'Falhas e depois sucesso, mesma origem, mesmo usuário: a senha foi adivinhada. Muitas falhas sem sucesso são só barulho da internet (que ainda vale bloquear).',
+        },
+        {
+          tipo: 'lacuna',
+          enunciado: 'No auth.log, a expressão "Failed password for ___ user admin" indica que a conta admin nem existe na máquina.',
+          aceitos: ['invalid'],
+          explicacao: 'O "invalid user" denuncia robô testando nomes comuns. Se o usuário existe, a linha não tem esse "invalid".',
+        },
+      ],
+      feitico: 'a3_f_journal',
+    },
+    {
+      tipo: 'aula',
+      id: 'a3_ransomware',
+      materia: 'Trato das Criaturas-Malware',
+      professor: 'baltazar',
+      titulo: 'Conhecendo o Sequestrador de Gavetas',
+      atributo: 'defesa',
+      lugar: 'viveiro',
+      abertura: [
+        ['baltazar', 'Gente, este aqui é um Sequestrador de Gavetas de laboratório. Preso, sem rede, sem dente. Eu trouxe para vocês conhecerem o bicho que acusaram de ser meu.'],
+        ['caua', 'Ele é menor do que eu imaginava.'],
+        ['baltazar', 'Os piores são assim. O tubarão você vê de longe. O que afunda barco é cupim no casco.'],
+      ],
+      explicacao: [
+        '**Ransomware** é um malware que **cifra** os arquivos da vítima (usando criptografia de verdade, a mesma que o Prof. Heitor ensinou) e cobra um **resgate** pela chave que desfaz a cifra. Sem a chave, os arquivos viram lixo embaralhado. O nome vem de "ransom", resgate em inglês. O primeiro conhecido é de 1989, distribuído em disquete. Hoje é crime organizado, com "atendimento ao cliente" e tudo.',
+        'Como ele entra? Quase nunca é mágica. As portas mais comuns: **acesso remoto exposto** (RDP, porta 3389, aberto na internet com senha fraca ou padrão); **credenciais roubadas ou compradas** de quem vende acesso inicial; **phishing** com anexo ou link; e **falhas sem atualização** em servidores e VPNs. Repararam? Tudo isso vocês já estudaram. O ransomware é o fim da história; o começo é quase sempre uma senha ou uma porta.',
+        'Antes de cifrar, o grupo costuma passar dias dentro da rede. Cria contas, ganha privilégio de administrador, procura os backups e tenta apagá-los, desliga o antivírus, e copia dados para fora. Essa cópia é a **dupla extorsão**: "paga para destrancar, e paga de novo para eu não publicar". Por isso backup sozinho não resolve tudo, mas sem backup não resolve nada.',
+        'Sinais clássicos de que o bicho está agindo, que vamos procurar nos logs: um monte de arquivo alterado no mesmo minuto, extensões estranhas (como `.gaveta`), um bilhete em toda pasta; no Windows, o comando `vssadmin delete shadows` (apaga as cópias de sombra, que são snapshots do próprio Windows) e o **evento 1102**, log de segurança limpo. Quem apaga o próprio rastro tem medo do rastro.',
+        'E a resposta: **isolar** a máquina da rede sem desligar (desligar pode perder evidência na memória, e às vezes a chave está lá); avisar a equipe de resposta; **não pagar** sem pensar (pagar não garante a chave, financia o próximo ataque, e em vários lugares pode ter implicação legal); preservar logs e evidências; descobrir **por onde entrou** antes de restaurar, senão o bicho volta; e restaurar de um **backup limpo**. A prevenção: MFA, nada de RDP aberto na internet, atualizações, menor privilégio, e backup 3-2-1 testado.',
+      ],
+      exercicios: [
+        {
+          tipo: 'ordenar',
+          enunciado: 'Ordene a vida típica de um ataque de ransomware, do começo ao fim.',
+          itens: [
+            'Acesso inicial (senha padrão no acesso remoto)',
+            'Cria conta e ganha privilégio de administrador',
+            'Procura e apaga backups e cópias de sombra',
+            'Copia dados para fora (exfiltração)',
+            'Cifra os arquivos e deixa o bilhete de resgate',
+          ],
+          explicacao: 'A cifragem é o último ato, o barulhento. Tudo antes deixa rastro em log, e é aí que a defesa ganha tempo.',
+        },
+        {
+          tipo: 'multipla',
+          pergunta: 'O servidor acabou de mostrar o bilhete de resgate. Qual a primeira ação mais adequada?',
+          opcoes: [
+            'Desligar da tomada imediatamente e formatar',
+            'Isolar da rede, sem desligar, e acionar a resposta a incidente',
+            'Pagar logo, antes que o preço suba',
+            'Restaurar o backup agora mesmo, sem investigar',
+          ],
+          correta: 1,
+          explicacao: 'Isolar contém o estrago e preserva evidência. Restaurar sem saber por onde entrou é convidar o bicho para voltar no dia seguinte.',
+        },
+        {
+          tipo: 'achar',
+          enunciado: 'Toque nos comandos que são sinais clássicos de ransomware se preparando num Windows.',
+          linhas: [
+            'C:\\> ipconfig /all',
+            'C:\\> vssadmin delete shadows /all /quiet',
+            'C:\\> wevtutil cl Security',
+            'C:\\> notepad relatorio.txt',
+            'C:\\> bcdedit /set default recoveryenabled no',
+          ],
+          corretas: [1, 2, 4],
+          explicacao: 'Apagar as cópias de sombra, limpar o log de segurança (que gera o evento 1102) e desligar a recuperação do Windows: tudo para dificultar a volta. Detectar esses comandos é uma das melhores defesas.',
+        },
+        {
+          tipo: 'ligar',
+          enunciado: 'Ligue cada porta de entrada à defesa certa.',
+          pares: [
+            ['RDP aberto na internet com senha padrão', 'acesso só por VPN, com MFA e senha única'],
+            ['phishing com anexo', 'treinamento, filtro de e-mail e bloqueio de macro'],
+            ['VPN sem atualização', 'gestão de patches'],
+            ['backup na mesma rede, apagado pelo invasor', 'cópia offline ou imutável'],
+          ],
+          explicacao: 'Toda criatura tem uma rede de contenção que funciona. Nenhuma é feita de pânico.',
+        },
+        {
+          tipo: 'multipla',
+          pergunta: 'O que é dupla extorsão?',
+          opcoes: [
+            'Cifrar os arquivos duas vezes',
+            'Cobrar pela chave e também ameaçar publicar os dados roubados',
+            'Atacar duas empresas no mesmo dia',
+            'Pedir resgate em duas moedas',
+          ],
+          correta: 1,
+          explicacao: 'Com dupla extorsão, até quem tem backup sofre, porque os dados já saíram. Por isso monitorar tráfego de saída também importa.',
+        },
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'refeitorio',
+      falas: [
+        ['narrador', 'Ceia de Natal no castelo. O teto mostra neve falsa, porque a Secretaria não aprovou neve de verdade no orçamento.'],
+        ['narrador', 'A Pomba Edite pousa no seu prato, exausta, com um pacote amarrado na pata e uma carta impressa.'],
+        ['vo_cida', '(carta) Querid{o/a/e} {nome}. Imprimi o grupo da família para você ler. Seu tio Aldo mandou 47 correntes este mês. Uma diz que se não repassar o WhatsApp vai ficar pago. Não repassei.'],
+        ['vo_cida', '(carta) Mandei pé de moleque. A pomba reclamou do peso. Pombo agora tem sindicato? Feliz Natal. PS: não abre e-mail de banco. PS 2: não abre e-mail meu também, que eu não mando e-mail, eu mando carta.'],
+        ['jonas', '"Pomba Edite chegou cansada, com doce e carta na pata; a vó manda corrente apagada, e o tio Aldo é quem mata."'],
+        ['bia', 'Jonas, isso rimou e me ofendeu ao mesmo tempo. Parabéns.'],
+      ],
+    },
+    {
+      tipo: 'escolha',
+      lugar: 'refeitorio',
+      pergunta: 'O Enzo está sozinho na ponta da mesa. O pai dele mandou só um vídeo patrocinado de "Feliz Natal". O que você faz?',
+      opcoes: [
+        {
+          texto: 'Ofereço um pé de moleque da Vó e chamo para a mesa.',
+          efeito: { amizade: { enzo: 3, vo_cida: 1 }, flag: 'a3_natal_enzo', xp: 15 },
+          resposta: [
+            ['enzo', '...Obrigado. É bom. Sua avó cozinha melhor que o chef que meu pai contratou para gravar story.'],
+            ['narrador', 'Ele fica até o fim da ceia. Rindo das rimas do Jonas, inclusive.'],
+          ],
+        },
+        {
+          texto: 'Deixo ele quieto. Às vezes a pessoa quer ficar sozinha.',
+          efeito: { amizade: { enzo: 0 }, xp: 5 },
+          resposta: [
+            ['narrador', 'O Enzo come rápido e vai embora. Na porta, ele olha para a mesa de vocês por um segundo a mais do que precisava.'],
+          ],
+        },
+        {
+          texto: 'Mando um bilhete pela Pomba Edite: "Feliz Natal. Sem patrocínio."',
+          efeito: { amizade: { enzo: 2 }, atributos: { social: 1 }, xp: 10 },
+          resposta: [
+            ['narrador', 'A Edite entrega o bilhete com cara de quem vai cobrar hora extra. O Enzo lê, olha para você e levanta o copo de suco.'],
+          ],
+        },
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'a3_sala_coletor',
+      falas: [
+        ['narrador', 'Noite de Natal. Você passa pela Sala do Coletor e encontra o Prof. Heitor, sozinho, olhando uma tela.'],
+        ['heitor', 'Ah. {nome}. Não deveria estar dormindo? Ou, como diz a Diretora, quem dorme cedo não tem log.'],
+        ['voce', 'O senhor está olhando os logs do ataque?'],
+        ['heitor', 'Estou olhando logs mais antigos. Hábito. Gente que trabalhou com resposta a incidente nunca para de olhar log. Seus pais também não paravam.'],
+        ['narrador', 'Ele fecha a janela antes que você consiga ler. Só dá para ver um ano no canto: 2015.'],
+        ['heitor', 'Boa noite. E feliz Natal. Não espalhe que eu desejei, eu tenho uma reputação.'],
+      ],
+    },
+    {
+      tipo: 'recompensa',
+      texto: 'Presente de Natal da Tati: o Moletom "Meu Fuso é UTC". E o bestiário registrou o Corujão da Exfiltração, o bicho da dupla extorsão. De brinde, a figurinha do Trojan AIDS, o primeiro ransomware.',
+      efeito: { item: 'a3_moletom_utc', criatura: 'a3_corujao', figurinha: 'a3_fig_aids_trojan', xp: 40, amizade: { tati: 2 } },
+    },
+  ],
+};
