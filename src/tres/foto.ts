@@ -40,12 +40,12 @@ export function foto(id: string, tinta?: number, corpoInteiro = false): Promise<
     h.tocar('parado', 0);
     h.update(0.6);
     cena.add(h.raiz);
-    const a = h.altura;
     h.raiz.updateMatrixWorld(true);
     const rosto = h.cabeca();
     if (corpoInteiro) {
-      cam.position.set(0, a * 0.55, a * 2.6);
-      cam.lookAt(0, a * 0.5, 0);
+      const topo = rosto.y + 0.14;
+      cam.position.set(0, topo * 0.52, topo * 2.5);
+      cam.lookAt(0, topo * 0.5, 0);
     } else {
       cam.position.set(rosto.x + 0.08, rosto.y + 0.02, rosto.z + 0.78);
       cam.lookAt(rosto.x, rosto.y - 0.06, rosto.z);

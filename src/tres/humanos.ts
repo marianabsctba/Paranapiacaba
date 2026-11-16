@@ -13,12 +13,15 @@ const DEDO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])\./;
 const DEDO_OSSO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])$/;
 // sinal da curva dos dedos (ajustado olhando as fotos)
 export const CURVA = { sinal: 1, eixo: 'z' as 'x' | 'y' | 'z' };
+const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), V4 = new THREE.Vector3();
+const V5 = new THREE.Vector3(), V6 = new THREE.Vector3(), V7 = new THREE.Vector3(), V8 = new THREE.Vector3();
+const QD = new THREE.Quaternion(), QW = new THREE.Quaternion(), QP = new THREE.Quaternion(), QI = new THREE.Quaternion();
 const carregados = new Map<string, Promise<THREE.Object3D | null>>();
 const clipes: Record<string, THREE.AnimationClip> = {};
 let loader: GLTFLoader | null = null;
 let animacoes: Promise<void> | null = null;
 
-function L(): GLTFLoader {
+export function L(): GLTFLoader {
   if (loader) return loader;
   const draco = new DRACOLoader();
   draco.setDecoderPath(`${BASE}draco/`);
@@ -146,6 +149,7 @@ export class Humano {
   vel = 1.2;
   altura = 1.6;
   private dedos: { osso: THREE.Object3D; repouso: THREE.Quaternion; ang: number }[] = [];
+  private pesoRelax = 1;
   pronto: Promise<void>;
 
   constructor(public id: string, tinta?: number) {
@@ -186,10 +190,13 @@ export class Humano {
             mt.polygonOffsetFactor = prio;
             mt.polygonOffsetUnits = prio;
           }
-          if (/^capa/.test(mt.name) || /^capa/.test(me.name)) mt.side = THREE.DoubleSide;
-          if (tinta !== undefined && /^(capa_borda|cachecol)/.test(mt.name)) {
+          // gravata do uniforme: tecido liso na cor da casa (ou da escola, para visitantes)
+          if (tinta !== undefined && /^gravata/.test(mt.name)) {
             const c = mt.clone();
+            c.map = null;
             c.color = new THREE.Color(tinta);
+            c.roughness = 0.55;
+            c.metalness = 0;
             return c;
           }
           return mt;
@@ -203,7 +210,7 @@ export class Humano {
         const m = DEDO_OSSO.exec(o.name);
         if (!m) return;
         const seg = Number(m[2]);
-        const ang = m[1] === 'thumb' ? [0, 0.1, 0.15, 0.1][seg] : [0, 0.25, 0.4, 0.3][seg];
+        const ang = m[1] === 'thumb' ? [0, 0.1, 0.15, 0.1][seg] : [0, 0.14, 0.24, 0.16][seg];
         this.dedos.push({ osso: o, repouso: o.quaternion.clone(), ang });
       });
       this.curvarDedos();
@@ -211,6 +218,43 @@ export class Humano {
       this.tocar('parado', 0);
       this.mixer.update(Math.random() * 3);
     });
+  }
+
+  /** gira o osso (em espaço de mundo) para o filho apontar na direção pedida */
+  private alinhar(osso: THREE.Object3D, filho: THREE.Object3D, alvo: THREE.Vector3, peso: number) {
+    const a = osso.getWorldPosition(V1);
+    const b = filho.getWorldPosition(V2);
+    const atual = b.sub(a).normalize();
+    QD.setFromUnitVectors(atual, alvo);
+    if (peso < 1) QD.slerp(QI, 1 - peso);
+    osso.getWorldQuaternion(QW);
+    QW.premultiply(QD);
+    osso.parent!.getWorldQuaternion(QP).invert();
+    osso.quaternion.copy(QP.multiply(QW));
+    osso.updateMatrixWorld(true);
+  }
+
+  /** em pé e parado: braços soltos ao lado do corpo, cotovelo pouco dobrado (a animação parada da biblioteca tem postura de luta) */
+  private bracosRelaxados(peso: number) {
+    const r = this.raiz;
+    r.updateMatrixWorld(true);
+    const frente = V3.set(Math.sin(r.rotation.y), 0, Math.cos(r.rotation.y));
+    for (const lado of ['l', 'r']) {
+      const ombro = r.getObjectByName('upperarm_' + lado);
+      const cot = r.getObjectByName('lowerarm_' + lado);
+      const mao = r.getObjectByName('hand_' + lado);
+      const dedo = r.getObjectByName('middle_01_' + lado);
+      if (!ombro || !cot || !mao) continue;
+      const peito = r.getObjectByName('spine_03');
+      const fora = ombro.getWorldPosition(V4).sub(peito ? peito.getWorldPosition(V5) : r.position);
+      fora.y = 0;
+      fora.normalize();
+      const braco = V6.set(0, -1, 0).multiplyScalar(0.985).addScaledVector(fora, 0.13).addScaledVector(frente, 0.06).normalize();
+      this.alinhar(ombro, cot, braco, peso);
+      const ante = V7.copy(braco).multiplyScalar(0.96).addScaledVector(frente, 0.26).normalize();
+      this.alinhar(cot, mao, ante, peso);
+      if (dedo) this.alinhar(mao, dedo, V8.copy(ante).addScaledVector(fora, -0.15).normalize(), peso);
+    }
   }
 
   /** mão relaxada: dedos levemente dobrados para dentro */
@@ -297,6 +341,10 @@ export class Humano {
       const est = andando ? (this.vel > 2 ? 'correndo' : 'andando') : this.estado;
       if (andando || ['parado', 'falando', 'feitico', 'apanhando', 'mexendo', 'comemorando'].includes(est)) this.tocarSemMudarEstado(est);
       this.mixer.update(dt);
+      // parado: braços soltos; falando: só suaviza o gesto
+      const alvo = est === 'parado' ? 1 : est === 'falando' ? 0.45 : 0;
+      this.pesoRelax += (alvo - this.pesoRelax) * Math.min(1, dt * 4);
+      if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
     } else if (this.id === 'bitu') {
       r.children[0].position.y = Math.abs(Math.sin(performance.now() / 600)) * 0.01;
     }

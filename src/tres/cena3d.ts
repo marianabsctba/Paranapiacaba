@@ -102,13 +102,19 @@ function povoar(a: Area) {
   const ids = ['aluno1', 'aluno2', 'aluno3', 'aluno4'];
   const [x0, x1, z0, z1] = a.limites;
   const livre = (x: number, z: number) => !a.obstaculos.some(([ax0, ax1, az0, az1]) => x > ax0 - 0.6 && x < ax1 + 0.6 && z > az0 - 0.6 && z < az1 + 0.6);
-  const ponto = () => {
-    for (let i = 0; i < 20; i++) {
+  // o caminho inteiro precisa estar livre, não só o destino (senão atravessam as mesas)
+  const caminhoLivre = (ax: number, az: number, bx: number, bz: number) => {
+    const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.25);
+    for (let i = 0; i <= n; i++) if (!livre(ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n)) return false;
+    return true;
+  };
+  const ponto = (de?: { x: number; z: number }) => {
+    for (let i = 0; i < 60; i++) {
       const x = x0 + 0.8 + Math.random() * (x1 - x0 - 1.6);
       const z = z0 + 0.8 + Math.random() * (z1 - z0 - 1.6);
-      if (livre(x, z)) return { x, z };
+      if (livre(x, z) && (!de || caminhoLivre(de.x, de.z, x, z))) return { x, z };
     }
-    return { x: 0, z: 0 };
+    return de ?? { x: 0, z: 0 };
   };
   for (const id of ids) {
     const h = new Humano(id, tintaDe(id));
@@ -118,7 +124,7 @@ function povoar(a: Area) {
     C.figurantes.push(h);
     const passear = async () => {
       while (h.raiz.parent) {
-        await h.irPara([ponto()], 0.9 + Math.random() * 0.4);
+        await h.irPara([ponto({ x: h.raiz.position.x, z: h.raiz.position.z })], 0.9 + Math.random() * 0.4);
         h.tocar(Math.random() > 0.5 ? 'falando' : 'parado');
         await new Promise((r) => setTimeout(r, 2000 + Math.random() * 5000));
       }
@@ -127,14 +133,48 @@ function povoar(a: Area) {
   }
 }
 
-let slot = 0;
-/** garante a pessoa em cena, num dos lugares do palco, virada para você */
+const ultimaFala = new Map<string, number>();
+
+/** acha um lugar livre num arco à sua frente: longe das outras pessoas, dos móveis e das paredes */
+function lugarLivre(a: Area): { x: number; z: number } | null {
+  const ocupados = [...C.npcs.values(), ...C.figurantes].map((h) => h.raiz.position);
+  const [x0, x1, z0, z1] = a.limitesNpc ?? a.limites;
+  const obst = [...a.obstaculos, ...(a.obstaculosNpc ?? [])];
+  const fx = -Math.sin(a.entrada.yaw);
+  const fz = -Math.cos(a.entrada.yaw);
+  const ok = (x: number, z: number) =>
+    x > x0 + 0.2 && x < x1 - 0.2 && z > z0 + 0.2 && z < z1 - 0.2 &&
+    !obst.some(([ax0, ax1, az0, az1]) => x > ax0 - 0.35 && x < ax1 + 0.35 && z > az0 - 0.35 && z < az1 + 0.35) &&
+    ocupados.every((p) => Math.hypot(p.x - x, p.z - z) > 0.8) &&
+    Math.hypot(x - J.pos.x, z - J.pos.z) > 1.2;
+  for (const r of [2.0, 2.6, 1.6, 3.2, 3.9, 4.6])
+    for (const ang of [0, 0.32, -0.32, 0.62, -0.62, 0.92, -0.92, 1.2, -1.2]) {
+      const c = Math.cos(ang);
+      const s = Math.sin(ang);
+      const x = J.pos.x + (fx * c - fz * s) * r;
+      const z = J.pos.z + (fx * s + fz * c) * r;
+      if (ok(x, z)) return { x, z };
+    }
+  return null;
+}
+
+/** garante a pessoa em cena, num lugar livre à sua frente, virada para você */
 export async function falante(id: string): Promise<Humano | null> {
   if (id === 'voce' || id === 'narrador' || !C.area) return null;
+  ultimaFala.set(id, performance.now());
   let h = C.npcs.get(id);
   if (!h) {
     h = new Humano(id, tintaDe(id));
-    const p = C.area.palco[slot++ % C.area.palco.length];
+    let p = lugarLivre(C.area);
+    while (!p && C.npcs.size) {
+      // sem espaço: quem está calado há mais tempo sai de cena
+      const sai = [...C.npcs.entries()].filter(([, n]) => !n.raiz.userData.travado).sort((a, b) => (ultimaFala.get(a[0]) ?? 0) - (ultimaFala.get(b[0]) ?? 0))[0];
+      if (!sai) break;
+      sai[1].raiz.removeFromParent();
+      C.npcs.delete(sai[0]);
+      p = lugarLivre(C.area);
+    }
+    p ??= C.area.palco[C.npcs.size % C.area.palco.length];
     h.raiz.position.set(p.x, 0, p.z);
     h.olharPara(J.pos.x, J.pos.z, true);
     C.area.grupo.add(h.raiz);

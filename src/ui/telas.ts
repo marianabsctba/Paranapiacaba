@@ -13,7 +13,46 @@ import { M } from '../tres/motor3d';
 import { imgFoto } from '../tres/foto';
 
 function mundo() {
+  // save antigo, de antes da matrícula 3D: escolhe a aparência antes de entrar
+  if (!estado().aparencia.modelo) return void trocarAparencia(true);
   abrirMundo(app, { menu: () => castelo(), historia: () => historia() });
+}
+
+/** escolher (ou trocar) a aparência 3D depois da matrícula */
+async function trocarAparencia(obrigatorio = false) {
+  const s = estado();
+  let modelo = s.aparencia.modelo ?? APARENCIAS[0];
+  const tinta = C3.tintaDe('voce');
+  const opcoes = h('div', { class: 'aparencias' });
+  APARENCIAS.forEach((id, i) => {
+    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, imgFoto(id, 'foto', tinta));
+    b.addEventListener('click', () => {
+      modelo = id;
+      opcoes.querySelectorAll('.aparencia').forEach((x) => x.classList.remove('sel'));
+      b.classList.add('sel');
+      C3.vitrine(id, tinta);
+    });
+    opcoes.append(b);
+  });
+  await C3.irPara('dormitorio');
+  tela('criacao',
+    h('div', { class: 'ficha' },
+      h('h1', {}, obrigatorio ? 'Escolha sua aparência' : 'Mudar aparência'),
+      h('p', { class: 'dica' }, obrigatorio ? 'Sua matrícula é de antes do espelho chegar no dormitório. Escolha como você quer aparecer.' : 'O espelho do dormitório aceita trocas ilimitadas. Diferente do RH.'),
+      opcoes,
+      h('div', { class: 'acoes-col' },
+        botao('Pronto', () => {
+          C3.vitrine(null);
+          s.aparencia.modelo = modelo;
+          salvar();
+          mundo();
+        }, 'primario'),
+        obrigatorio ? null : botao('Voltar', () => {
+          C3.vitrine(null);
+          ajustes();
+        }, 'secundario'))),
+  );
+  C3.vitrine(modelo, tinta);
 }
 function historia() {
   pararMundo();
@@ -307,6 +346,7 @@ function ajustes() {
         if (c && importar(c)) mundo();
         else if (c) alert('Código inválido.');
       }, 'secundario')),
+    h('section', {}, h('h3', {}, 'Aparência'), botao('Mudar aparência', () => trocarAparencia(), 'secundario')),
     h('section', {}, h('h3', {}, 'Partida'), h('p', {}, `${esc(s.nome)}, criada em ${new Date(s.criadoEm).toLocaleDateString('pt-BR')}.`),
       botao('Tela inicial', () => inicio(), 'secundario'),
       botao('Apagar partida', () => {

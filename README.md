@@ -23,7 +23,8 @@ Enredo e personagens são originais. Toda técnica ofensiva aparece só em labor
 
 - Pessoas em 3D geradas com [MakeHuman](http://www.makehumancommunity.org/) via MPFB no Blender, com assets CC0.
 - Animações da Universal Animation Library, de [Quaternius](https://quaternius.com/) (CC0), adaptadas ao esqueleto do MPFB.
-- Motor 3D: [Three.js](https://threejs.org/) (MIT). Cenários e texturas gerados no próprio código.
+- Texturas e móveis 3D do [Poly Haven](https://polyhaven.com/) (CC0), convertidos para WebP e GLB com Draco (`ferramentas/texturas.mjs` e gltf-transform).
+- Motor 3D: [Three.js](https://threejs.org/) (MIT). Arquitetura do castelo, comida do banquete e velas gerados no próprio código.
 - O gerador do elenco está em `ferramentas/makehuman/gerar.py`.
 
 ## Desenvolvimento

@@ -7,6 +7,7 @@ import { CASA_INFO, esc, fmt, personaliza } from '../motor/texto';
 import * as C3 from '../tres/cena3d';
 import { J, soltarMouse } from '../tres/jogador';
 import { M } from '../tres/motor3d';
+import { modeloDoLugar } from '../tres/areas';
 import { imgFoto } from '../tres/foto';
 import { brasao } from '../arte/brasao';
 import { aviso, botao, espera, h } from './dom';
@@ -140,21 +141,34 @@ export function notaEstrelas(acertos: number, total: number): number {
 }
 
 /** roda uma aula. Em modo revisão (do boletim) só melhora a nota. */
+// Aula só acontece em sala do castelo. Fora da escola (casa, galeria, trem, Secretaria) vira ensinamento,
+// sem sala nem lousa. Dentro da escola mas fora de uma sala (refeitório, pátio), vai para a sala da matéria.
+const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra'];
+const FORA_DA_ESCOLA = ['casa', 'cidade', 'trem', 'colunas'];
+export function ondeEnsina(p: PassoAula): { lugar: string; ensinamento: boolean } {
+  const m = modeloDoLugar(LUGARES.get(p.lugar));
+  if (FORA_DA_ESCOLA.includes(m)) return { lugar: p.lugar, ensinamento: true };
+  if (SALAS.includes(m)) return { lugar: p.lugar, ensinamento: false };
+  const mat = p.materia.toLowerCase();
+  return { lugar: /rede/.test(mat) ? 'torre_redes' : /cripto/.test(mat) ? 'cripta' : 'lab_terminal', ensinamento: false };
+}
+
 export async function aula(p: PassoAula, g: number, revisao = false): Promise<void> {
-  await lugar(p.lugar);
+  const onde = ondeEnsina(p);
+  await lugar(onde.lugar);
   let painel = abrirPainel();
   painel.classList.add('escolha');
   const prof = PERSONAGENS.get(p.professor);
   painel.append(
     h('div', { class: 'aula-capa' },
       h('div', { class: 'aula-ret' }, imgFoto(p.professor, 'foto', C3.tintaDe(p.professor))),
-      h('div', {}, h('div', { class: 'materia' }, p.materia), h('h2', {}, personaliza(p.titulo)), h('div', { class: 'prof' }, prof ? personaliza(prof.nome) : ''),
+      h('div', {}, h('div', { class: 'materia' }, onde.ensinamento ? `Ensinamento · ${p.materia}` : p.materia), h('h2', {}, personaliza(p.titulo)), h('div', { class: 'prof' }, prof ? personaliza(prof.nome) : ''),
         h('div', { class: 'estrelas', html: estrelasHtml(estado().aulas[p.id] ?? 0) }))),
   );
-  await clique(painel, revisao ? 'Refazer aula' : 'Entrar na sala');
+  await clique(painel, revisao ? (onde.ensinamento ? 'Ouvir de novo' : 'Refazer aula') : onde.ensinamento ? 'Ouvir' : 'Entrar na sala');
   painel.classList.remove('escolha');
   fecharPainel();
-  await C3.modoAula(p);
+  if (!onde.ensinamento) await C3.modoAula(p);
   await falar(p.abertura, g);
   if (g !== geracao) return;
 
@@ -191,7 +205,7 @@ export async function aula(p: PassoAula, g: number, revisao = false): Promise<vo
   const frases = ['O professor nem olhou pro celular durante sua resposta. Respeito.', 'Passou raspando, igual boleto pago às 23h59.', 'Bom trabalho. Já pode colocar no LinkedIn com moderação.', 'Excelência! A sala inteira quer copiar seu caderno.'];
   painel.append(
     h('div', { class: 'resultado' },
-      h('h2', {}, 'Aula concluída'),
+      h('h2', {}, onde.ensinamento ? 'Ensinamento concluído' : 'Aula concluída'),
       h('div', { class: 'estrelas grandes', html: estrelasHtml(nota) }),
       h('p', {}, `${acertos} de ${p.exercicios.length} exercícios certos. ${frases[nota]}`),
       revisao && !melhorou ? h('p', { class: 'dica' }, 'Sua nota anterior era igual ou melhor, então ela fica.') : null,
@@ -199,7 +213,7 @@ export async function aula(p: PassoAula, g: number, revisao = false): Promise<vo
   );
   await clique(painel, 'Continuar');
   fecharPainel();
-  C3.fimAula();
+  if (!onde.ensinamento) C3.fimAula();
 }
 
 async function desafio(p: Extract<Passo, { tipo: 'desafio' }>, g: number) {

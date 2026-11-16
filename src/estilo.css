@@ -320,3 +320,6 @@ img.foto.carregando { opacity: .35; }
   #app.criacao { background: linear-gradient(180deg, transparent 0%, transparent 38%, #120e26e8 50%, #120e26f8 100%); }
   .ficha { margin-top: 44vh; width: 100%; }
 }
+
+#app.modo-tela.transparente { max-width: none; }
+.tela.criacao { max-width: none; }

@@ -5,6 +5,9 @@ import * as THREE from 'three';
 import type { Lugar } from '../conteudo/tipos';
 import * as T from './texturas';
 import { M } from './motor3d';
+import { pbr } from './pbr';
+import { movel } from './moveis';
+import { comida, velasFlutuantes } from './banquete';
 
 export interface Area {
   modelo: string;
@@ -15,6 +18,9 @@ export interface Area {
   assento?: { x: number; z: number; yaw: number };
   lousa?: THREE.Mesh;
   limites: [number, number, number, number];
+  // onde os personagens podem ficar, quando é diferente de onde você anda (ex.: entre os bancos do trem)
+  limitesNpc?: [number, number, number, number];
+  obstaculosNpc?: [number, number, number, number][];
   obstaculos: [number, number, number, number][];
   portas: { x: number; z: number; rotulo: string }[];
   ceu: number;
@@ -127,10 +133,10 @@ const COR_CASA = [0xe8a317, 0xff7f11, 0x3fb59f, 0x9ccc65];
 function patio(): Area {
   const g = new THREE.Group();
   const r = rnd(3);
-  plano(g, 140, 140, texMat(T.paralelepipedo([40, 40]), { roughness: 0.95 }), 0, 0, 0, -Math.PI / 2);
-  const tij = texMat(T.tijolo([8, 3]));
-  const tijT = texMat(T.tijolo([3, 6]));
-  const tel = texMat(T.telhado([8, 2]));
+  plano(g, 140, 140, pbr('paralelepipedo', [46, 46]), 0, 0, 0, -Math.PI / 2);
+  const tij = pbr('tijolo', [10, 4]);
+  const tijT = pbr('tijolo', [2, 9]);
+  const tel = pbr('telhado', [10, 3]);
   const madeiraClara = std({ color: 0xe9e1cf, roughness: 0.8 });
   // corpo principal do castelo
   caixa(g, 34, 12, 10, tij, 0, 0, -26);
@@ -189,9 +195,13 @@ function patio(): Area {
   // postes de lampião
   const poste = std({ color: 0x1b1b1b, metalness: 0.6, roughness: 0.5 });
   for (const [x, z] of [[-8, -6], [8, -6], [-8, 14], [8, 14], [-20, 2], [20, 2]]) {
-    cil(g, 0.08, 0.12, 4, poste, x, 0, z, 8);
-    lampiao(g, x, 4.25, z, 9, 14);
+    void poste;
+    movel(g, 'street_lamp_01', x, z, { alt: 4.2 });
+    const luz = lampiao(g, x, 3.75, z, 9, 14);
+    luz.parent!.children.slice(-3, -1).forEach((o) => (o.visible = false));
   }
+  for (const [x, z, ry] of [[-5, -4, 0], [5, -4, 0], [-12, 10, Math.PI / 2], [12, 10, -Math.PI / 2]]) movel(g, 'painted_wooden_bench', x, z, { larg: 1.8, ry });
+  for (const [x, z] of [[-14.6, -15], [-13.8, -14.4], [14.4, -15]]) movel(g, 'Barrel_01', x, z, { alt: 0.9 });
   // árvores da mata atlântica nas bordas
   const tronco = std({ color: 0x3a2a1e, roughness: 1 });
   const folha = std({ color: 0x1f3d22, roughness: 1 });
@@ -231,7 +241,7 @@ function patio(): Area {
   g.add(disco);
   return {
     modelo: 'patio', grupo: g, entrada: { x: 0, z: 12, yaw: 0 }, palco: [{ x: -1.6, z: 8.4 }, { x: 1.4, z: 8.6 }, { x: 0, z: 7.8 }, { x: -3, z: 9.6 }],
-    limites: [-28, 28, -16.6, 26], obstaculos: [[-17, 17, -31, -17], [-27, -15, -29, -15], [15, 27, -29, -15]],
+    limites: [-28, 28, -16.6, 26], obstaculos: [[-17, 17, -31, -17], [-27, -15, -29, -15], [15, 27, -29, -15], [-6, -4, -4.5, -3.5], [4, 6, -4.5, -3.5], [-12.5, -11.5, 9, 11], [11.5, 12.5, 9, 11]],
     portas: [{ x: 0, z: -16.8, rotulo: 'Entrar no castelo' }], ceu: 0x1a2235, neblina: 0.028,
     atualizar: () => {
       const d = new Date();
@@ -243,24 +253,29 @@ function patio(): Area {
 
 function salao(colunas = false): Area {
   const g = new THREE.Group();
+  let velas: ((dt: number, t: number, c?: THREE.Camera) => void) | null = null;
   const W = 14;
   const D = 32;
   const H = 9;
-  salaFechada(g, W, D, H, texMat(T.pedra([5, 3])), texMat(T.tabuado([4, 10])), std({ color: 0x1a1428, roughness: 1 }));
+  salaFechada(g, W, D, H, pbr('pedra', [4, 3]), pbr('assoalho', [4, 9]), std({ color: 0x1a1428, roughness: 1 }));
   const mesa = texMat(T.madeira([3, 1], '#5a3820'), { roughness: 0.55 });
   const r = rnd(9);
   if (!colunas) {
+    void r;
     for (const x of [-4.2, -1.4, 1.4, 4.2]) {
-      caixa(g, 1.2, 0.08, 22, mesa, x, 0.74, -2);
-      for (const z of [-12, -2, 8]) caixa(g, 0.1, 0.74, 0.1, mesa, x, 0, z);
-      for (const lx of [x - 0.85, x + 0.85]) caixa(g, 0.36, 0.45, 22, mesa, lx, 0, -2);
-      // pratos e canecas
-      for (let z = -12; z < 9; z += 1.4) {
-        const p = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.02, 16), std({ color: 0xe8e4da, roughness: 0.3 }));
-        p.position.set(x + (r() > 0.5 ? 0.3 : -0.3), 0.83, z);
-        g.add(p);
+      for (let z = -12; z <= 8; z += 2.1) {
+        movel(g, 'dining_table', x, z, { alt: 0.78, ry: Math.PI / 2 });
+      }
+      // bancos corridos de refeitório, na altura do assento
+      const banco = pbr('assoalho', [0.4, 8]);
+      for (const lx of [x - 0.78, x + 0.78]) {
+        caixa(g, 0.34, 0.06, 22.4, banco, lx, 0.42, -2);
+        for (let bz = -12.6; bz <= 8.6; bz += 2.8) caixa(g, 0.28, 0.42, 0.08, banco, lx, 0, bz);
       }
     }
+    movel(g, 'vintage_grandfather_clock_01', -W / 2 + 0.5, -D / 2 + 0.8, { alt: 2.3, ry: Math.PI / 2 });
+    comida(g, [-4.2, -1.4, 1.4, 4.2].map((x) => ({ x, z0: -13, z1: 9, y: 0.78 })));
+    velas = velasFlutuantes(g, -W / 2 + 1, W / 2 - 1, -D / 2 + 1.5, D / 2 - 2, 5.2, 7.6);
     // estandartes das casas
     COR_CASA.forEach((c, i) => {
       const b = plano(g, 1.6, 4, std({ color: c, roughness: 0.9, side: THREE.DoubleSide }), -4.5 + i * 3, 5.4, -15.9);
@@ -278,7 +293,10 @@ function salao(colunas = false): Area {
     g.add(capa);
   }
   for (const z of [-10, -2, 6]) for (const x of [-W / 2 + 0.02, W / 2 - 0.02]) janela(g, x, 5, z, 1.6, 3.4, x < 0 ? Math.PI / 2 : -Math.PI / 2);
-  for (let z = -12; z <= 8; z += 5) lampiao(g, 0, 6.2, z, 7, 12);
+  for (let z = -12; z <= 8; z += 5) {
+    lampiao(g, 0, 6.2, z, 7, 12);
+    movel(g, 'Chandelier_01', 0, z, { alt: 1.3, y: H, pendurado: true });
+  }
   luzPrincipal(g, 0, 8.6, -2, 0xffd9a8, 60, new THREE.Vector3(0, 0, -2));
   g.add(new THREE.HemisphereLight(0x9a8ab8, 0x3a2a18, 1.1));
   return {
@@ -286,6 +304,7 @@ function salao(colunas = false): Area {
     limites: [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4],
     obstaculos: colunas ? [[-3, 3, -12.6, -11.4]] : [-4.2, -1.4, 1.4, 4.2].map((x) => [x - 1.1, x + 1.1, -13, 9] as [number, number, number, number]),
     portas: [{ x: 0, z: 15.6, rotulo: 'Sair' }], ceu: 0x0e0b18, neblina: 0.012,
+    atualizar: velas ? (dt, t) => velas!(dt, t, M.camera) : undefined,
   };
 }
 
@@ -294,7 +313,7 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
   const W = 12;
   const D = 14;
   const H = variante === 'torre' ? 7 : 4.6;
-  salaFechada(g, W, D, H, variante === 'datacenter' ? std({ color: 0x4a4e58, roughness: 0.8 }) : texMat(T.tijolo([4, 2])), variante === 'datacenter' ? std({ color: 0x8a8f99, roughness: 0.6 }) : texMat(T.tabuado([3, 3])), std({ color: 0x2a2030, roughness: 1 }));
+  salaFechada(g, W, D, H, variante === 'datacenter' ? pbr('concreto', [4, 2]) : pbr('tijolo', [4, 2]), variante === 'datacenter' ? pbr('concreto', [4, 4], { color: 0x9a9fa8 }) : pbr('assoalho', [3, 3]), std({ color: 0x2a2030, roughness: 1 }));
   const madeira = texMat(T.madeira([1, 1], '#5c3a20'), { roughness: 0.6 });
   const r = rnd(variante.length);
   let lousa: THREE.Mesh | undefined;
@@ -306,35 +325,41 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
     lousa = plano(g, 5, 2.4, std({ color: 0xffffff, roughness: 0.95 }), 0, 2.2, -D / 2 + 0.06);
     (lousa.material as THREE.MeshStandardMaterial).map = T.lousa('Paranapiacaba', ['Quem tem backup tem tudo.']);
     caixa(g, 5.3, 0.1, 0.2, madeira, 0, 0.95, -D / 2 + 0.12);
-    caixa(g, 1.6, 0.8, 0.7, madeira, -3.4, 0, -D / 2 + 1.6);
+    movel(g, 'painted_wooden_table', -3.4, -D / 2 + 1.6, { larg: 1.6 });
+    movel(g, 'desk_lamp_arm_01', -3.9, -D / 2 + 1.5, { alt: 0.45, y: 0.76 });
+    obst.push([-4.3, -2.5, -D / 2 + 1, -D / 2 + 2.2]);
   }
   if (variante === 'aula') {
     const tela = std({ color: 0x0b2a14, emissive: 0x2bff6a, emissiveIntensity: 0.6 });
     const gab = std({ color: 0xcfc6b0, roughness: 0.6 });
+    void tela;
+    void gab;
     for (let fila = 0; fila < 3; fila++)
       for (const x of [-3.2, -1, 1.2, 3.4]) {
         const z = -2.4 + fila * 2.4;
-        caixa(g, 1.4, 0.06, 0.7, madeira, x, 0.74, z);
-        for (const px of [-0.6, 0.6]) caixa(g, 0.06, 0.74, 0.6, madeira, x + px, 0, z);
-        caixa(g, 0.5, 0.36, 0.36, gab, x, 0.8, z - 0.1);
-        const t = plano(g, 0.4, 0.27, tela, x, 0.98, z + 0.085);
-        t.rotation.x = -0.08;
-        caixa(g, 0.44, 0.45, 0.4, madeira, x, 0, z + 0.75);
-        obst.push([x - 0.75, x + 0.75, z - 0.4, z + 1]);
+        movel(g, 'SchoolDesk_01', x, z, { alt: 0.76 });
+        movel(g, 'classic_laptop', x, z - 0.05, { larg: 0.34, y: 0.76, ry: Math.PI });
+        movel(g, 'SchoolChair_01', x, z + 0.62, { alt: 0.84 });
+        obst.push([x - 0.5, x + 0.5, z - 0.4, z + 1]);
       }
+    movel(g, 'wooden_bookshelf_worn', -W / 2 + 0.45, 3.5, { alt: 2.2, ry: Math.PI / 2 });
+    movel(g, 'potted_plant_01', W / 2 - 0.6, -D / 2 + 0.7, { alt: 1.1 });
     assento = { x: 0.1, z: 4.6, yaw: 0 };
   } else if (variante === 'biblioteca') {
     const livros = [0x7a2e2e, 0x2e4a7a, 0x2e6a3a, 0x8a6a2a, 0x5a2e6a, 0x3a3a3a];
+    void livros;
     for (const x of [-4.5, -1.5, 1.5, 4.5]) {
-      for (const z of [-3, 1, 5]) {
-        caixa(g, 2.2, 3.6, 0.5, madeira, x, 0, z);
-        for (let prat = 0; prat < 5; prat++)
-          for (let k = 0; k < 14; k++) {
-            const hl = 0.42 + r() * 0.2;
-            caixa(g, 0.12, hl, 0.32, std({ color: livros[Math.floor(r() * livros.length)], roughness: 0.8 }), x - 1 + k * 0.145, 0.15 + prat * 0.7, z + 0.12);
-          }
-        obst.push([x - 1.2, x + 1.2, z - 0.4, z + 0.4]);
+      for (const z of [-3, 1]) {
+        movel(g, 'wooden_bookshelf_worn', x, z, { alt: 2.6 });
+        for (const y of [0.1, 0.55, 1.0, 1.45, 1.9]) for (const dx of [-0.45, 0.45]) movel(g, 'book_encyclopedia_set_01', x + dx, z, { larg: 0.62, y, ry: Math.random() < 0.5 ? 0 : Math.PI });
+        obst.push([x - 1.1, x + 1.1, z - 0.4, z + 0.4]);
       }
+    }
+    for (const x of [-2.8, 2.8]) {
+      movel(g, 'painted_wooden_table', x, 4.3, { larg: 1.6 });
+      movel(g, 'book_encyclopedia_set_01', x - 0.3, 4.3, { larg: 0.45, y: 0.76 });
+      movel(g, 'desk_lamp_arm_01', x + 0.55, 4.2, { alt: 0.45, y: 0.76 });
+      obst.push([x - 0.95, x + 0.95, 3.8, 4.8]);
     }
   } else if (variante === 'datacenter') {
     const rack = std({ color: 0x15161a, metalness: 0.6, roughness: 0.4 });
@@ -356,8 +381,9 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
     // torre: antenas, mesa de rádio e janelas para a noite
     const metal = std({ color: 0x7a8088, metalness: 0.8, roughness: 0.35 });
     for (let i = 0; i < 6; i++) cil(g, 0.03, 0.05, 2.5 + r() * 2, metal, -4 + i * 1.6, 0, -5.4, 6);
-    caixa(g, 3, 0.9, 1, madeira, 3, 0, -4.6);
-    caixa(g, 1, 0.4, 0.5, std({ color: 0x222222 }), 3, 0.9, -4.6);
+    movel(g, 'painted_wooden_table', 3, -4.6, { larg: 1.6 });
+    movel(g, 'classic_laptop', 3, -4.6, { larg: 0.34, y: 0.76, ry: Math.PI });
+    movel(g, 'desk_lamp_arm_01', 3.6, -4.7, { alt: 0.45, y: 0.76 });
   }
   for (const z of [-3, 2]) janela(g, W / 2 - 0.02, 2.4, z, 1.4, 2.2, -Math.PI / 2);
   for (const x of [-2.5, 2.5]) lampiao(g, x, H - 0.9, 0, 5, 9);
@@ -376,15 +402,15 @@ function dormitorio(): Area {
   const g = new THREE.Group();
   const W = 9;
   const D = 10;
-  salaFechada(g, W, D, 4, texMat(T.pedra([3, 2])), texMat(T.tabuado([3, 3])), std({ color: 0x3a2a1e, roughness: 1 }));
+  salaFechada(g, W, D, 4, pbr('pedra', [3, 2]), pbr('assoalho', [3, 3]), std({ color: 0x3a2a1e, roughness: 1 }));
   const madeira = texMat(T.madeira([1, 1], '#4a2c18'), { roughness: 0.6 });
   const obst: Area['obstaculos'] = [];
   for (const [x, z] of [[-3.2, -3], [-3.2, 0.5], [3.2, -3], [3.2, 0.5]]) {
-    caixa(g, 1.1, 0.45, 2.1, madeira, x, 0, z);
-    caixa(g, 1.0, 0.18, 2.0, std({ map: T.tecido('#7a2a3a').map, roughness: 1 }), x, 0.45, z);
-    caixa(g, 0.7, 0.14, 0.4, std({ color: 0xf2efe6, roughness: 1 }), x, 0.63, z - 0.75);
-    caixa(g, 1.1, 1.2, 0.08, madeira, x, 0, z - 1.05);
-    caixa(g, 0.9, 0.5, 0.5, madeira, x + (x < 0 ? 1 : -1) * 0.2, 0, z + 1.4);
+    void madeira;
+    movel(g, 'GothicBed_01', x, z, { larg: 2.15, ry: x < 0 ? Math.PI / 2 : -Math.PI / 2 });
+    movel(g, 'treasure_chest', x + (x < 0 ? 0.15 : -0.15), z + 1.45, { larg: 0.85 });
+    movel(g, 'ClassicNightstand_01', x + (x < 0 ? -0.1 : 0.1), z - 1.45, { alt: 0.6 });
+    movel(g, 'wooden_lantern_01', x + (x < 0 ? -0.1 : 0.1), z - 1.45, { alt: 0.32, y: 0.6 });
     obst.push([x - 0.6, x + 0.6, z - 1.1, z + 1.7]);
   }
   plano(g, 3, 4, std({ map: T.tecido('#5a3a6a', [3, 3]).map, roughness: 1 }), 0, 0.01, -1, -Math.PI / 2);
@@ -406,31 +432,26 @@ function casa(): Area {
   const g = new THREE.Group();
   const W = 7;
   const D = 8;
-  salaFechada(g, W, D, 2.8, std({ color: 0xe6d3b0, roughness: 0.95 }), texMat(T.ladrilho([5, 6]), { roughness: 0.5, bumpScale: 0.3 }), std({ color: 0xf0eadc, roughness: 1 }));
-  const sofa = std({ map: T.tecido('#7a3b5a').map, roughness: 1 });
-  caixa(g, 2.4, 0.45, 0.9, sofa, -1.2, 0, -2.9);
-  caixa(g, 2.4, 0.5, 0.25, sofa, -1.2, 0.45, -3.25);
+  salaFechada(g, W, D, 2.8, pbr('reboco', [3, 1.5]), texMat(T.ladrilho([5, 6]), { roughness: 0.5, bumpScale: 0.3 }), std({ color: 0xf0eadc, roughness: 1 }));
+  movel(g, 'Sofa_01', -1.2, -3.1, { larg: 2.2 });
+  movel(g, 'CoffeeTable_01', -1.2, -1.7, { larg: 1.1 });
+  movel(g, 'Television_01', 2, -3.55, { alt: 0.55, y: 0.6 });
   const madeira = texMat(T.madeira([1, 1], '#6b4528'), { roughness: 0.6 });
   caixa(g, 1.6, 0.6, 0.45, madeira, 2, 0, -3.5);
-  caixa(g, 1.3, 0.75, 0.06, std({ color: 0x050505, roughness: 0.2, emissive: 0x223355, emissiveIntensity: 0.4 }), 2, 0.6, -3.55);
   // o roteador de cabeça para baixo, claro
   const rot = caixa(g, 0.32, 0.06, 0.2, std({ color: 0x222222 }), 2.6, 0.62, -3.3);
   rot.rotation.z = Math.PI;
   const led = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), std({ color: 0x000000, emissive: 0x33ff55, emissiveIntensity: 3 }));
   led.position.set(2.5, 0.6, -3.19);
   g.add(led);
-  caixa(g, 1, 0.75, 0.7, madeira, 0.5, 0, 1);
   // planta e imagem na parede
-  cil(g, 0.18, 0.14, 0.35, std({ color: 0x9a4a2a }), -3, 0, 2.8, 12);
-  const folha = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), std({ color: 0x2f6a2a, roughness: 1 }));
-  folha.position.set(-3, 0.7, 2.8);
-  g.add(folha);
+  movel(g, 'potted_plant_01', -3, 2.8, { alt: 1.2 });
   janela(g, -W / 2 + 0.02, 1.5, 0, 1.2, 1.2, Math.PI / 2, 0x9cc4e8);
   luzPrincipal(g, 0, 2.7, 0, 0xfff0d8, 18, new THREE.Vector3(0, 0, -1));
   g.add(new THREE.HemisphereLight(0xfff4e0, 0x6a5040, 1.1));
   return {
     modelo: 'casa', grupo: g, entrada: { x: 0, z: 2.8, yaw: 0 }, palco: [{ x: -0.8, z: 0.4 }, { x: 0.9, z: 0.3 }, { x: 0, z: 0 }, { x: -1.8, z: 0.8 }],
-    limites: [-W / 2 + 0.3, W / 2 - 0.3, -D / 2 + 0.3, D / 2 - 0.3], obstaculos: [[-2.5, 0.1, -3.5, -2.3], [1.1, 2.9, -3.8, -3.1], [-0.05, 1.05, 0.6, 1.4]],
+    limites: [-W / 2 + 0.3, W / 2 - 0.3, -D / 2 + 0.3, D / 2 - 0.3], obstaculos: [[-2.4, 0, -3.6, -2.6], [-1.8, -0.6, -2.1, -1.3], [1.1, 2.9, -3.8, -3.1]],
     portas: [{ x: 0, z: D / 2 - 0.4, rotulo: 'Sair de casa' }], ceu: 0x9cc4e8, neblina: 0.01,
   };
 }
@@ -460,6 +481,8 @@ function trem(): Area {
   return {
     modelo: 'trem', grupo: g, entrada: { x: 0, z: 6.5, yaw: 0 }, palco: [{ x: -0.6, z: 4.6 }, { x: 0.6, z: 4.4 }, { x: 0, z: 4 }, { x: 0, z: 3 }],
     limites: [-0.5, 0.5, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: [],
+    limitesNpc: [-1.45, 1.45, -D / 2 + 0.4, D / 2 - 0.4],
+    obstaculosNpc: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [[-1.55, -0.55, z - 0.3, z + 0.32], [0.55, 1.55, z - 0.3, z + 0.32]] as [number, number, number, number][]),
     portas: [{ x: 0, z: -D / 2 + 0.5, rotulo: 'Descer do trem' }], ceu: 0x6f8098, neblina: 0.01,
     atualizar: (_dt, t) => {
       fora.emissiveIntensity = 0.65 + Math.sin(t * 2.3) * 0.08 + Math.sin(t * 7.1) * 0.04;
@@ -507,7 +530,10 @@ function masmorra(): Area {
   const g = new THREE.Group();
   const W = 10;
   const D = 12;
-  salaFechada(g, W, D, 4, texMat(T.pedra([4, 2]), { color: 0x9a9aa8 }), texMat(T.pedra([4, 4]), { color: 0x7a7a88 }), texMat(T.pedra([4, 4]), { color: 0x5a5a68 }));
+  salaFechada(g, W, D, 4, pbr('pedra', [4, 2]), pbr('pedra', [4, 4], { color: 0x9a9aa8 }), pbr('pedra', [4, 4], { color: 0x6a6a78 }));
+  movel(g, 'treasure_chest', 3.6, -3.4, { larg: 1.1, ry: -0.4 });
+  movel(g, 'wooden_candlestick', 3.6, -3.4, { alt: 0.35, y: 0.62 });
+  for (const [bx, bz] of [[-4, 3.8], [-3.3, 4.3]]) movel(g, 'Barrel_01', bx, bz, { alt: 0.95 });
   const cofre = std({ color: 0x4a4a55, metalness: 0.8, roughness: 0.35 });
   const ouro = std({ color: 0xc9b26b, metalness: 1, roughness: 0.3 });
   const obst: Area['obstaculos'] = [];
@@ -542,7 +568,7 @@ function masmorra(): Area {
 function floresta(lago = false): Area {
   const g = new THREE.Group();
   const r = rnd(lago ? 77 : 41);
-  plano(g, 120, 120, texMat(T.grama([30, 30]), { roughness: 1 }), 0, 0, 0, -Math.PI / 2);
+  plano(g, 120, 120, pbr('chao_mata', [36, 36]), 0, 0, 0, -Math.PI / 2);
   const tronco = std({ color: 0x3a2a1e, roughness: 1 });
   const folhas = [0x1f3d22, 0x24482a, 0x18341c].map((c) => std({ color: c, roughness: 1 }));
   for (let i = 0; i < (lago ? 60 : 140); i++) {
@@ -594,7 +620,7 @@ function floresta(lago = false): Area {
 
 function campo(): Area {
   const g = new THREE.Group();
-  plano(g, 140, 140, texMat(T.grama([40, 40]), { roughness: 1 }), 0, 0, 0, -Math.PI / 2);
+  plano(g, 140, 140, pbr('grama', [46, 46]), 0, 0, 0, -Math.PI / 2);
   const ouro = std({ color: 0xd9b54f, metalness: 0.9, roughness: 0.3 });
   for (const z of [-30, 30])
     for (const [x, h] of [[-4, 12], [0, 15], [4, 10]]) {
