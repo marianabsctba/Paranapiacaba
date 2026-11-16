@@ -1,8 +1,9 @@
 import type { Ano } from './tipos';
+
 export const ano7: Ano = {
   "numero": 7,
   "titulo": "O Grande Apagão",
-  "resumo": "O Nulo derruba as redes das escolas. Com Active Directory, Kerberos, hunting e recuperação, a turma reencontra Lena e Rui, reconstrói a confiança e conclui a saga.",
+  "resumo": "O Nulo derruba as redes das escolas. Com Active Directory, Kerberos, hunting e recuperação, a turma reencontra Lena e Rui, reconstrói a confiança e conclui a saga. Agora são dez capítulos, com investigação e decisões adicionais antes do final.",
   "capitulos": [
     {
       "id": "a7c01",
@@ -1390,7 +1391,7 @@ export const ano7: Ano = {
     {
       "id": "a7c07",
       "titulo": "Reconstruir a Confiança",
-      "mes": "Maio",
+      "mes": "Abril",
       "passos": [
         {
           "tipo": "cena",
@@ -1664,8 +1665,524 @@ export const ano7: Ano = {
     },
     {
       "id": "a7c08",
-      "titulo": "A Chave é Sua",
+      "titulo": "Os Ecos do Domínio",
+      "mes": "Maio",
+      "passos": [
+        {
+          "tipo": "cena",
+          "lugar": "a7_centro_crise",
+          "falas": [
+            [
+              "narrador",
+              "Com Rui a salvo, Lena encontra indícios de atividade semelhante em vários controladores. Tati propõe hipóteses verificáveis. O Nulo deixou rastros, mas também armadilhas para provocar acusações precipitadas."
+            ],
+            [
+              "nanda",
+              "Vamos trabalhar com evidências. Herói de palco não recupera sistema."
+            ],
+            [
+              "enzo",
+              "Entendi. Sem adivinhar e sem culpar ninguém antes da hora."
+            ]
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a7_aula_17",
+          "materia": "Resposta a Incidentes",
+          "professor": "nanda",
+          "titulo": "Caça entre controladores",
+          "atributo": "forense",
+          "lugar": "a7_centro_crise",
+          "abertura": [
+            [
+              "nanda",
+              "Hoje: caça entre controladores. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Threat hunting consulta fontes de telemetria para testar hipóteses sobre atividade adversária. No Windows, 4624 registra logon bem-sucedido e 4625 registra tentativa de logon com falha, conforme auditoria habilitada.",
+            "A análise deve combinar período, identidade, origem e comportamento. Um evento isolado não demonstra intenção. Documente sempre limites de retenção e cobertura dos sensores."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual evento representa logon bem-sucedido?",
+              "opcoes": [
+                "4624",
+                "4625",
+                "1102"
+              ],
+              "correta": 0,
+              "explicacao": "4624 é um evento de logon com êxito."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "4624"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é 4624."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a7_aula_18",
+          "materia": "Resposta a Incidentes",
+          "professor": "a7_lena",
+          "titulo": "Hipótese, não adivinhação",
+          "atributo": "defesa",
+          "lugar": "a7_centro_crise",
+          "abertura": [
+            [
+              "a7_lena",
+              "Hoje: hipótese, não adivinhação. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "Uma hipótese de hunting deve indicar exatamente que comportamento se espera encontrar, quais sistemas serão consultados e qual período será analisado.",
+            "Se uma fonte não produz logs, isso limita a investigação. Relate a lacuna em vez de concluir que não houve comprometimento."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "O que concluir quando faltam logs de um controlador?",
+              "opcoes": [
+                "Há uma lacuna de visibilidade",
+                "Não houve ataque",
+                "O domínio já está seguro"
+              ],
+              "correta": 0,
+              "explicacao": "Ausência de dados não equivale a ausência de ameaça."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "hunting"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é hunting."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "desafio",
+          "lugar": "a7_centro_crise",
+          "titulo": "Decidir a próxima ação",
+          "antes": [
+            [
+              "nanda",
+              "Qual decisão preserva a segurança e o trabalho da equipe?"
+            ]
+          ],
+          "exercicio": {
+            "tipo": "multipla",
+            "pergunta": "O que deve orientar nossa resposta?",
+            "opcoes": [
+              "Evidência, autorização e validação",
+              "Pressão do placar",
+              "Um palpite popular"
+            ],
+            "correta": 0,
+            "explicacao": "Procedimentos e fatos confirmados orientam a resposta."
+          },
+          "depois": [
+            [
+              "bia",
+              "Resposta registrada. Assim ninguém confunde pressa com competência."
+            ]
+          ],
+          "atributo": "defesa"
+        },
+        {
+          "tipo": "escolha",
+          "lugar": "a7_centro_crise",
+          "pergunta": "A equipe precisa decidir como documentar esta etapa.",
+          "opcoes": [
+            {
+              "texto": "Registrar as hipóteses e os resultados separadamente",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "tati": 2
+                }
+              },
+              "resposta": [
+                [
+                  "tati",
+                  "Finalmente uma planilha que a equipe inteira quer preencher."
+                ]
+              ]
+            },
+            {
+              "texto": "Organizar uma revisão coletiva das evidências",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "enzo": 2
+                }
+              },
+              "resposta": [
+                [
+                  "enzo",
+                  "Eu vou ouvir antes de opinar. Sim, isso é novidade."
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tipo": "recompensa",
+          "texto": "Capítulo 8 concluído. A equipe domina mais uma etapa da investigação.",
+          "efeito": {
+            "xp": 50,
+            "atributos": {
+              "defesa": 1,
+              "forense": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a7c09",
+      "titulo": "O Plano que Não Cabe no PowerPoint",
       "mes": "Junho",
+      "passos": [
+        {
+          "tipo": "cena",
+          "lugar": "a7_centro_crise",
+          "falas": [
+            [
+              "narrador",
+              "A Secretaria exige o retorno de todos os sistemas de uma vez. Iolanda responde com dependências de DNS, autenticação e aplicações. Lena desenha o plano de retomada no quadro enquanto Enzo revisa os privilégios."
+            ],
+            [
+              "nanda",
+              "Vamos trabalhar com evidências. Herói de palco não recupera sistema."
+            ],
+            [
+              "enzo",
+              "Entendi. Sem adivinhar e sem culpar ninguém antes da hora."
+            ]
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a7_aula_19",
+          "materia": "Resposta a Incidentes",
+          "professor": "ruth",
+          "titulo": "Recuperar por dependências",
+          "atributo": "defesa",
+          "lugar": "a7_centro_crise",
+          "abertura": [
+            [
+              "ruth",
+              "Hoje: recuperar por dependências. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "A recuperação de um incidente amplo deve priorizar infraestrutura confiável, serviços críticos e dependências. DNS e autenticação podem ser pré-requisitos de aplicações e operações.",
+            "Restaure apenas backups íntegros e verificados, erradique persistências, teste cada onda de recuperação e mantenha planos de reversão."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Como organizar o retorno de serviços?",
+              "opcoes": [
+                "Por dependências e validação",
+                "Por ordem alfabética",
+                "Por reclamações no chat"
+              ],
+              "correta": 0,
+              "explicacao": "Recuperação coordenada reduz reinfecção e indisponibilidade."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "recuperação"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é recuperação."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "aula",
+          "id": "a7_aula_20",
+          "materia": "Resposta a Incidentes",
+          "professor": "heitor",
+          "titulo": "A rotação da krbtgt",
+          "atributo": "cripto",
+          "lugar": "a7_centro_crise",
+          "abertura": [
+            [
+              "heitor",
+              "Hoje: a rotação da krbtgt. A solução exige evidências, não poderes de adivinhação."
+            ],
+            [
+              "tati",
+              "Vou registrar a hipótese e a resposta na planilha."
+            ]
+          ],
+          "explicacao": [
+            "A conta krbtgt protege tíquetes Kerberos TGT. Após comprometimento, geralmente são necessárias duas rotações coordenadas para invalidar a confiança em segredos antigos.",
+            "Não execute duas mudanças imediatamente: considere replicação, validade dos tíquetes e controladores somente leitura. Siga o plano de recuperação e orientações técnicas aplicáveis."
+          ],
+          "exercicios": [
+            {
+              "tipo": "multipla",
+              "pergunta": "Por que coordenar as duas rotações de krbtgt?",
+              "opcoes": [
+                "Para respeitar replicação e validade dos tíquetes",
+                "Porque o firewall exige",
+                "Porque DNS impede alteração"
+              ],
+              "correta": 0,
+              "explicacao": "O intervalo e a sequência devem proteger a disponibilidade."
+            },
+            {
+              "tipo": "lacuna",
+              "enunciado": "Complete o conceito estudado: ___",
+              "aceitos": [
+                "krbtgt"
+              ],
+              "explicacao": "Nesta aula, a palavra-chave é krbtgt."
+            },
+            {
+              "tipo": "ligar",
+              "enunciado": "Associe cada prática à finalidade.",
+              "pares": [
+                [
+                  "Coleta",
+                  "Reunir dados de fontes autorizadas"
+                ],
+                [
+                  "Integridade",
+                  "Detectar alterações indevidas"
+                ],
+                [
+                  "Correlação",
+                  "Relacionar eventos de várias fontes"
+                ],
+                [
+                  "Reteste",
+                  "Confirmar a eficácia da correção"
+                ]
+              ],
+              "explicacao": "O ciclo de evidências inclui coleta, integridade, correlação e validação."
+            },
+            {
+              "tipo": "multipla",
+              "pergunta": "Qual princípio vale durante a investigação?",
+              "opcoes": [
+                "Preservar evidências e agir no escopo autorizado",
+                "Apagar todos os logs",
+                "Divulgar dados pessoais"
+              ],
+              "correta": 0,
+              "explicacao": "Rastreabilidade e responsabilidade são essenciais."
+            }
+          ]
+        },
+        {
+          "tipo": "desafio",
+          "lugar": "a7_centro_crise",
+          "titulo": "Decidir a próxima ação",
+          "antes": [
+            [
+              "nanda",
+              "Qual decisão preserva a segurança e o trabalho da equipe?"
+            ]
+          ],
+          "exercicio": {
+            "tipo": "multipla",
+            "pergunta": "O que deve orientar nossa resposta?",
+            "opcoes": [
+              "Evidência, autorização e validação",
+              "Pressão do placar",
+              "Um palpite popular"
+            ],
+            "correta": 0,
+            "explicacao": "Procedimentos e fatos confirmados orientam a resposta."
+          },
+          "depois": [
+            [
+              "bia",
+              "Resposta registrada. Assim ninguém confunde pressa com competência."
+            ]
+          ],
+          "atributo": "defesa"
+        },
+        {
+          "tipo": "escolha",
+          "lugar": "a7_centro_crise",
+          "pergunta": "A equipe precisa decidir como documentar esta etapa.",
+          "opcoes": [
+            {
+              "texto": "Registrar as hipóteses e os resultados separadamente",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "tati": 2
+                }
+              },
+              "resposta": [
+                [
+                  "tati",
+                  "Finalmente uma planilha que a equipe inteira quer preencher."
+                ]
+              ]
+            },
+            {
+              "texto": "Organizar uma revisão coletiva das evidências",
+              "efeito": {
+                "xp": 20,
+                "amizade": {
+                  "enzo": 2
+                }
+              },
+              "resposta": [
+                [
+                  "enzo",
+                  "Eu vou ouvir antes de opinar. Sim, isso é novidade."
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "tipo": "recompensa",
+          "texto": "Capítulo 9 concluído. A equipe domina mais uma etapa da investigação.",
+          "efeito": {
+            "xp": 50,
+            "atributos": {
+              "defesa": 1,
+              "forense": 1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "a7c10",
+      "titulo": "Formatura na Neblina",
+      "mes": "Julho",
       "passos": [
         {
           "tipo": "cena",
