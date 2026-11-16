@@ -8,6 +8,8 @@ import { M } from './motor3d';
 import { pbr } from './pbr';
 import { movel } from './moveis';
 import { comida, velasFlutuantes } from './banquete';
+import { brasaoSvg } from '../arte/brasao';
+import { CASA_INFO } from '../motor/texto';
 
 export interface Area {
   modelo: string;
@@ -124,6 +126,75 @@ function janela(g: THREE.Object3D, x: number, y: number, z: number, w: number, h
 function rnd(semente: number) {
   let s = semente >>> 0;
   return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+}
+
+/** estandarte de tecido com o brasão bordado e a ponta em rabo de andorinha */
+function estandarte(g: THREE.Object3D, casa: 'oncarina' | 'tucanal' | 'capivarias' | 'jararacas', x: number, y: number, z: number) {
+  const info = CASA_INFO[casa];
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 640;
+  const c = cv.getContext('2d')!;
+  const pano = () => {
+    c.clearRect(0, 0, 256, 640);
+    c.beginPath();
+    c.moveTo(0, 0);
+    c.lineTo(256, 0);
+    c.lineTo(256, 640);
+    c.lineTo(128, 560);
+    c.lineTo(0, 640);
+    c.closePath();
+    const gr = c.createLinearGradient(0, 0, 256, 0);
+    gr.addColorStop(0, info.cor2);
+    gr.addColorStop(0.5, info.cor);
+    gr.addColorStop(1, info.cor2);
+    c.fillStyle = gr;
+    c.fill();
+    c.strokeStyle = '#d9a520';
+    c.lineWidth = 10;
+    c.stroke();
+    for (let i = 0; i < 256; i += 3) {
+      c.fillStyle = 'rgba(0,0,0,0.05)';
+      c.fillRect(i, 0, 1, 640);
+    }
+  };
+  pano();
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const img = new Image();
+  img.onload = () => {
+    c.drawImage(img, 28, 70, 200, 240);
+    c.fillStyle = '#f2e6c8';
+    c.font = 'italic 22px Georgia, serif';
+    c.textAlign = 'center';
+    const palavras = info.lema.split(' ');
+    let linha = '';
+    let yy = 360;
+    for (const p of palavras) {
+      if (c.measureText(linha + p).width > 210) {
+        c.fillText(linha.trim(), 128, yy);
+        yy += 28;
+        linha = '';
+      }
+      linha += p + ' ';
+    }
+    c.fillText(linha.trim(), 128, yy);
+    tex.needsUpdate = true;
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(brasaoSvg(casa));
+  const geo = new THREE.PlaneGeometry(1.6, 4, 8, 16);
+  // leve ondulação do tecido
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) pos.setZ(i, Math.sin(pos.getY(i) * 2.2 + pos.getX(i)) * 0.04);
+  geo.computeVertexNormals();
+  const m = new THREE.Mesh(geo, std({ map: tex, roughness: 0.92, side: THREE.DoubleSide, alphaTest: 0.5, transparent: false }));
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  g.add(m);
+  const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.9, 8), std({ color: 0xd9a520, metalness: 0.9, roughness: 0.3 }));
+  haste.rotation.z = Math.PI / 2;
+  haste.position.set(x, y + 2.03, z + 0.03);
+  g.add(haste);
 }
 
 const COR_CASA = [0xe8a317, 0xff7f11, 0x3fb59f, 0x9ccc65];
@@ -277,10 +348,7 @@ function salao(colunas = false): Area {
     comida(g, [-4.2, -1.4, 1.4, 4.2].map((x) => ({ x, z0: -13, z1: 9, y: 0.78 })));
     velas = velasFlutuantes(g, -W / 2 + 1, W / 2 - 1, -D / 2 + 1.5, D / 2 - 2, 5.2, 7.6);
     // estandartes das casas
-    COR_CASA.forEach((c, i) => {
-      const b = plano(g, 1.6, 4, std({ color: c, roughness: 0.9, side: THREE.DoubleSide }), -4.5 + i * 3, 5.4, -15.9);
-      b.castShadow = true;
-    });
+    (['oncarina', 'tucanal', 'capivarias', 'jararacas'] as const).forEach((casa, i) => estandarte(g, casa, -4.5 + i * 3, 5.2, -15.9));
   } else {
     const coluna = std({ color: 0xd8d0bc, roughness: 0.7 });
     for (const x of [-5, 5]) for (let z = -13; z <= 11; z += 6) cil(g, 0.45, 0.5, H, coluna, x, 0, z, 20);
