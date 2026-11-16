@@ -4,7 +4,7 @@ Jogo para o navegador que ensina segurança cibernética do zero, numa escola de
 
 ## Regras de escrita (valem para todo texto do jogo)
 
-1. **Nunca usar travessão** (os caracteres "—" e "–"). Use vírgula, dois-pontos, parênteses ou ponto. O teste automático reprova.
+1. **Nunca usar travessão** (nem o longo, nem o meia-risca, Unicode U+2014 e U+2013). Use vírgula, dois-pontos, parênteses ou ponto. O teste automático reprova.
 2. **Português com acentuação correta** em tudo que a pessoa lê. Identificadores (ids, chaves) em ASCII sem acento.
 3. **Tudo original.** O jogo é do gênero "escola de magia", mas não reconta nem imita cenas, personagens, falas ou acontecimentos de nenhum livro ou filme existente. Nada de trocar nomes de personagens conhecidos por trocadilhos. Os personagens e o enredo desta bíblia são nossos; invente a partir deles.
 4. **Técnica de verdade.** Comando, porta, protocolo, número de evento do Windows, tudo correto e verificável. Humor nunca troca a informação certa por piada errada. A explicação da aula é didática, do zero, como um bom professor faria.

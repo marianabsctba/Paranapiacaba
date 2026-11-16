@@ -129,6 +129,21 @@ export interface PassoDesafio {
   atributo: Atributo;
 }
 
+// Duelo de feitiços (estilo jogo de escola de magia de celular): rodadas rápidas com tempo.
+// Cada rodada é um exercício curto (de preferência 'multipla', 'lacuna' ou 'terminal').
+// Acertar tira vida do oponente; errar tira a sua. O motor cuida de vida, tempo e animação.
+export interface PassoDuelo {
+  tipo: 'duelo';
+  lugar: LugarId;
+  oponente: Quem;
+  titulo: string; // ex.: 'Duelo no Clube de Duelos: você contra Enzo'
+  antes: Fala[];
+  rodadas: Exercicio[]; // de 3 a 6
+  vitoria: Fala[];
+  derrota: Fala[]; // perder não trava a história, só muda a reação
+  atributo: Atributo;
+}
+
 // Libera coisas e mostra um aviso bonito
 export interface PassoRecompensa {
   tipo: 'recompensa';
@@ -151,6 +166,7 @@ export type Passo =
   | PassoAula
   | PassoEscolha
   | PassoDesafio
+  | PassoDuelo
   | PassoRecompensa
   | PassoSelecao
   | PassoFimDeAno;

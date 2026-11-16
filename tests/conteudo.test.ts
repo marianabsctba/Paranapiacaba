@@ -123,6 +123,16 @@ function conferePasso(p: Passo, onde: string) {
       confereFalas(p.depois, onde);
       confereExercicio(p.exercicio, onde);
       break;
+    case 'duelo':
+      confereLugar(p.lugar, onde);
+      expect(personagens.set.has(p.oponente), `${onde}: oponente ${p.oponente}`).toBe(true);
+      confereFalas(p.antes, onde);
+      confereFalas(p.vitoria, onde);
+      confereFalas(p.derrota, onde);
+      expect(p.rodadas.length, onde).toBeGreaterThanOrEqual(3);
+      expect(p.rodadas.length, onde).toBeLessThanOrEqual(6);
+      p.rodadas.forEach((e, i) => confereExercicio(e, `${onde} rodada${i}`));
+      break;
     case 'recompensa':
       confereEfeito(p.efeito, onde);
       break;
@@ -183,6 +193,8 @@ for (const ano of anos) {
       const aulas = ano.capitulos.flatMap((c) => c.passos.filter((p) => p.tipo === 'aula'));
       expect(ano.capitulos.length).toBeGreaterThanOrEqual(8);
       expect(aulas.length).toBeGreaterThanOrEqual(16);
+      const duelos = ano.capitulos.flatMap((c) => c.passos.filter((p) => p.tipo === 'duelo'));
+      expect(duelos.length, 'pelo menos 2 duelos por ano').toBeGreaterThanOrEqual(2);
     });
   });
 }
