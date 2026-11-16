@@ -1926,5 +1926,26 @@ export const ano4: Ano = {
       "cena": "castelo"
     }
   ],
-  "personagens": []
+  "personagens": [
+    {
+      "id": "a4_lia",
+      "nome": "Lia Moraes",
+      "papel": "organizadora do Torneio das Bandeiras e juíza do placar",
+      "cor": "#f4a261",
+      "pele": "#c68642",
+      "cabelo": "#2b1a10",
+      "estilo": "coque",
+      "roupa": "#264653"
+    },
+    {
+      "id": "a4_davi",
+      "nome": "Davi Nogueira",
+      "papel": "juiz técnico do Torneio das Bandeiras",
+      "cor": "#8ab17d",
+      "pele": "#8d5524",
+      "cabelo": "#111",
+      "estilo": "barba",
+      "roupa": "#3d405b"
+    }
+  ]
 };
