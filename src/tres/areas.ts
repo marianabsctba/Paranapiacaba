@@ -967,6 +967,8 @@ function vila(): Area {
   return {
     modelo: 'vila', grupo: g, entrada: { x: 0, z: L / 2 - 3, yaw: 0 }, palco: [{ x: -1, z: L / 2 - 5.2 }, { x: 1.1, z: L / 2 - 5.4 }, { x: 0, z: L / 2 - 6 }, { x: -1.8, z: L / 2 - 6.4 }],
     limites: [-RUA / 2 + 0.3, RUA / 2 - 0.3, -L / 2 + 1, L / 2 - 1], obstaculos: obst,
+    // a Tati e o Cauã passeando na rua
+    gente: [{ id: 'tati', x: 1.4, z: L / 2 - 8, ry: Math.PI * 0.8 }, { id: 'caua', x: 0.5, z: L / 2 - 8.6, ry: -Math.PI * 0.85 }],
     portas: [...portas, { x: 0, z: L / 2 - 0.8, rotulo: 'Voltar pela estrada' }], ceu: 0x9aa6b4, neblina: 0.03,
     atualizar: (_dt, t) => brilhos.forEach((b, i) => (b.emissiveIntensity = 0.85 + Math.sin(t * 1.3 + i) * 0.08)),
   };
@@ -1078,7 +1080,7 @@ function loja(tipo: 'doceria' | 'teclados' | 'livraria' | 'correio' | 'pegadinha
   caixa(g, 4, 1, 0.8, madeira, 0, 0, -D / 2 + 1.6);
   const atualiza: ((t: number) => void)[] = [];
   const rr = rnd(tipo.length * 13);
-  const gente: NonNullable<Area['gente']> = [{ id: ['adulta1', 'adulto1', 'adulta2', 'adulto1', 'adulta1'][['doceria', 'teclados', 'livraria', 'correio', 'pegadinhas'].indexOf(tipo)], x: 0.8, z: -D / 2 + 0.8, ry: 0 }];
+  const gente: NonNullable<Area['gente']> = [{ id: ({ doceria: 'vila_lurdinha', teclados: 'vila_kenji', livraria: 'vila_firmina', correio: 'vila_oswaldo', pegadinhas: 'vila_juca' } as Record<string, string>)[tipo], x: 0.8, z: -D / 2 + 0.8, ry: 0 }];
   if (tipo === 'doceria') {
     // vitrine de vidro com doces coloridos
     const vidro = std({ color: 0xddeeff, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.25 });

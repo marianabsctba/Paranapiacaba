@@ -80,6 +80,11 @@ SPECS = [
     dict(id="nulo", f=0, anos=38, raca="caucasian", peso=0.38, musc=0.45, alt=0.72, cabelo="short04", roupas=["male_elegantsuit01", "shoes01"], capa=0, pele="middleage_caucasian_male"),
     # figurantes adultos para personagens de cada ano
     dict(id="dalva", f=1, anos=45, raca="caucasian", peso=0.5, musc=0.4, alt=0.5, cabelo="long01", roupas=["toigo_female_suit_2", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="vila_lurdinha", f=1, anos=55, raca="african", peso=0.7, musc=0.4, alt=0.4, cabelo="afro01", roupas=["toigo_fisherman_sweater", "toigo_long_full_skirt", "toigo_ballet_flats"], capa=0, pele="middleage_african_female"),
+    dict(id="vila_kenji", f=0, anos=58, raca="asian", peso=0.5, musc=0.45, alt=0.45, cabelo="short01", roupas=["namuhekam_male_polo_shirt", "toigo_wool_pants", "shoes03"], capa=0, pele="middleage_asian_male"),
+    dict(id="vila_firmina", f=1, anos=62, raca=PARDO, peso=0.55, musc=0.35, alt=0.4, cabelo="ponytail01", roupas=["female_elegantsuit01", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="vila_oswaldo", f=0, anos=55, raca=PARDO, peso=0.65, musc=0.5, alt=0.5, cabelo="short04", roupas=["male_worksuit01", "toigo_ankle_boots_male"], capa=0, pele="middleage_caucasian_male"),
+    dict(id="vila_juca", f=0, anos=30, raca="african", peso=0.45, musc=0.5, alt=0.6, cabelo="afro01", roupas=["male_casualsuit02", "shoes02"], capa=0, pele="young_african_male"),
     dict(id="adulto1", f=0, anos=40, raca=PARDO, peso=0.6, musc=0.5, alt=0.55, cabelo="short04", roupas=["male_casualsuit03", "shoes02"], capa=0, pele="middleage_african_male"),
     dict(id="adulta1", f=1, anos=38, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="long01", roupas=["female_elegantsuit01", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
     dict(id="adulta2", f=1, anos=50, raca="caucasian", peso=0.55, musc=0.4, alt=0.45, cabelo="ponytail01", roupas=["toigo_female_suit_2", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),

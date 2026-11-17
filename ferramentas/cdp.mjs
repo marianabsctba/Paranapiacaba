@@ -2,7 +2,7 @@
 // Uso: node tools/cdp.mjs <url> <roteiro.json> <pasta-de-saida>
 // Roteiro: lista de passos { "eval": "expr" } | { "espera": ms } | { "foto": "nome.png" } | { "tecla": "KeyE", "segura": ms }
 import { spawn, execSync } from 'node:child_process';
-import { writeFileSync, readFileSync, mkdirSync } from 'node:fs';
+import { rmSync, writeFileSync, readFileSync, mkdirSync } from 'node:fs';
 
 const [url, roteiroArq, saida = 'D:/Temp/pnp'] = process.argv.slice(2);
 mkdirSync(saida, { recursive: true });
@@ -54,4 +54,8 @@ for (const p of roteiro) {
     console.log('foto', p.foto);
   }
 }
-matar(); process.exit(0);
+matar();
+// o perfil do navegador de teste é descartável: apaga para não lotar o disco (cada execução criava um novo)
+await esperar(800);
+try { rmSync(perfil, { recursive: true, force: true }); } catch { /* nada */ }
+process.exit(0);
