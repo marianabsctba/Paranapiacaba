@@ -9,6 +9,7 @@ import { Humano, preCarregar } from './humanos';
 import { M } from './motor3d';
 import { J, OLHO, posicionar } from './jogador';
 import { lousa as texLousa } from './texturas';
+import { repetir } from './moveis';
 
 export const C = {
   area: null as Area | null,
@@ -99,7 +100,12 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
     if (l && !s.lugares.includes(lugarId)) s.lugares.push(lugarId);
     salvar();
   }
-  if (ambiente) povoar(a);
+  encenado = '';
+  feitos.clear();
+  if (ambiente) {
+    povoar(a);
+    await encenar(momentoDoLugar());
+  }
   await fade(false);
 }
 
@@ -228,8 +234,9 @@ export async function modoAula(p: PassoAula) {
     mat.map = texLousa(textoLimpo(p.titulo), frases);
     mat.needsUpdate = true;
   }
+  await encenar('aula');
   if (a.assento) {
-    posicionar(a.assento.x, a.assento.z, a.assento.yaw, 1.32);
+    posicionar(a.assento.x, a.assento.z, a.assento.yaw, 1.08);
     J.alvoOlhar = a.lousa ? a.lousa.getWorldPosition(new THREE.Vector3()).setY(1.9) : prof?.cabeca() ?? null;
   } else if (prof) J.alvoOlhar = prof.cabeca();
   prof?.olharPara(J.pos.x, J.pos.z);
@@ -364,4 +371,96 @@ export function alvoNaMira(): Alvo {
 
 export function preCarregarElenco() {
   preCarregar(['tati', 'caua', 'bia', 'jonas', 'enzo', 'vo_cida', 'baltazar', 'iolanda', 'otavio', 'aluno1', 'aluno2', 'aluno3', 'aluno4']);
+}
+
+// ---------------------------------------------------------------- encenação (lugar cheio de gente)
+
+export type Momento = 'aula' | 'banquete' | 'selecao' | 'trem';
+let encenado = '';
+const feitos = new Set<Momento>();
+const ROSTOS = ['aluno1', 'aluno2', 'aluno3', 'aluno4', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
+
+function sentar(id: string, p: { x: number; z: number; ry: number }, tinta?: number) {
+  const a = C.area!;
+  const h = new Humano(id, tinta);
+  h.sentado = true;
+  h.raiz.position.set(p.x, 0, p.z);
+  h.raiz.rotation.y = p.ry;
+  h.raiz.userData.travado = true;
+  a.grupo.add(h.raiz);
+  C.figurantes.push(h);
+  h.pronto.then(() => {
+    h.tocar('parado', 0);
+    h.update(Math.random() * 3);
+  });
+  return h;
+}
+
+/** enche o lugar de gente conforme o momento da história (idempotente por lugar e momento) */
+export async function encenar(momento: Momento | null) {
+  const a = C.area;
+  if (!a || !momento || !temPartida()) return;
+  const chave = `${C.lugarId}:${momento}`;
+  if (encenado === chave) return;
+  encenado = chave;
+  const jaTemBanquete = feitos.has('banquete');
+  feitos.add(momento);
+  const s = estado();
+  const meu = s.aparencia.modelo;
+  const rostos = ROSTOS.filter((r) => r !== meu);
+  const leve = M.qualidade === 'baixa';
+  let k = 0;
+  const proximo = () => rostos[k++ % rostos.length];
+  if (momento === 'aula' && a.assentos) {
+    const amigos = ['tati', 'caua', 'bia', 'jonas'];
+    a.assentos.slice(0, leve ? 5 : 9).forEach((p, i) => sentar(i < amigos.length ? amigos[i] : proximo(), p, tintaDe(i < amigos.length ? amigos[i] : 'aluno1')));
+  }
+  if ((momento === 'banquete' || (momento === 'selecao' && !jaTemBanquete)) && a.assentos) {
+    // espalha alunos pelas quatro mesas, cada mesa com a gravata da sua casa
+    const porMesa = leve ? 2 : 5;
+    for (let casa = 0; casa < 4; casa++) {
+      const lugares = a.assentos.filter((p) => p.casa === casa);
+      for (let i = 0; i < porMesa; i++) sentar(proximo(), lugares[(i * 3 + casa) % lugares.length], corCasa(CASAS[casa]));
+    }
+  }
+  if (momento === 'selecao') {
+    // mesa alta dos professores no fundo, o Capacete no banquinho e os calouros na frente
+    const profs = ['iolanda', 'otavio', 'ruth', 'heitor', 'nanda'];
+    profs.forEach((id, i) => {
+      const h = new Humano(id);
+      h.raiz.position.set(-3 + i * 1.5, 0, -14.6);
+      h.olharPara(0, 0, true);
+      h.raiz.userData.travado = true;
+      a.grupo.add(h.raiz);
+      C.npcs.set(id, h);
+    });
+    repetir(a.grupo, 'dining_table', [-2.2, 0, 2.2].map((x) => ({ x, z: -13.9 })), { alt: 0.78 });
+    const cap = new Humano('chapeu');
+    cap.raiz.position.set(0, 0, -10.4);
+    cap.olharPara(0, 0, true);
+    cap.raiz.userData.travado = true;
+    a.grupo.add(cap.raiz);
+    C.npcs.set('chapeu', cap);
+    const calouros = ['tati', 'caua', 'bia', 'jonas', 'enzo'];
+    calouros.forEach((id, i) => {
+      const h = new Humano(id, tintaDe(id));
+      // meia-lua ao seu lado, todo mundo olhando para o Capacete
+      const lugar = [[-1.3, -7.3], [-2.2, -6.7], [1.3, -7.3], [2.2, -6.7], [2.9, -6.0]][i];
+      h.raiz.position.set(lugar[0], 0, lugar[1]);
+      h.olharPara(0, -10.4, true);
+      a.grupo.add(h.raiz);
+      C.npcs.set(id, h);
+    });
+    posicionar(0, -6.6, 0);
+    J.alvoOlhar = new THREE.Vector3(0, 0.95, -10.4);
+  }
+  if (momento === 'trem' && a.assentos) {
+    a.assentos.filter((_, i) => i % 3 !== 1).slice(0, leve ? 4 : 8).forEach((p) => sentar(proximo(), p, tintaDe('aluno' + (1 + (k % 4)))));
+  }
+}
+
+/** momento que combina com o lugar quando não há indicação da história */
+export function momentoDoLugar(): Momento | null {
+  const m = C.area?.modelo;
+  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : null;
 }

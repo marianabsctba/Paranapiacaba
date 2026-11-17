@@ -122,6 +122,7 @@ export function modeloDe(id: string): string | null {
 const CLIPE: Record<string, string> = {
   parado: 'Idle_Loop', falando: 'Idle_Talking_Loop', andando: 'Walk_Loop', correndo: 'Jog_Fwd_Loop', feitico: 'Spell_Simple_Idle_Loop',
   apanhando: 'Hit_Head', mexendo: 'Interact', comemorando: 'Dance_Loop', formal: 'Walk_Formal_Loop',
+  sentado: 'Sitting_Idle_Loop', sentado_falando: 'Sitting_Talking_Loop',
 };
 
 // ---------------------------------------------------------------- humano
@@ -280,7 +281,11 @@ export class Humano {
     }
   }
 
+  /** sentado: parado vira sentado, falando vira falar sentado */
+  sentado = false;
+
   tocar(estado: string, fade = 0.3) {
+    if (this.sentado) estado = estado === 'falando' ? 'sentado_falando' : estado === 'parado' ? 'sentado' : estado;
     this.estado = estado;
     if (!this.mixer) return;
     const clipe = clipes[CLIPE[estado] ?? CLIPE.parado];
@@ -352,10 +357,10 @@ export class Humano {
     if (this.mixer) {
       const andando = this.caminho.length > 0;
       const est = andando ? (this.vel > 2 ? 'correndo' : 'andando') : this.estado;
-      if (andando || ['parado', 'falando', 'feitico', 'apanhando', 'mexendo', 'comemorando'].includes(est)) this.tocarSemMudarEstado(est);
+      if (andando || ['parado', 'falando', 'feitico', 'apanhando', 'mexendo', 'comemorando', 'sentado', 'sentado_falando'].includes(est)) this.tocarSemMudarEstado(est);
       this.mixer.update(dt);
       // parado: braços soltos; falando: só suaviza o gesto
-      const alvo = est === 'parado' ? 0.75 : est === 'falando' ? 0.35 : 0;
+      const alvo = this.sentado ? 0 : est === 'parado' ? 0.75 : est === 'falando' ? 0.35 : 0;
       this.pesoRelax += (alvo - this.pesoRelax) * Math.min(1, dt * 4);
       if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
       // dedos se mexem de leve, como mão relaxada respirando

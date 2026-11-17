@@ -54,6 +54,8 @@ async function lugar(id: string) {
   const l = LUGARES.get(id);
   palco.local.textContent = l?.nome ?? '';
   await C3.irPara(id);
+  // refeitório e trem nunca ficam vazios
+  await C3.encenar(C3.momentoDoLugar());
 }
 
 /** espera um toque no palco ou Enter/Espaço */
@@ -330,6 +332,7 @@ const PERGUNTAS_SELECAO: { q: string; r: [string, CasaId][] }[] = [
 
 async function selecao(g: number) {
   await lugar('refeitorio');
+  await C3.encenar('selecao');
   await falar([
     ['narrador', 'O refeitório fica em silêncio. Em cima de um banquinho de madeira, um capacete de obra amarelo pisca dois LEDs azuis.'],
     ['chapeu', 'Boa noite, calouros. Eu sou o Capacete Classificador. Fui treinado em 1997 com 14 alunos e um disquete. Minha acurácia é de 100%, segundo eu mesmo.'],

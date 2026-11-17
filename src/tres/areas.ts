@@ -18,6 +18,8 @@ export interface Area {
   palco: { x: number; z: number }[];
   professor?: { x: number; z: number };
   assento?: { x: number; z: number; yaw: number };
+  // lugares onde personagens sentam (cadeira, banco); casa = índice da casa da mesa no refeitório
+  assentos?: { x: number; z: number; ry: number; casa?: number }[];
   lousa?: THREE.Mesh;
   limites: [number, number, number, number];
   // onde os personagens podem ficar, quando é diferente de onde você anda (ex.: entre os bancos do trem)
@@ -199,6 +201,69 @@ function estandarte(g: THREE.Object3D, casa: 'oncarina' | 'tucanal' | 'capivaria
 
 const COR_CASA = [0xe8a317, 0xff7f11, 0x3fb59f, 0x9ccc65];
 
+/** conta de luz com o QR code do convite impresso no verso */
+function contaDeLuz(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = 256;
+  cv.height = 362;
+  const c = cv.getContext('2d')!;
+  c.fillStyle = '#f4f1ea';
+  c.fillRect(0, 0, 256, 362);
+  c.fillStyle = '#1d4e89';
+  c.fillRect(0, 0, 256, 44);
+  c.fillStyle = '#fff';
+  c.font = 'bold 20px sans-serif';
+  c.fillText('CONTA DE LUZ', 14, 30);
+  c.fillStyle = '#333';
+  c.font = '13px sans-serif';
+  ['Cliente: Aparecida (Vó Cida)', 'Nova Iguaçu, RJ', 'Vencimento: 10/09', 'Total: R$ 240,00'].forEach((l, i) => c.fillText(l, 14, 70 + i * 20));
+  // QR code fictício: padrão determinístico com os três quadrados de canto
+  const ox = 64, oy = 170, n = 25, q = 5;
+  let s = 7;
+  const rnd = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  c.fillStyle = '#fff';
+  c.fillRect(ox - 8, oy - 8, n * q + 16, n * q + 16);
+  c.fillStyle = '#111';
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > 0.5) c.fillRect(ox + x * q, oy + y * q, q, q);
+  for (const [cx, cy] of [[0, 0], [n - 7, 0], [0, n - 7]]) {
+    c.fillStyle = '#111';
+    c.fillRect(ox + cx * q, oy + cy * q, 7 * q, 7 * q);
+    c.fillStyle = '#fff';
+    c.fillRect(ox + (cx + 1) * q, oy + (cy + 1) * q, 5 * q, 5 * q);
+    c.fillStyle = '#111';
+    c.fillRect(ox + (cx + 2) * q, oy + (cy + 2) * q, 3 * q, 3 * q);
+  }
+  c.fillStyle = '#7a3b5a';
+  c.font = 'italic 12px sans-serif';
+  c.fillText('Leia com atenção. Ou não.', 60, 330);
+  const tx = new THREE.CanvasTexture(cv);
+  tx.colorSpace = THREE.SRGBColorSpace;
+  return tx;
+}
+
+/** teclas de um teclado mecânico visto de cima */
+function teclado(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = 512;
+  cv.height = 180;
+  const c = cv.getContext('2d')!;
+  c.fillStyle = '#1b1b1f';
+  c.fillRect(0, 0, 512, 180);
+  const linhas = [15, 14, 13, 12];
+  linhas.forEach((qtd, l) => {
+    const w = 512 / 15.5;
+    for (let i = 0; i < qtd; i++) {
+      c.fillStyle = (l + i) % 7 === 0 ? '#c9a227' : '#e8e4da';
+      c.fillRect(8 + i * w + l * 8, 10 + l * 36, w - 5, 30);
+    }
+  });
+  c.fillStyle = '#e8e4da';
+  c.fillRect(140, 154, 230, 22);
+  const tx = new THREE.CanvasTexture(cv);
+  tx.colorSpace = THREE.SRGBColorSpace;
+  return tx;
+}
+
 // ---------------------------------------------------------------- modelos
 
 function patio(): Area {
@@ -371,6 +436,7 @@ function salao(colunas = false): Area {
     modelo: colunas ? 'colunas' : 'salao', grupo: g, entrada: { x: 0, z: 13, yaw: 0 }, palco: [{ x: -1.2, z: 9.6 }, { x: 1.3, z: 9.4 }, { x: 0, z: 9 }, { x: -2.6, z: 10.4 }],
     limites: [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4],
     obstaculos: colunas ? [[-3, 3, -12.6, -11.4]] : [-4.2, -1.4, 1.4, 4.2].map((x) => [x - 1.1, x + 1.1, -13, 9] as [number, number, number, number]),
+    assentos: colunas ? undefined : [-4.2, -1.4, 1.4, 4.2].flatMap((x, casa) => [-11, -8, -5, -2, 1, 4, 7].flatMap((z) => [{ x: x - 0.78, z, ry: Math.PI / 2, casa }, { x: x + 0.78, z: z + 1.2, ry: -Math.PI / 2, casa }])),
     portas: [{ x: 0, z: 15.6, rotulo: 'Sair' }], ceu: 0x0e0b18, neblina: 0.012,
     atualizar: velas ? (dt, t) => velas!(dt, t, M.camera) : undefined,
   };
@@ -386,6 +452,7 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
   const r = rnd(variante.length);
   let lousa: THREE.Mesh | undefined;
   let assento: Area['assento'];
+  let assentos: Area['assentos'];
   const obst: Area['obstaculos'] = [];
   const atualiza: ((dt: number, t: number) => void)[] = [];
   // lousa na parede da frente
@@ -410,11 +477,13 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
         obst.push([x - 0.5, x + 0.5, z - 0.4, z + 1]);
       }
     repetir(g, 'SchoolDesk_01', lugares, { alt: 0.76 });
-    repetir(g, 'classic_laptop', lugares.map((p) => ({ x: p.x, z: p.z - 0.05 })), { larg: 0.34, y: 0.76, ry: Math.PI }, false);
+    repetir(g, 'classic_laptop', lugares.map((p) => ({ x: p.x, z: p.z - 0.05 })), { larg: 0.34, y: 0.76, ry: 0 }, false);
     repetir(g, 'SchoolChair_01', lugares.map((p) => ({ x: p.x, z: p.z + 0.62 })), { alt: 0.84, ry: Math.PI });
     movel(g, 'wooden_bookshelf_worn', -W / 2 + 0.45, 3.5, { alt: 2.2, ry: Math.PI / 2 });
     movel(g, 'potted_plant_01', W / 2 - 0.6, -D / 2 + 0.7, { alt: 1.1 });
-    assento = { x: 0.1, z: 4.6, yaw: 0 };
+    // você senta numa carteira da última fila; os colegas ocupam as outras
+    assento = { x: 1.2, z: 2.4 + 0.62, yaw: 0 };
+    assentos = lugares.filter((p) => !(p.x === 1.2 && p.z === 2.4)).map((p) => ({ x: p.x, z: p.z + 0.62, ry: Math.PI }));
   } else if (variante === 'biblioteca') {
     const livros = [0x7a2e2e, 0x2e4a7a, 0x2e6a3a, 0x8a6a2a, 0x5a2e6a, 0x3a3a3a];
     void livros;
@@ -486,7 +555,7 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
   g.add(new THREE.HemisphereLight(0x9a8ab8, 0x3a2a18, 1.1));
   return {
     modelo: variante, grupo: g, entrada: { x: 0, z: 5.6, yaw: 0 }, palco: [{ x: -1.2, z: 3.4 }, { x: 1.2, z: 3.3 }, { x: 0, z: 3 }, { x: 2.4, z: 3.8 }],
-    professor: { x: 1.6, z: -D / 2 + 1.5 }, assento, lousa,
+    professor: { x: 1.6, z: -D / 2 + 1.5 }, assento, assentos, lousa,
     limites: [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: obst,
     portas: [{ x: -W / 2 + 0.5, z: 5.5, rotulo: 'Sair da sala' }], ceu: 0x0e0b18, neblina: 0.02,
     atualizar: atualiza.length ? (dt, t) => atualiza.forEach((f) => f(dt, t)) : undefined,
@@ -541,6 +610,8 @@ function casa(): Area {
   g.add(led);
   // planta e imagem na parede
   movel(g, 'potted_plant_01', -3, 2.8, { alt: 1.2 });
+  const conta = plano(g, 0.21, 0.297, std({ map: contaDeLuz(), roughness: 0.9 }), 1.45, 0.603, -3.35, -Math.PI / 2);
+  conta.rotation.z = 0.35;
   janela(g, -W / 2 + 0.02, 1.5, 0, 1.2, 1.2, Math.PI / 2, 0x9cc4e8);
   luzPrincipal(g, 0, 2.7, 0, 0xfff0d8, 18, new THREE.Vector3(0, 0, -1));
   g.add(new THREE.HemisphereLight(0xfff4e0, 0x6a5040, 1.1));
@@ -577,6 +648,7 @@ function trem(): Area {
     modelo: 'trem', grupo: g, entrada: { x: 0, z: 6.5, yaw: 0 }, palco: [{ x: -0.6, z: 4.6 }, { x: 0.6, z: 4.4 }, { x: 0, z: 4 }, { x: 0, z: 3 }],
     limites: [-0.5, 0.5, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: [],
     limitesNpc: [-1.45, 1.45, -D / 2 + 0.4, D / 2 - 0.4],
+    assentos: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [{ x: -1.05, z: z - 0.05, ry: Math.PI }, { x: 1.05, z: z - 0.05, ry: Math.PI }]),
     obstaculosNpc: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [[-1.55, -0.55, z - 0.3, z + 0.32], [0.55, 1.55, z - 0.3, z + 0.32]] as [number, number, number, number][]),
     portas: [{ x: 0, z: -D / 2 + 0.5, rotulo: 'Descer do trem' }], ceu: 0x6f8098, neblina: 0.01,
     atualizar: (_dt, t) => {
@@ -603,6 +675,15 @@ function cidade(): Area {
     l.position.set(lado * 1.8, 3, z);
     g.add(l);
   });
+  // balcão de teclados encantados: um deles brilha, é o que vai escolher você
+  const tampo = std({ color: 0x2a1a10, roughness: 0.5 });
+  caixa(g, 0.9, 1.0, 3.2, tampo, -W / 2 + 0.75, 0, -5.5);
+  const teclas = teclado();
+  for (let i = 0; i < 6; i++) {
+    const brilha = i === 3;
+    const k = caixa(g, 0.42, 0.035, 0.15, std({ map: teclas, roughness: 0.6, emissive: brilha ? 0x7df9ff : 0x000000, emissiveIntensity: brilha ? 0.35 : 0 }), -W / 2 + 0.75, 1.0, -6.8 + i * 0.5, 0.15);
+    k.castShadow = false;
+  }
   // cabos pendurados, porque é Santa Ifigênia
   const cabo = std({ color: 0x111111 });
   for (let z = -10; z < 10; z += 1.3) {
@@ -616,7 +697,7 @@ function cidade(): Area {
   luzPrincipal(g, 0, 3.9, 0, 0xffe0c0, 16, new THREE.Vector3(0, 0, -2));
   return {
     modelo: 'cidade', grupo: g, entrada: { x: 0, z: 10, yaw: 0 }, palco: [{ x: -0.8, z: 7.8 }, { x: 0.9, z: 7.6 }, { x: 0, z: 7.2 }, { x: -1.8, z: 8.6 }],
-    limites: [-W / 2 + 0.9, W / 2 - 0.9, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: [],
+    limites: [-W / 2 + 0.9, W / 2 - 0.9, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: [[-W / 2, -W / 2 + 1.3, -7.2, -3.8]],
     portas: [{ x: 0, z: D / 2 - 0.5, rotulo: 'Voltar para a rua' }], ceu: 0x140f1c, neblina: 0.03,
   };
 }
