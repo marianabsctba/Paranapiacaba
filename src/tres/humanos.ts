@@ -8,19 +8,26 @@ import { PERSONAGENS } from '../conteudo/index';
 import { criarBicho, type Bicho } from './bichos';
 
 const BASE = import.meta.env.BASE_URL;
-export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
+export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2', 'dalva', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
 
 const DEDO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])\./;
 const DEDO_OSSO = /^(index|middle|ring|pinky|thumb)_0([1-3])_([lr])$/;
 // sinal da curva dos dedos (ajustado olhando as fotos)
 export const CURVA = { sinal: 1, eixo: 'z' as 'x' | 'y' | 'z' };
+// dedos juntos (no modelo eles vêm abertos em leque, o que parece garra) e quanto cada um dobra
+// pose parada: quanto corrige a animação (1 = braço solto de vez), afastamento do tronco e cotovelo
+export const RELAX = { parado: 1, falando: 0.35, fora: 0.3, cotovelo: 0.1 };
+export const JUNTA = { sinal: 1, eixo: 'x' as 'x' | 'y' | 'z', ang: 0.12, dobra: 1 };
+// giro extra da palma e polegar encostado na mão (ajustados olhando as fotos)
+export const PALMA = { extra: 0, polegarEixo: 'z' as 'x' | 'y' | 'z', polegar: -0.7 };
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), V4 = new THREE.Vector3();
 const V5 = new THREE.Vector3(), V6 = new THREE.Vector3(), V7 = new THREE.Vector3(), V8 = new THREE.Vector3();
+const VA = new THREE.Vector3(), VB = new THREE.Vector3(), VC = new THREE.Vector3();
 const QD = new THREE.Quaternion(), QW = new THREE.Quaternion(), QP = new THREE.Quaternion(), QI = new THREE.Quaternion();
 const repintadas = new Map<string, THREE.Texture>();
 /** troca os pixels laranja (a gravata original) pela cor da casa, mantendo o claro e o escuro do tecido */
-function repintarLaranja(mapa: THREE.Texture, tinta: number): THREE.Texture {
-  const chave = mapa.uuid + tinta;
+function repintarLaranja(mapa: THREE.Texture, tinta: number, tudo = false): THREE.Texture {
+  const chave = mapa.uuid + tinta + (tudo ? 't' : '');
   const pronta = repintadas.get(chave);
   if (pronta) return pronta;
   const img = mapa.image as HTMLImageElement | ImageBitmap;
@@ -35,8 +42,8 @@ function repintarLaranja(mapa: THREE.Texture, tinta: number): THREE.Texture {
   for (let i = 0; i < d.data.length; i += 4) {
     const r = d.data[i], gg = d.data[i + 1], b = d.data[i + 2];
     const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
-    if (r === mx && mx > 60 && (mx - mn) / mx > 0.35) {
-      const luz = (0.3 * r + 0.59 * gg + 0.11 * b) / 170;
+    if (tudo || (r === mx && mx > 60 && (mx - mn) / mx > 0.35)) {
+      const luz = (0.3 * r + 0.59 * gg + 0.11 * b) / (tudo ? 110 : 170);
       d.data[i] = Math.min(255, tr * luz);
       d.data[i + 1] = Math.min(255, tg * luz);
       d.data[i + 2] = Math.min(255, tb * luz);
@@ -106,6 +113,7 @@ function hash(s: string) {
 /** qual modelo representa um personagem (null = bicho procedural) */
 export function modeloDe(id: string): string | null {
   if (MODELOS.includes(id)) return id;
+  if (id === 'a1_dalva') return 'dalva';
   if (id === 'bitu' || id === 'chapeu') return null;
   const p = PERSONAGENS.get(id);
   if (!p) return 'adulto1';
@@ -138,7 +146,7 @@ export class Humano {
   private fimCaminho: (() => void) | null = null;
   vel = 1.2;
   altura = 1.6;
-  private dedos: { osso: THREE.Object3D; repouso: THREE.Quaternion; ang: number }[] = [];
+  private dedos: { osso: THREE.Object3D; repouso: THREE.Quaternion; ang: number; abre: number; lado: number; ehPolegar: boolean }[] = [];
   private pesoRelax = 1;
   private bicho: Bicho | null = null;
   private semente = Math.random() * 10;
@@ -174,7 +182,7 @@ export class Humano {
           const fio = /eyelash|eyebrow|short|long|bob|braid|afro|ponytail/i.test(mt.name);
           mt.transparent = false;
           mt.depthWrite = true;
-          mt.alphaTest = fio ? 0.45 : /low-poly/i.test(mt.name) ? 0.5 : 0;
+          mt.alphaTest = fio ? 0.45 : /low-poly/i.test(mt.name) ? 0.5 : /body/i.test(mt.name) ? 0 : 0.5;
           if (!fio) mt.side = THREE.FrontSide;
           // roupa é tudo que não é corpo, olho, cabelo, sobrancelha ou cílio (o nome da malha varia com o asset)
           const roupa = !fio && !/body|low-poly|eye/i.test(mt.name) && !/^corpo/.test(me.name);
@@ -194,6 +202,13 @@ export class Humano {
               // relevo do tecido mais suave: forte demais, o blazer parecia papel amassado
               if (mt.normalMap) mt.normalScale.set(0.3, 0.3);
             }
+          }
+          // peças que vêm do MakeHuman com cor ruim: botinha quase branca, terninho rosa-choque, camiseta cinza metálica
+          if (roupa && /ankle_boots/.test(mt.name)) mt.color.setHex(0x5a3e2e);
+          if (roupa && /basic_tucked_t-shirt/.test(mt.name)) mt.color.setHex(0xa9bfd8);
+          if (roupa && mt.map && /female_suit_2/.test(mt.name) && !mt.userData.recolorido) {
+            mt.map = repintarLaranja(mt.map, 0x7d4e57, true);
+            mt.userData.recolorido = true;
           }
           // restos de estampa laranja na textura do blazer do uniforme também ganham a cor da casa
           if (tinta !== undefined && roupa && mt.map && /suit_tie_and_jacket/.test(mt.name)) {
@@ -222,7 +237,8 @@ export class Humano {
         if (!m) return;
         const seg = Number(m[2]);
         const ang = m[1] === 'thumb' ? [0, 0.1, 0.15, 0.1][seg] : [0, 0.14, 0.24, 0.16][seg];
-        this.dedos.push({ osso: o, repouso: o.quaternion.clone(), ang });
+        const abre = seg === 1 ? ({ index: 1, middle: 0, ring: -1, pinky: -2, thumb: 0 } as Record<string, number>)[m[1]] : 0;
+        this.dedos.push({ osso: o, repouso: o.quaternion.clone(), ang, abre, lado: m[3] === 'l' ? 1 : -1, ehPolegar: m[1] === 'thumb' && seg === 1 });
       });
       // mãos um pouco menores: a proporção adulta nos corpos de 12 anos deixava as mãos enormes
       for (const lado of ['l', 'r']) modelo.getObjectByName('hand_' + lado)?.scale.setScalar(0.86);
@@ -263,21 +279,48 @@ export class Humano {
       fora.y = 0;
       fora.normalize();
       // braço um pouco afastado do tronco: colado demais, o paletó repuxa e faz corcova no ombro
-      const braco = V6.set(0, -1, 0).multiplyScalar(0.94).addScaledVector(fora, 0.33).addScaledVector(frente, 0.07).normalize();
+      const braco = V6.set(0, -1, 0).multiplyScalar(0.94).addScaledVector(fora, RELAX.fora).addScaledVector(frente, 0.07).normalize();
       this.alinhar(ombro, cot, braco, peso);
-      const ante = V7.copy(braco).multiplyScalar(0.96).addScaledVector(frente, 0.26).normalize();
+      const ante = V7.copy(braco).multiplyScalar(0.96).addScaledVector(frente, RELAX.cotovelo).normalize();
       this.alinhar(cot, mao, ante, peso);
       if (dedo) this.alinhar(mao, dedo, V8.copy(ante).addScaledVector(fora, -0.15).normalize(), peso);
+      // palma virada para a coxa e polegar para a frente (sem isso a palma ficava para a frente, feito garra)
+      const ind = r.getObjectByName('index_01_' + lado);
+      const min = r.getObjectByName('pinky_01_' + lado);
+      if (dedo && ind && min) {
+        const eixo = dedo.getWorldPosition(VA).sub(mao.getWorldPosition(VB)).normalize();
+        const k = ind.getWorldPosition(VB).sub(min.getWorldPosition(VC));
+        k.addScaledVector(eixo, -k.dot(eixo)).normalize();
+        const t = VC.copy(frente).addScaledVector(eixo, -frente.dot(eixo)).normalize();
+        const ang = Math.acos(Math.max(-1, Math.min(1, k.dot(t)))) * (k.cross(t).dot(eixo) < 0 ? -1 : 1);
+        QD.setFromAxisAngle(eixo, (ang + PALMA.extra * (lado === 'l' ? 1 : -1)) * peso);
+        mao.getWorldQuaternion(QW);
+        QW.premultiply(QD);
+        mao.parent!.getWorldQuaternion(QP).invert();
+        mao.quaternion.copy(QP.multiply(QW));
+        mao.updateMatrixWorld(true);
+      }
     }
   }
 
   /** mão relaxada: dedos levemente dobrados para dentro */
   curvarDedos(fator = 1) {
     const eixo = new THREE.Vector3(CURVA.eixo === 'x' ? 1 : 0, CURVA.eixo === 'y' ? 1 : 0, CURVA.eixo === 'z' ? 1 : 0);
+    const eixoJ = new THREE.Vector3(JUNTA.eixo === 'x' ? 1 : 0, JUNTA.eixo === 'y' ? 1 : 0, JUNTA.eixo === 'z' ? 1 : 0);
     const q = new THREE.Quaternion();
+    const qj = new THREE.Quaternion();
     for (const d of this.dedos) {
-      q.setFromAxisAngle(eixo, d.ang * CURVA.sinal * fator);
+      q.setFromAxisAngle(eixo, d.ang * CURVA.sinal * fator * JUNTA.dobra);
       d.osso.quaternion.copy(d.repouso).multiply(q);
+      if (PALMA.polegar && d.ehPolegar) {
+        const e = new THREE.Vector3(PALMA.polegarEixo === 'x' ? 1 : 0, PALMA.polegarEixo === 'y' ? 1 : 0, PALMA.polegarEixo === 'z' ? 1 : 0);
+        qj.setFromAxisAngle(e, PALMA.polegar * d.lado);
+        d.osso.quaternion.multiply(qj);
+      }
+      if (d.abre) {
+        qj.setFromAxisAngle(eixoJ, d.abre * JUNTA.ang * JUNTA.sinal * d.lado);
+        d.osso.quaternion.multiply(qj);
+      }
     }
   }
 
@@ -360,7 +403,7 @@ export class Humano {
       if (andando || ['parado', 'falando', 'feitico', 'apanhando', 'mexendo', 'comemorando', 'sentado', 'sentado_falando'].includes(est)) this.tocarSemMudarEstado(est);
       this.mixer.update(dt);
       // parado: braços soltos; falando: só suaviza o gesto
-      const alvo = this.sentado ? 0 : est === 'parado' ? 0.75 : est === 'falando' ? 0.35 : 0;
+      const alvo = this.sentado ? 0 : est === 'parado' ? RELAX.parado : est === 'falando' ? RELAX.falando : 0;
       this.pesoRelax += (alvo - this.pesoRelax) * Math.min(1, dt * 4);
       if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
       // dedos se mexem de leve, como mão relaxada respirando
