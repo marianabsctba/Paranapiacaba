@@ -1166,6 +1166,680 @@ function loja(tipo: 'doceria' | 'teclados' | 'livraria' | 'correio' | 'pegadinha
   };
 }
 
+// ---------------------------------------------------------------- salas temáticas (um cenário próprio por lugar)
+
+/** tela falsa desenhada em canvas: log rolando, gráfico, mapa, alerta ou slide */
+function telaFalsa(tipo: 'log' | 'graf' | 'mapa' | 'alerta' | 'slide' | 'hex', texto = '', semente = 1): THREE.CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = 512;
+  cv.height = 320;
+  const c = cv.getContext('2d')!;
+  const r = rnd(semente);
+  c.fillStyle = tipo === 'alerta' ? '#2a0508' : tipo === 'slide' ? '#f4f1ea' : '#06120c';
+  c.fillRect(0, 0, 512, 320);
+  if (tipo === 'log' || tipo === 'hex') {
+    c.font = '15px monospace';
+    for (let i = 0; i < 17; i++) {
+      c.fillStyle = r() < 0.12 ? '#ff5a5a' : r() < 0.2 ? '#ffd166' : '#5aff8a';
+      const linha = tipo === 'hex'
+        ? `${(0x7f3a0000 + i * 16).toString(16)}  ${Array.from({ length: 8 }, () => Math.floor(r() * 65536).toString(16).padStart(4, '0')).join(' ')}`
+        : `${String(10 + Math.floor(r() * 13)).padStart(2, '0')}:${String(Math.floor(r() * 60)).padStart(2, '0')} ${['sshd', 'kernel', 'nginx', 'auth', 'dns', 'fw'][Math.floor(r() * 6)]}: ${['login ok', 'conexão recusada', 'GET /index 200', 'senha errada', 'consulta castelo.br', 'pacote bloqueado', 'sessão aberta'][Math.floor(r() * 7)]}`;
+      c.fillText(linha, 10, 22 + i * 18);
+    }
+  } else if (tipo === 'graf') {
+    c.strokeStyle = '#1e4a3a';
+    for (let x = 0; x < 512; x += 32) c.strokeRect(x, 0, 32, 320);
+    c.strokeStyle = '#6ef2ff';
+    c.lineWidth = 3;
+    c.beginPath();
+    for (let x = 0; x <= 512; x += 16) c.lineTo(x, 200 - Math.sin(x / 40 + semente) * 60 - r() * 40);
+    c.stroke();
+    c.fillStyle = '#ffd166';
+    for (let i = 0; i < 10; i++) c.fillRect(20 + i * 48, 300 - r() * 90, 30, 90);
+  } else if (tipo === 'mapa') {
+    c.fillStyle = '#0d2a3a';
+    c.beginPath();
+    c.ellipse(256, 160, 200, 120, 0, 0, Math.PI * 2);
+    c.fill();
+    for (let i = 0; i < 24; i++) {
+      c.fillStyle = r() < 0.3 ? '#ff3d5a' : '#6ef2ff';
+      c.beginPath();
+      c.arc(90 + r() * 330, 70 + r() * 180, 4 + r() * 4, 0, Math.PI * 2);
+      c.fill();
+    }
+  } else if (tipo === 'alerta') {
+    c.fillStyle = '#ff3d5a';
+    c.font = 'bold 54px sans-serif';
+    c.textAlign = 'center';
+    c.fillText(texto || 'ALERTA', 256, 150);
+    c.font = '22px monospace';
+    c.fillStyle = '#ffd0d0';
+    c.fillText('severidade: alta', 256, 210);
+  } else {
+    c.fillStyle = '#1a1a2e';
+    c.font = 'bold 40px sans-serif';
+    c.textAlign = 'center';
+    c.fillText(texto || 'SINERGIA 360°', 256, 120);
+    c.font = '22px sans-serif';
+    c.fillStyle = '#7a4aa8';
+    ['• alavancar', '• empoderar', '• sinergizar'].forEach((t, i) => c.fillText(t, 256, 180 + i * 34));
+  }
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/** monitor com moldura preta e tela acesa */
+function monitor(g: THREE.Object3D, x: number, y: number, z: number, ry: number, tex: THREE.Texture, w = 0.55, hh = 0.34) {
+  const m = new THREE.Group();
+  m.position.set(x, y, z);
+  m.rotation.y = ry;
+  g.add(m);
+  caixa(m, w + 0.04, hh + 0.04, 0.04, std({ color: 0x151515, roughness: 0.5 }), 0, 0.12, 0);
+  const tela = plano(m, w, hh, std({ color: 0x000000, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.9 }), 0, 0.12 + (hh + 0.04) / 2, 0.022);
+  tela.castShadow = false;
+  caixa(m, 0.05, 0.12, 0.05, std({ color: 0x222222 }), 0, 0, 0);
+  return m;
+}
+
+interface Tema {
+  modelo: string;
+  W: number;
+  D: number;
+  H: number;
+  parede: THREE.Material;
+  piso: THREE.Material;
+  teto?: THREE.Material;
+  lousa?: string; // título escrito na lousa; sem isso não tem lousa
+  carteiras?: { fileiras: number; colunas: number; z0?: number; laptop?: boolean };
+  luz?: number;
+  ceu?: number;
+  neblina?: number;
+  porta?: string;
+  deco: (g: THREE.Group, obst: Area['obstaculos'], atualiza: ((t: number) => void)[], d: { W: number; D: number; H: number }) => void;
+}
+
+/** sala com paredes, luz, lousa e carteiras opcionais; o tema coloca o resto */
+function salaTematica(t: Tema): Area {
+  const g = new THREE.Group();
+  const { W, D, H } = t;
+  salaFechada(g, W, D, H, t.parede, t.piso, t.teto ?? std({ color: 0x2a2018, roughness: 1 }));
+  const obst: Area['obstaculos'] = [];
+  const atualiza: ((tt: number) => void)[] = [];
+  let lousa: THREE.Mesh | undefined;
+  let assento: Area['assento'];
+  let assentos: Area['assentos'];
+  if (t.lousa !== undefined) {
+    lousa = plano(g, 4, 2, std({ color: 0xffffff, roughness: 0.95 }), 0, 2.1, -D / 2 + 0.06);
+    (lousa.material as THREE.MeshStandardMaterial).map = T.lousa(t.lousa, ['Quem tem backup tem tudo.']);
+    caixa(g, 4.3, 0.1, 0.2, texMat(T.madeira([1, 1], '#5c3a20'), { roughness: 0.6 }), 0, 1.05, -D / 2 + 0.12);
+  }
+  if (t.carteiras) {
+    const { fileiras, colunas } = t.carteiras;
+    const z0 = t.carteiras.z0 ?? -D / 2 + 3.4;
+    const lugares: { x: number; z: number }[] = [];
+    for (let f = 0; f < fileiras; f++)
+      for (let c = 0; c < colunas; c++) {
+        const x = (c - (colunas - 1) / 2) * 2.2;
+        const z = z0 + f * 2.3;
+        lugares.push({ x, z });
+        obst.push([x - 0.5, x + 0.5, z - 0.4, z + 1]);
+      }
+    repetir(g, 'SchoolDesk_01', lugares, { alt: 0.76 });
+    if (t.carteiras.laptop !== false) repetir(g, 'classic_laptop', lugares.map((p) => ({ x: p.x, z: p.z - 0.05 })), { larg: 0.34, y: 0.76, ry: 0 }, false);
+    repetir(g, 'SchoolChair_01', lugares.map((p) => ({ x: p.x, z: p.z + 0.62 })), { alt: 0.84, ry: Math.PI });
+    const meu = lugares[lugares.length - 2] ?? lugares[0];
+    assento = { x: meu.x, z: meu.z + 0.62, yaw: 0 };
+    assentos = lugares.filter((p) => p !== meu).map((p) => ({ x: p.x, z: p.z + 0.62, ry: Math.PI }));
+  }
+  t.deco(g, obst, atualiza, { W, D, H });
+  lampiao(g, 0, H - 0.9, 0, 5, 10, t.luz ?? 0xffc98a);
+  luzPrincipal(g, 0, H - 0.2, 2, t.luz ?? 0xffe2b8, 26, new THREE.Vector3(0, 0, -1.5));
+  g.add(new THREE.HemisphereLight(0xd8d0e0, 0x3a2a18, 1));
+  return {
+    modelo: t.modelo, grupo: g, entrada: { x: 0, z: D / 2 - 1.4, yaw: 0 }, palco: [{ x: -1.2, z: D / 2 - 3.4 }, { x: 1.2, z: D / 2 - 3.5 }, { x: 0, z: D / 2 - 4 }, { x: 2.2, z: D / 2 - 3 }],
+    professor: { x: 1.4, z: -D / 2 + 1.4 }, assento, assentos, lousa,
+    limites: [-W / 2 + 0.5, W / 2 - 0.5, -D / 2 + 0.5, D / 2 - 0.4], obstaculos: obst,
+    portas: [{ x: 0, z: D / 2 - 0.4, rotulo: t.porta ?? 'Sair' }], ceu: t.ceu ?? 0x0e0b18, neblina: t.neblina ?? 0.015,
+    atualizar: atualiza.length ? (_dt, tt) => atualiza.forEach((f) => f(tt)) : undefined,
+  };
+}
+
+const madeiraEscura = () => texMat(T.madeira([2, 1], '#4a2c18'), { roughness: 0.55 });
+const metalEscuro = () => std({ color: 0x3a3e44, metalness: 0.7, roughness: 0.4 });
+
+const TEMAS: Record<string, () => Area> = {
+  // sala acolhedora demais: almofada, biscoito e um quadro que pede confiança
+  persuasao: () => salaTematica({
+    modelo: 'persuasao', W: 11, D: 12, H: 4, parede: pbr('reboco', [3, 1.5], { color: 0xf0c8c0 }), piso: pbr('assoalho', [3, 3]),
+    lousa: 'Persuasão e Engano', carteiras: { fileiras: 2, colunas: 3, laptop: false }, luz: 0xffd0b0, porta: 'Sair da sala',
+    deco: (g, obst, _a, { W, D }) => {
+      for (const lado of [-1, 1]) {
+        movel(g, 'Sofa_01', lado * (W / 2 - 0.8), 1.5, { larg: 2, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2 });
+        obst.push([lado < 0 ? -W / 2 : W / 2 - 1.3, lado < 0 ? -W / 2 + 1.3 : W / 2, 0.4, 2.6]);
+      }
+      const cores = [0xff9fd2, 0xffd166, 0x9fe7ff, 0xc8a0ff];
+      for (let i = 0; i < 8; i++) {
+        const a = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 10), std({ color: cores[i % 4], roughness: 1 }));
+        a.scale.set(1, 0.45, 1);
+        a.position.set(-W / 2 + 1.2 + (i % 2) * 0.5, 0.14 + Math.floor(i / 2) * 0.01, -2.2 + i * 0.5);
+        g.add(a);
+      }
+      movel(g, 'CoffeeTable_01', W / 2 - 2.2, 3.6, { larg: 1 });
+      for (let i = 0; i < 6; i++) cil(g, 0.05, 0.05, 0.015, std({ color: 0xc89050, roughness: 0.9 }), W / 2 - 2.3 + (i % 3) * 0.12, 0.45, 3.5 + Math.floor(i / 3) * 0.12, 12);
+      const tex = T.placa('CONFIE EM MIM', '#3a1a2a', '#ffd0e0', 512, 128);
+      plano(g, 2, 0.5, std({ map: tex, roughness: 0.8 }), -W / 2 + 0.05, 2.4, -1, 0, Math.PI / 2).castShadow = false;
+      movel(g, 'potted_plant_01', -W / 2 + 0.7, -D / 2 + 0.7, { alt: 1.2 });
+    },
+  }),
+  // casa de máquinas do funicular: volante gigante, tambor de cabo e cabos de rede no lugar do aço
+  maquinas: () => salaTematica({
+    modelo: 'maquinas', W: 14, D: 14, H: 7, parede: pbr('tijolo', [5, 3]), piso: pbr('concreto', [4, 4], { color: 0x8a847c }),
+    lousa: 'Casa de Máquinas', luz: 0xffd8a0, porta: 'Sair da casa de máquinas',
+    deco: (g, obst, atualiza, { W, D }) => {
+      const ferro = metalEscuro();
+      const volante = new THREE.Group();
+      volante.position.set(-3.6, 2.8, -2);
+      volante.rotation.y = Math.PI / 2;
+      g.add(volante);
+      const aro = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.16, 10, 40), ferro);
+      volante.add(aro);
+      for (let i = 0; i < 6; i++) {
+        const raio = new THREE.Mesh(new THREE.BoxGeometry(0.14, 4.8, 0.14), ferro);
+        raio.rotation.z = (i * Math.PI) / 6;
+        volante.add(raio);
+      }
+      atualiza.push((t) => (volante.rotation.x = t * 0.25));
+      caixa(g, 1, 0.5, 5.4, ferro, -3.6, 0, -2);
+      obst.push([-6.5, -0.8, -5, 1]);
+      // tambor com cabo amarelo enrolado
+      const tambor = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 2.4, 24), std({ color: 0xd4b030, roughness: 0.6 }));
+      tambor.rotation.z = Math.PI / 2;
+      tambor.position.set(3.4, 1.2, -3);
+      g.add(tambor);
+      atualiza.push((t) => (tambor.rotation.x = -t * 0.4));
+      obst.push([2, 4.8, -4.2, -1.8]);
+      for (let i = 0; i < 4; i++) cil(g, 0.035, 0.035, 9, std({ color: [0x2a5aaa, 0xd4b030, 0xaa2a2a, 0x2aaa5a][i] }), W / 2 - 0.3, 5.8 - i * 0.12, -D / 2 + 2, 6).rotation.x = Math.PI / 2;
+      movel(g, 'steel_frame_shelves_01', W / 2 - 0.6, 3, { alt: 2.2, ry: -Math.PI / 2 });
+    },
+  }),
+  // central telefônica: mesas de telefonista com plugues de latão
+  comutacao: () => salaTematica({
+    modelo: 'comutacao', W: 12, D: 12, H: 4.2, parede: texMat(T.madeira([4, 2], '#6a4a2e'), { roughness: 0.7 }), piso: pbr('assoalho', [3, 3]),
+    lousa: 'Sala de Comutação', porta: 'Sair da sala',
+    deco: (g, obst, atualiza, { W }) => {
+      const cv = document.createElement('canvas');
+      cv.width = 512;
+      cv.height = 256;
+      const c = cv.getContext('2d')!;
+      c.fillStyle = '#2a1c12';
+      c.fillRect(0, 0, 512, 256);
+      for (let y = 0; y < 6; y++) for (let x = 0; x < 16; x++) {
+        c.fillStyle = '#c9a050';
+        c.beginPath();
+        c.arc(18 + x * 31, 22 + y * 40, 7, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#111';
+        c.beginPath();
+        c.arc(18 + x * 31, 22 + y * 40, 3, 0, Math.PI * 2);
+        c.fill();
+      }
+      const painel = new THREE.CanvasTexture(cv);
+      painel.colorSpace = THREE.SRGBColorSpace;
+      const luzes: THREE.MeshStandardMaterial[] = [];
+      for (const lado of [-1, 1]) for (let i = 0; i < 3; i++) {
+        const z = -2.5 + i * 2.4;
+        const x = lado * (W / 2 - 0.5);
+        caixa(g, 0.7, 0.8, 1.8, madeiraEscura(), x, 0, z);
+        plano(g, 1.8, 0.9, std({ map: painel, roughness: 0.6 }), lado * (W / 2 - 0.06), 1.4, z, 0, lado < 0 ? Math.PI / 2 : -Math.PI / 2);
+        const l = std({ color: 0x000000, emissive: 0xffaa22, emissiveIntensity: 1 });
+        luzes.push(l);
+        const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), l);
+        lamp.position.set(lado * (W / 2 - 0.1), 1.95, z);
+        g.add(lamp);
+        movel(g, 'SchoolChair_01', lado * (W / 2 - 1.3), z, { alt: 0.84, ry: lado < 0 ? -Math.PI / 2 : Math.PI / 2 });
+        obst.push([x - 0.5, x + 0.5, z - 1, z + 1]);
+        for (let k = 0; k < 3; k++) {
+          const cabo = new THREE.Mesh(new THREE.TorusGeometry(0.25 + k * 0.08, 0.012, 5, 16, Math.PI), std({ color: [0x8a2a2a, 0x2a2a2a, 0x2a4a8a][k] }));
+          cabo.position.set(lado * (W / 2 - 0.4), 0.95, z - 0.3 + k * 0.3);
+          cabo.rotation.set(Math.PI, lado < 0 ? Math.PI / 2 : -Math.PI / 2, 0);
+          g.add(cabo);
+        }
+      }
+      atualiza.push((t) => luzes.forEach((l, i) => (l.emissiveIntensity = Math.sin(t * 2.5 + i * 1.7) > 0.4 ? 2 : 0.15)));
+    },
+  }),
+  // antiga sala do telégrafo: fitas de papel perfurado nas paredes e mesa de luz
+  rastros: () => salaTematica({
+    modelo: 'rastros', W: 12, D: 14, H: 4.6, parede: pbr('reboco', [3, 1.5], { color: 0xd8ccb0 }), piso: pbr('assoalho', [3, 3]),
+    lousa: 'Leitura de Rastros', carteiras: { fileiras: 3, colunas: 4 }, porta: 'Sair da sala',
+    deco: (g, _o, _a, { W, D }) => {
+      const cv = document.createElement('canvas');
+      cv.width = 64;
+      cv.height = 512;
+      const c = cv.getContext('2d')!;
+      c.fillStyle = '#f2ecd8';
+      c.fillRect(0, 0, 64, 512);
+      c.fillStyle = '#2a2018';
+      const r = rnd(3);
+      for (let y = 8; y < 512; y += 14) for (let x = 0; x < 5; x++) if (r() < 0.5) c.fillRect(8 + x * 11, y, 6, 6);
+      const fita = new THREE.CanvasTexture(cv);
+      fita.colorSpace = THREE.SRGBColorSpace;
+      for (const lado of [-1, 1]) for (let i = 0; i < 9; i++)
+        plano(g, 0.18, 2.4, std({ map: fita, roughness: 1, side: THREE.DoubleSide }), lado * (W / 2 - 0.04), 2.2 + Math.sin(i) * 0.15, -5 + i * 1.2, 0, lado < 0 ? Math.PI / 2 : -Math.PI / 2).castShadow = false;
+      const mesaLuz = caixa(g, 1.6, 0.9, 1, std({ color: 0xf0f4ff, emissive: 0xdde8ff, emissiveIntensity: 0.7 }), -W / 2 + 1.4, 0, -D / 2 + 1.6);
+      mesaLuz.castShadow = false;
+    },
+  }),
+  // antiga sala de música tomada pela consultoria: pufe, lousa de vidro e TV gigante
+  sinergia: () => salaTematica({
+    modelo: 'sinergia', W: 12, D: 12, H: 4.2, parede: pbr('reboco', [3, 1.5], { color: 0xeeeeee }), piso: pbr('assoalho', [3, 3], { color: 0xcfc8c0 }),
+    lousa: 'Sinergia', luz: 0xf0f4ff, porta: 'Sair da sala',
+    deco: (g, obst, _a, { W }) => {
+      const tv = plano(g, 3.6, 2, std({ color: 0x000000, emissive: 0xffffff, emissiveMap: telaFalsa('slide', 'SINERGIA 360°'), emissiveIntensity: 0.9 }), W / 2 - 0.1, 2.1, 0, 0, -Math.PI / 2);
+      tv.castShadow = false;
+      caixa(g, 0.1, 2.1, 3.7, std({ color: 0x111111 }), W / 2 - 0.02, 1.05, 0);
+      const cores = [0xff7a3a, 0x3ad0ff, 0xc8ff3a, 0xff3ad0, 0xffd23a];
+      for (let i = 0; i < 10; i++) {
+        const x = -3 + (i % 5) * 1.5;
+        const z = 0.5 + Math.floor(i / 5) * 2;
+        cil(g, 0.35, 0.4, 0.42, std({ color: cores[i % 5], roughness: 0.9 }), x, 0, z, 16);
+        obst.push([x - 0.4, x + 0.4, z - 0.4, z + 0.4]);
+      }
+      movel(g, 'potted_plant_01', -W / 2 + 0.6, -3.5, { alt: 1.4 });
+    },
+  }),
+  // oficina de locomotivas virada laboratório: bancadas de ferro com monitores em fila
+  reverso: () => salaTematica({
+    modelo: 'reverso', W: 13, D: 15, H: 5.5, parede: pbr('tijolo', [4, 2]), piso: pbr('concreto', [4, 4], { color: 0x8a847c }),
+    lousa: 'Engenharia Reversa', carteiras: { fileiras: 3, colunas: 4, laptop: false }, luz: 0xe8f0ff, porta: 'Sair do laboratório',
+    deco: (g, _o, _a, { W, D, H }) => {
+      for (let f = 0; f < 3; f++) for (let c = 0; c < 4; c++) monitor(g, (c - 1.5) * 2.2, 0.76, -D / 2 + 3.4 + f * 2.3 - 0.15, 0, telaFalsa(f % 2 ? 'hex' : 'log', '', f * 4 + c));
+      const ferro = metalEscuro();
+      for (let x = -4; x <= 4; x += 4) caixa(g, 0.25, 0.3, D, ferro, x, H - 0.6, 0);
+      for (const lado of [-1, 1]) {
+        const e = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.1, 6, 20), std({ color: 0x8a6a3a, metalness: 0.8, roughness: 0.35 }));
+        e.position.set(lado * (W / 2 - 0.1), 3, 2);
+        e.rotation.y = Math.PI / 2;
+        g.add(e);
+      }
+    },
+  }),
+  // túneis ferroviários de 1890 com cabo de cobre pregado na pedra
+  tunel: () => salaTematica({
+    modelo: 'tunel', W: 5, D: 26, H: 3.6, parede: pbr('pedra', [10, 1.4]), piso: pbr('pedra', [2, 10], { color: 0x8a8a90 }), teto: pbr('pedra', [2, 10], { color: 0x6a6a70 }),
+    luz: 0xffb070, ceu: 0x050508, neblina: 0.05, porta: 'Subir para o castelo',
+    deco: (g, _o, atualiza, { W, D }) => {
+      const trilho = std({ color: 0x6a6460, metalness: 0.9, roughness: 0.35 });
+      for (const dx of [-0.72, 0.72]) caixa(g, 0.07, 0.07, D - 0.4, trilho, dx, 0, 0).castShadow = false;
+      const dormente = texMat(T.madeira([1, 1], '#3a2818'), { roughness: 0.9 });
+      for (let z = -D / 2 + 0.6; z < D / 2; z += 0.9) caixa(g, 1.9, 0.04, 0.22, dormente, 0, 0, z).castShadow = false;
+      const cobre = std({ color: 0xb87333, metalness: 0.9, roughness: 0.35 });
+      for (const lado of [-1, 1]) for (let i = 0; i < 3; i++) cil(g, 0.025, 0.025, D - 1, cobre, lado * (W / 2 - 0.08), 2 + i * 0.12, 0, 6).rotation.x = Math.PI / 2;
+      const leds: THREE.MeshStandardMaterial[] = [];
+      for (let z = -10; z <= 10; z += 5) {
+        const lado = z % 10 ? 1 : -1;
+        caixa(g, 0.2, 0.4, 0.5, metalEscuro(), lado * (W / 2 - 0.12), 1.3, z);
+        const l = std({ color: 0x000000, emissive: 0x33ff55, emissiveIntensity: 2 });
+        leds.push(l);
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 6), l);
+        p.position.set(lado * (W / 2 - 0.23), 1.6, z);
+        g.add(p);
+        lampiao(g, 0, 3, z, 3, 7, 0xffb070);
+      }
+      atualiza.push((t) => leds.forEach((l, i) => (l.emissiveIntensity = Math.sin(t * 4 + i * 2) > 0 ? 2.4 : 0.2)));
+    },
+  }),
+  // centro de crise: parede de telas, mesas com monitores e giroflex vermelho
+  crise: () => salaTematica({
+    modelo: 'crise', W: 16, D: 15, H: 5, parede: pbr('concreto', [4, 2], { color: 0x6a7078 }), piso: pbr('concreto', [4, 4], { color: 0x5a5f66 }),
+    lousa: 'Centro de Crise', carteiras: { fileiras: 3, colunas: 4, laptop: false }, luz: 0xd0e0ff, ceu: 0x05070c, porta: 'Sair do centro de crise',
+    deco: (g, _o, atualiza, { W, D }) => {
+      const tipos = ['mapa', 'graf', 'log', 'alerta', 'graf', 'mapa'] as const;
+      for (let fila = 0; fila < 2; fila++) for (let col = 0; col < 6; col++) {
+        if (col >= 2 && col <= 3 && fila === 0) continue;
+        const tex = telaFalsa(tipos[(col + fila) % 6], 'INCIDENTE', col + fila * 7);
+        const x = -6.5 + col * 2.6;
+        plano(g, 2.4, 1.4, std({ color: 0x000000, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.85 }), x, 1.6 + fila * 1.6, -D / 2 + 0.05).castShadow = false;
+      }
+      for (let f = 0; f < 3; f++) for (let c = 0; c < 4; c++) {
+        monitor(g, (c - 1.5) * 2.2 - 0.28, 0.76, -D / 2 + 3.4 + f * 2.3 - 0.15, 0.15, telaFalsa('log', '', f * 9 + c), 0.42, 0.27);
+        monitor(g, (c - 1.5) * 2.2 + 0.28, 0.76, -D / 2 + 3.4 + f * 2.3 - 0.15, -0.15, telaFalsa('graf', '', f * 5 + c), 0.42, 0.27);
+      }
+      const giro = new THREE.SpotLight(0xff2030, 30, 18, 0.5, 0.4, 1.2);
+      giro.position.set(0, 4.7, 0);
+      g.add(giro, giro.target);
+      const sirene = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), std({ color: 0x400000, emissive: 0xff2030, emissiveIntensity: 2 }));
+      sirene.position.set(0, 4.8, 0);
+      g.add(sirene);
+      atualiza.push((t) => giro.target.position.set(Math.cos(t * 3) * 6, 0, Math.sin(t * 3) * 6));
+      for (const lado of [-1, 1]) janela(g, lado * (W / 2 - 0.02), 2.6, 3, 1.6, 1.8, lado < 0 ? Math.PI / 2 : -Math.PI / 2, 0x1a2a4a);
+    },
+  }),
+  // galpão dos trens antigos com SOC improvisado: seis monitores de doação e painel de alertas
+  galpao: () => salaTematica({
+    modelo: 'galpao', W: 16, D: 18, H: 6.5, parede: pbr('tijolo', [6, 3]), piso: pbr('concreto', [5, 6], { color: 0x8a847c }),
+    lousa: 'SOC do Galpão', carteiras: { fileiras: 2, colunas: 3, laptop: false }, luz: 0xe0f0ff, porta: 'Sair do galpão',
+    deco: (g, obst, atualiza, { W, D }) => {
+      for (let i = 0; i < 6; i++) monitor(g, -4.5 + i * 1.8, 0, -D / 2 + 1.2, 0, telaFalsa(i % 3 === 0 ? 'graf' : i % 3 === 1 ? 'log' : 'mapa', '', i * 3), 0.9, 0.55).position.y = 1.0;
+      caixa(g, 11, 0.9, 0.7, madeiraEscura(), 0, 0, -D / 2 + 1.1);
+      const alerta = std({ color: 0x000000, emissive: 0xffffff, emissiveMap: telaFalsa('alerta', 'ALERTA'), emissiveIntensity: 1 });
+      plano(g, 2.4, 1.4, alerta, W / 2 - 0.06, 3.2, -3, 0, -Math.PI / 2).castShadow = false;
+      atualiza.push((t) => (alerta.emissiveIntensity = Math.sin(t * 5) > 0 ? 1.2 : 0.35));
+      // locomotiva velha no fundo
+      const loco = new THREE.Group();
+      loco.position.set(-W / 2 + 2.4, 0, 4);
+      g.add(loco);
+      const verde = std({ color: 0x2a4a3a, metalness: 0.5, roughness: 0.6 });
+      caixa(loco, 2.4, 0.9, 7, metalEscuro(), 0, 0.2, 0);
+      const caldeira = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.95, 4.5, 20), verde);
+      caldeira.rotation.x = Math.PI / 2;
+      caldeira.position.set(0, 2, -0.8);
+      loco.add(caldeira);
+      caixa(loco, 2.3, 2.4, 2.2, verde, 0, 1.1, 2.3);
+      cil(loco, 0.3, 0.38, 1, std({ color: 0x1a1a1a }), 0, 2.8, -2.4, 12);
+      for (const z of [-2.4, -0.8, 0.8, 2.4]) for (const x of [-1.2, 1.2]) {
+        const roda = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.15, 20), std({ color: 0x8a2a1a, metalness: 0.6 }));
+        roda.rotation.z = Math.PI / 2;
+        roda.position.set(x, 0.55, z);
+        loco.add(roda);
+      }
+      obst.push([-W / 2 + 1, -W / 2 + 3.8, 0, 8]);
+      // chaleira em cima de um banquinho
+      cil(g, 0.12, 0.15, 0.22, std({ color: 0xc0c0c0, metalness: 0.9, roughness: 0.3 }), W / 2 - 1.2, 0.76, 5, 14);
+      movel(g, 'painted_wooden_table', W / 2 - 1.2, 5, { larg: 1 });
+    },
+  }),
+  // cabine de sinalização: torrinha de madeira com alavancas
+  cabine: () => salaTematica({
+    modelo: 'cabine', W: 7, D: 6, H: 3.4, parede: texMat(T.madeira([3, 2], '#7a2e2a'), { roughness: 0.7 }), piso: texMat(T.tabuado([2, 3])),
+    lousa: 'Sinalização', luz: 0xffd8a0, porta: 'Descer da cabine',
+    deco: (g, obst, atualiza, { W, D }) => {
+      const cores = [0xc0392b, 0x2a5aaa, 0xd4b030, 0xc0392b, 0x2a5aaa, 0x2a2a2a, 0xc0392b, 0xd4b030];
+      const alavancas: THREE.Mesh[] = [];
+      for (let i = 0; i < 8; i++) {
+        const a = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.2, 8), std({ color: cores[i], metalness: 0.5, roughness: 0.4 }));
+        a.geometry.translate(0, 0.6, 0);
+        a.position.set(-1.75 + i * 0.5, 0.25, -D / 2 + 1.5);
+        a.rotation.x = i % 3 === 0 ? 0.5 : -0.25;
+        g.add(a);
+        alavancas.push(a);
+      }
+      caixa(g, 4.4, 0.25, 0.5, metalEscuro(), 0, 0, -D / 2 + 1.5);
+      obst.push([-2.3, 2.3, -D / 2 + 1, -D / 2 + 2]);
+      atualiza.push((t) => (alavancas[(Math.floor(t / 4) % 8)].rotation.x = 0.5 * Math.sin(t)));
+      for (const lado of [-1, 1]) for (const z of [-1, 1]) janela(g, lado * (W / 2 - 0.02), 2, z, 1.4, 1.2, lado < 0 ? Math.PI / 2 : -Math.PI / 2, 0x9ab0c8);
+    },
+  }),
+  // caixa de areia: sala isolada, sem janela, com tanque de areia e cabines de vidro
+  sandbox: () => salaTematica({
+    modelo: 'sandbox', W: 12, D: 12, H: 4, parede: pbr('concreto', [3, 1.5], { color: 0xd8d8d0 }), piso: pbr('concreto', [3, 3], { color: 0xb8b8b0 }),
+    lousa: 'Caixa de Areia', luz: 0xf0f4ff, porta: 'Sair da caixa de areia',
+    deco: (g, obst, _a, { W, D }) => {
+      caixa(g, 3.4, 0.35, 2.4, metalEscuro(), 0, 0, 0.6);
+      const areia = caixa(g, 3.2, 0.06, 2.2, std({ color: 0xe0c890, roughness: 1 }), 0, 0.33, 0.6);
+      areia.castShadow = false;
+      for (let i = 0; i < 6; i++) {
+        const monte = new THREE.Mesh(new THREE.ConeGeometry(0.25 + (i % 3) * 0.08, 0.2, 10), std({ color: 0xd8bc80, roughness: 1 }));
+        monte.position.set(-1.2 + i * 0.48, 0.48, 0.2 + (i % 2) * 0.7);
+        g.add(monte);
+      }
+      obst.push([-1.8, 1.8, -0.7, 1.9]);
+      const vidro = std({ color: 0xcfe8ff, roughness: 0.05, transparent: true, opacity: 0.22 });
+      for (const lado of [-1, 1]) for (let i = 0; i < 2; i++) {
+        const z = -3 + i * 3;
+        const x = lado * (W / 2 - 1.1);
+        caixa(g, 1.8, 2.4, 1.8, vidro, x, 0, z).castShadow = false;
+        monitor(g, x, 0.76, z - 0.3, 0, telaFalsa('log', '', i * 3 + (lado > 0 ? 1 : 0)), 0.42, 0.27);
+        movel(g, 'painted_wooden_table', x, z - 0.2, { larg: 1 });
+        obst.push([x - 0.95, x + 0.95, z - 0.95, z + 0.95]);
+      }
+      const tex = T.placa('SEM REDE · SEM WI-FI · SEM CHORO', '#1a1a1a', '#ffd166', 768, 96);
+      plano(g, 4, 0.5, std({ map: tex, roughness: 0.7 }), 0, 3.4, -D / 2 + 0.07).castShadow = false;
+    },
+  }),
+  // oficina do Bem-te-vi: bancada, eletrônicos e quadro de investigação com barbante vermelho
+  oficina: () => salaTematica({
+    modelo: 'oficina', W: 9, D: 9, H: 3.4, parede: pbr('reboco', [3, 1.5], { color: 0xb8a890 }), piso: texMat(T.tabuado([2, 3])),
+    luz: 0xffc070, porta: 'Sair da oficina',
+    deco: (g, obst, _a, { W, D }) => {
+      movel(g, 'painted_wooden_table', 0, -D / 2 + 1, { larg: 2.6 });
+      movel(g, 'desk_lamp_arm_01', -0.9, -D / 2 + 0.9, { alt: 0.45, y: 0.76 });
+      monitor(g, 0.4, 0.76, -D / 2 + 0.85, 0, telaFalsa('log', '', 13));
+      for (let i = 0; i < 5; i++) caixa(g, 0.3, 0.12, 0.25, std({ color: [0x2a6a2a, 0x2a2a6a, 0x6a2a2a][i % 3], roughness: 0.5 }), -0.6 + i * 0.32, 0.76, -D / 2 + 1.25);
+      obst.push([-1.4, 1.4, -D / 2, -D / 2 + 1.5]);
+      // quadro de investigação: fotos, papéis e barbante vermelho ligando tudo
+      const cv = document.createElement('canvas');
+      cv.width = 768;
+      cv.height = 448;
+      const c = cv.getContext('2d')!;
+      c.fillStyle = '#a8784a';
+      c.fillRect(0, 0, 768, 448);
+      const pontos: [number, number][] = [];
+      const r = rnd(21);
+      for (let i = 0; i < 11; i++) {
+        const x = 40 + r() * 660;
+        const y = 30 + r() * 360;
+        pontos.push([x + 35, y + 25]);
+        c.fillStyle = i % 3 ? '#f2eee2' : '#d8d0c0';
+        c.fillRect(x, y, 70, 50);
+        c.fillStyle = '#333';
+        c.font = '12px monospace';
+        c.fillText(['O NULO?', 'IP 10.0.0.66', '23h47', 'quem?', 'log apagado', 'senha123', 'túnel 4'][i % 7], x + 6, y + 28);
+      }
+      c.strokeStyle = '#c0392b';
+      c.lineWidth = 3;
+      c.beginPath();
+      pontos.forEach(([x, y], i) => (i ? c.lineTo(x, y) : c.moveTo(x, y)));
+      c.stroke();
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      plano(g, 3, 1.75, std({ map: tex, roughness: 1 }), -W / 2 + 0.05, 1.8, 0, 0, Math.PI / 2).castShadow = false;
+      movel(g, 'steel_frame_shelves_01', W / 2 - 0.5, 0, { alt: 2, ry: -Math.PI / 2 });
+      movel(g, 'Sofa_01', W / 2 - 1.1, 3, { larg: 1.8, ry: -Math.PI / 2 });
+    },
+  }),
+  // viveiro: galpão com gaiolas de contenção onde as criaturas-malware brilham
+  viveiro: () => salaTematica({
+    modelo: 'viveiro', W: 14, D: 14, H: 5, parede: texMat(T.madeira([4, 2], '#5a4a32'), { roughness: 0.8 }), piso: pbr('chao_mata', [4, 4]),
+    lousa: 'Criaturas-Malware', luz: 0xe0ffd0, porta: 'Sair do viveiro',
+    deco: (g, obst, atualiza, { W }) => {
+      const vidro = std({ color: 0xcfffe8, roughness: 0.05, transparent: true, opacity: 0.2 });
+      const ferro = metalEscuro();
+      const cores = [0x7dff9a, 0xff6ec7, 0x6ef2ff, 0xffd166, 0xc88aff, 0xff8a5a];
+      for (const lado of [-1, 1]) for (let i = 0; i < 3; i++) {
+        const x = lado * (W / 2 - 1.3);
+        const z = -3.5 + i * 3.2;
+        caixa(g, 1.8, 0.2, 1.8, ferro, x, 0, z);
+        caixa(g, 1.7, 1.7, 1.7, vidro, x, 0.2, z).castShadow = false;
+        const cor = cores[(i + (lado > 0 ? 3 : 0)) % 6];
+        const bicho = new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 1), std({ color: cor, emissive: cor, emissiveIntensity: 1.2, roughness: 0.4 }));
+        bicho.position.set(x, 0.9, z);
+        g.add(bicho);
+        const f = i * 1.3 + lado;
+        atualiza.push((t) => {
+          bicho.position.y = 0.9 + Math.sin(t * 2 + f) * 0.25;
+          bicho.rotation.set(t * 0.8 + f, t * 1.1, 0);
+        });
+        const tex = T.placa(['WORM', 'TROJAN', 'ROOTKIT', 'BOTNET', 'RANSOM', 'KEYLOGGER'][(i + (lado > 0 ? 3 : 0)) % 6], '#1a120c', '#e8c66a', 256, 64);
+        plano(g, 0.8, 0.2, std({ map: tex }), x - lado * 0.88, 1.95, z, 0, lado < 0 ? Math.PI / 2 : -Math.PI / 2).castShadow = false;
+        obst.push([x - 1, x + 1, z - 1, z + 1]);
+      }
+      for (let i = 0; i < 3; i++) barril(g, -W / 2 + 1.2 + i * 0.8, 5.6, 0.8);
+    },
+  }),
+  // sala do coletor central: o servidor Fofoqueiro e as telas de log
+  coletor: () => salaTematica({
+    modelo: 'coletor', W: 9, D: 9, H: 3.6, parede: pbr('concreto', [3, 1.5], { color: 0x7a8088 }), piso: pbr('concreto', [3, 3], { color: 0x5a5f66 }),
+    lousa: 'O Fofoqueiro', luz: 0xd0e8ff, ceu: 0x05070c, porta: 'Voltar ao data center',
+    deco: (g, obst, atualiza, { W, D }) => {
+      const RX = 2.9;
+      const RZ = -3.3;
+      caixa(g, 1, 2.2, 1, std({ color: 0x1a1c20, metalness: 0.6, roughness: 0.4 }), RX, 0, RZ);
+      obst.push([RX - 0.6, RX + 0.6, RZ - 0.6, RZ + 0.6]);
+      const leds: THREE.MeshStandardMaterial[] = [];
+      for (let i = 0; i < 18; i++) {
+        const l = std({ color: 0x000000, emissive: i % 4 ? 0x33ff55 : 0xffaa22, emissiveIntensity: 2 });
+        leds.push(l);
+        const p = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, 0.01), l);
+        p.position.set(RX - 0.35 + (i % 6) * 0.14, 0.4 + Math.floor(i / 6) * 0.55, RZ + 0.51);
+        g.add(p);
+      }
+      atualiza.push((t) => leds.forEach((l, i) => (l.emissiveIntensity = Math.sin(t * (5 + i) + i) > 0.3 ? 2.4 : 0.1)));
+      for (const lado of [-1, 1]) for (let i = 0; i < 2; i++) monitor(g, lado * (W / 2 - 0.5), 0.9, -2 + i * 1.6, lado < 0 ? Math.PI / 2 : -Math.PI / 2, telaFalsa('log', '', i + (lado > 0 ? 5 : 0)), 0.9, 0.55);
+      for (const lado of [-1, 1]) caixa(g, 0.8, 0.9, 3.6, madeiraEscura(), lado * (W / 2 - 0.45), 0, -1.2);
+      const tex = T.placa('FOFOQUEIRO · syslog', '#0b0a0e', '#6ef2ff', 512, 96);
+      plano(g, 0.9, 0.17, std({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.6 }), RX, 2.0, RZ + 0.52).castShadow = false;
+      void D;
+    },
+  }),
+};
+
+/** arquivo morto: estantes de aço com caixas, gaiolas antigas, fitas de backup ou discos de memória */
+function arquivo(tipo: 'logs' | 'gaiolas' | 'fitas' | 'dumps'): Area {
+  const frio = tipo === 'dumps';
+  return salaTematica({
+    modelo: 'arquivo_' + tipo, W: 12, D: 14, H: 4, parede: frio ? pbr('concreto', [3, 1.5], { color: 0xa0b0c0 }) : pbr('pedra', [4, 2]), piso: pbr('concreto', [3, 3], { color: 0x8a8a88 }),
+    lousa: frio ? 'Galeria dos Dumps' : undefined, luz: frio ? 0xb8d8ff : 0xffc070, ceu: 0x050508, neblina: frio ? 0.02 : 0.035,
+    porta: tipo === 'fitas' ? 'Sair do cofre' : 'Subir a escada',
+    deco: (g, obst) => {
+      const papelao = std({ color: 0xb08a5a, roughness: 1 });
+      const r = rnd(tipo.length * 7);
+      for (const x of [-3.6, -1.2, 1.2, 3.6]) {
+        for (const z of [-3, 1.2]) {
+          movel(g, 'steel_frame_shelves_01', x, z, { alt: 2.2 });
+          obst.push([x - 0.6, x + 0.6, z - 1.6, z + 1.6]);
+          for (let n = 0; n < 4; n++) for (let k = 0; k < 3; k++) {
+            const y = 0.12 + n * 0.55;
+            const zz = z - 0.9 + k * 0.9;
+            if (tipo === 'logs') caixa(g, 0.5, 0.32, 0.42, papelao, x, y, zz, (r() - 0.5) * 0.2);
+            else if (tipo === 'fitas') for (let f = 0; f < 3; f++) cil(g, 0.13, 0.13, 0.04, std({ color: f % 2 ? 0x1a1a1a : 0x3a2a1a, roughness: 0.4 }), x - 0.15 + f * 0.15, y + 0.12, zz, 16).rotation.z = Math.PI / 2;
+            else if (tipo === 'dumps') {
+              caixa(g, 0.38, 0.06, 0.28, std({ color: 0x9aa0a8, metalness: 0.8, roughness: 0.3 }), x, y, zz);
+              plano(g, 0.16, 0.05, std({ color: 0xf2eee2 }), x, y + 0.03, zz + 0.142).castShadow = false;
+            } else {
+              const gaiola = std({ color: 0x5a5a5a, metalness: 0.7, roughness: 0.5, wireframe: true });
+              caixa(g, 0.45, 0.4, 0.45, gaiola, x, y, zz).castShadow = false;
+            }
+          }
+        }
+      }
+      if (tipo === 'fitas') {
+        // a geladeira desligada onde o Seu Zé guarda as fitas mais importantes
+        caixa(g, 0.8, 1.8, 0.75, std({ color: 0xe8e4dc, roughness: 0.4 }), -5.3, 0, -5.8);
+        caixa(g, 0.05, 0.5, 0.05, std({ color: 0xaaaaaa, metalness: 0.8 }), -4.95, 1.1, -5.4);
+      }
+    },
+  });
+}
+
+/** arena das bandeiras: salão das três escolas, com palco, telão e arquibancadas */
+function arena(): Area {
+  const a = salaTematica({
+    modelo: 'arena', W: 20, D: 22, H: 8, parede: pbr('tijolo', [6, 3]), piso: pbr('assoalho', [5, 5]),
+    lousa: 'Competição Ética', carteiras: { fileiras: 2, colunas: 4, z0: -3 }, luz: 0xffe8c8, porta: 'Sair da arena',
+    deco: (g, obst, atualiza, { W, D }) => {
+      caixa(g, 10, 0.5, 3, madeiraEscura(), 0, 0, -D / 2 + 2.6);
+      obst.push([-5, 5, -D / 2 + 1.1, -D / 2 + 4.1]);
+      // as bandeiras das três escolas penduradas no alto
+      const escolas: [string, string, string][] = [['PARANAPIACABA', '#2a1a4a', '#f2c45a'], ['PAMPA DIGITAL', '#1a3a2a', '#9fe79f'], ['ACADEMIA DO SERTÃO', '#4a2a10', '#ffb366']];
+      const panos: THREE.Mesh[] = [];
+      escolas.forEach(([nome, fundo, cor], i) => {
+        const cv = document.createElement('canvas');
+        cv.width = 256;
+        cv.height = 640;
+        const c = cv.getContext('2d')!;
+        c.fillStyle = fundo;
+        c.fillRect(0, 0, 256, 640);
+        c.strokeStyle = cor;
+        c.lineWidth = 10;
+        c.strokeRect(14, 14, 228, 612);
+        c.fillStyle = cor;
+        c.font = 'bold 30px serif';
+        c.textAlign = 'center';
+        nome.split(' ').forEach((p, k) => c.fillText(p, 128, 260 + k * 42));
+        c.beginPath();
+        c.arc(128, 150, 54, 0, Math.PI * 2);
+        c.fill();
+        const tex = new THREE.CanvasTexture(cv);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const pano = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 5.5, 1, 12), std({ map: tex, side: THREE.DoubleSide, roughness: 0.9 }));
+        pano.position.set(-6 + i * 6, 5, -D / 2 + 0.3);
+        g.add(pano);
+        panos.push(pano);
+      });
+      atualiza.push((t) => panos.forEach((p, i) => (p.rotation.y = Math.sin(t * 0.8 + i) * 0.05)));
+      // arquibancadas laterais com lugares para a plateia
+      for (const lado of [-1, 1]) for (let degrau = 0; degrau < 3; degrau++) {
+        const x = lado * (W / 2 - 1 - degrau * 0.9);
+        caixa(g, 0.9, 0.45 + degrau * 0.45, 12, madeiraEscura(), x, 0, 2);
+        obst.push([x - 0.45, x + 0.45, -4, 8]);
+      }
+      for (const lado of [-1, 1]) caixa(g, 0.1, 1, 6, std({ color: 0x000000, emissive: 0xffffff, emissiveMap: telaFalsa('graf', '', lado + 3), emissiveIntensity: 0.8 }), lado * (W / 2 - 0.05), 4, -4);
+    },
+  });
+  // a plateia senta no degrau de baixo de cada arquibancada
+  a.assentos = [...(a.assentos ?? []), ...[-1, 1].flatMap((lado) => [-2, 0, 2, 4, 6].map((z) => ({ x: lado * (20 / 2 - 1), z, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2, y: 0 })))];
+  return a;
+}
+
+/** rotunda das locomotivas: galpão redondo com plataforma giratória e locomotivas em raios */
+function rotunda(): Area {
+  const g = new THREE.Group();
+  const R = 13;
+  const parede = new THREE.Mesh(new THREE.CylinderGeometry(R, R, 7, 40, 1, true), (() => { const m = pbr('tijolo', [10, 2]); m.side = THREE.BackSide; return m; })());
+  parede.position.y = 3.5;
+  g.add(parede);
+  const chao = new THREE.Mesh(new THREE.CircleGeometry(R, 40), pbr('concreto', [6, 6], { color: 0x8a847c }));
+  chao.rotation.x = -Math.PI / 2;
+  chao.receiveShadow = true;
+  g.add(chao);
+  const teto = new THREE.Mesh(new THREE.ConeGeometry(R + 0.3, 3.5, 40, 1, true), (() => { const m = std({ color: 0x3a2a1e, roughness: 1 }); m.side = THREE.BackSide; return m; })());
+  teto.position.y = 7 + 1.75;
+  g.add(teto);
+  // plataforma giratória no centro
+  const giro = new THREE.Group();
+  g.add(giro);
+  cil(g, 3.2, 3.2, 0.05, metalEscuro(), 0, 0, 0, 40);
+  caixa(giro, 1.6, 0.25, 6.2, texMat(T.tabuado([1, 4])), 0, 0.05, 0);
+  const trilho = std({ color: 0x6a6460, metalness: 0.9, roughness: 0.35 });
+  for (const dx of [-0.72, 0.72]) caixa(giro, 0.07, 0.07, 6.2, trilho, dx, 0.3, 0);
+  // locomotivas dormindo em raios
+  const verde = std({ color: 0x2a4a3a, metalness: 0.5, roughness: 0.6 });
+  const vermelho = std({ color: 0x6a2a1a, metalness: 0.5, roughness: 0.6 });
+  const obst: Area['obstaculos'] = [];
+  for (let i = 0; i < 7; i++) {
+    const ang = Math.PI * 0.15 + (i * Math.PI * 1.7) / 7;
+    const raio = new THREE.Group();
+    raio.rotation.y = ang;
+    g.add(raio);
+    for (const dx of [-0.72, 0.72]) caixa(raio, 0.07, 0.07, 8, trilho, dx, 0, -(R - 4.6));
+    if (i % 2 === 0) {
+      const cor = i % 4 ? vermelho : verde;
+      caixa(raio, 2.2, 0.9, 6, metalEscuro(), 0, 0.2, -(R - 4));
+      const cald = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 4, 18), cor);
+      cald.rotation.x = Math.PI / 2;
+      cald.position.set(0, 1.9, -(R - 4) + 0.8);
+      raio.add(cald);
+      caixa(raio, 2.1, 2.2, 2, cor, 0, 1.1, -(R - 4) - 2);
+      cil(raio, 0.28, 0.35, 0.9, std({ color: 0x1a1a1a }), 0, 2.7, -(R - 4) + 2.4, 12);
+      const cx = -Math.sin(ang) * (R - 4);
+      const cz = -Math.cos(ang) * (R - 4);
+      obst.push([cx - 1.8, cx + 1.8, cz - 1.8, cz + 1.8]);
+    }
+  }
+  luzPrincipal(g, 0, 6.6, 3, 0xffe2c0, 40, new THREE.Vector3(0, 0, -2));
+  lampiao(g, 0, 5.5, 0, 6, 14, 0xffc98a);
+  g.add(new THREE.HemisphereLight(0xd8d0c8, 0x3a3028, 1.1));
+  return {
+    modelo: 'rotunda', grupo: g, entrada: { x: 0, z: 6, yaw: 0 }, palco: [{ x: -1.4, z: 4 }, { x: 1.4, z: 3.9 }, { x: 0, z: 3.5 }, { x: 2.4, z: 4.6 }],
+    professor: { x: 1.6, z: 3 },
+    limites: [-8, 8, -8, 9], obstaculos: obst,
+    portas: [{ x: 0, z: R - 1, rotulo: 'Sair da rotunda' }], ceu: 0x1a1612, neblina: 0.02,
+    atualizar: (_dt, t) => (giro.rotation.y = t * 0.08),
+  };
+}
+
 function dormitorio(): Area {
   const g = new THREE.Group();
   const W = 9;
@@ -1490,9 +2164,13 @@ function campo(): Area {
 export function modeloDoLugar(l: Lugar | undefined): string {
   if (!l) return 'patio';
   const fixo: Record<string, string> = {
+    a1_sala_persuasao: 'persuasao', a2_casa_maquinas: 'maquinas', a2_sala_comutacao: 'comutacao', a3_sala_rastros: 'rastros', a5_sala_sinergia: 'sinergia',
+    a6_lab_reverso: 'reverso', a2_tuneis: 'tunel', a7_centro_crise: 'crise', a5_galpao: 'galpao', a5_cabine_sinais: 'cabine', a6_caixa_areia: 'sandbox',
+    a7_oficina: 'oficina', a3_sala_coletor: 'coletor', a3_arquivo_morto: 'arquivo_logs', a6_arquivo_morto: 'arquivo_gaiolas', a3_cofre_fitas: 'arquivo_fitas',
+    a6_galeria_dumps: 'arquivo_dumps', a4_arena: 'arena', a5_rotunda: 'rotunda', viveiro: 'viveiro',
     vila: 'vila', vila_vagao: 'vagao', vila_doceria: 'loja_doceria', vila_teclados: 'loja_teclados', vila_livraria: 'loja_livraria', vila_correio: 'loja_correio', vila_pegadinhas: 'loja_pegadinhas',
     a1_clube_duelos: 'clube', sala_diretora: 'gabinete', a1_pombal: 'pombal', a2_torre_relogio: 'relogio', a1_galeria_formandos: 'galeria', refeitorio: 'salao', dormitorio: 'dormitorio', lab_terminal: 'aula', biblioteca: 'biblioteca', datacenter: 'datacenter',
-    casa_vo: 'casa', estacao: 'trem', santa_ifigenia: 'cidade', cripta: 'masmorra', torre_redes: 'torre', viveiro: 'floresta',
+    casa_vo: 'casa', estacao: 'trem', santa_ifigenia: 'cidade', cripta: 'masmorra', torre_redes: 'torre',
     mata: 'floresta', campo: 'campo', represa: 'lago', secretaria: 'colunas', patio: 'patio',
   };
   if (fixo[l.id]) return fixo[l.id];
@@ -1525,6 +2203,8 @@ export function construir(modelo: string): Area {
     case 'lago': return floresta(true);
     case 'campo': return campo();
     case 'clube': return clube();
+    case 'arena': return arena();
+    case 'rotunda': return rotunda();
     case 'vila': return vila();
     case 'vagao': return vagao();
     case 'loja_doceria': return loja('doceria');
@@ -1536,7 +2216,10 @@ export function construir(modelo: string): Area {
     case 'pombal': return pombal();
     case 'relogio': return pombal(true);
     case 'galeria': return galeria();
-    default: return sala('aula');
+    default:
+      if (TEMAS[modelo]) return TEMAS[modelo]();
+      if (modelo.startsWith('arquivo_')) return arquivo(modelo.slice(8) as 'logs' | 'gaiolas' | 'fitas' | 'dumps');
+      return sala('aula');
   }
 }
 

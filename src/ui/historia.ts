@@ -146,7 +146,8 @@ export function notaEstrelas(acertos: number, total: number): number {
 /** roda uma aula. Em modo revisão (do boletim) só melhora a nota. */
 // Aula só acontece em sala do castelo. Fora da escola (casa, galeria, trem, Secretaria) vira ensinamento,
 // sem sala nem lousa. Dentro da escola mas fora de uma sala (refeitório, pátio), vai para a sala da matéria.
-const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra'];
+// salas do castelo onde a aula acontece no próprio lugar (as temáticas também contam)
+const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra', 'persuasao', 'maquinas', 'comutacao', 'rastros', 'sinergia', 'reverso', 'tunel', 'crise', 'galpao', 'cabine', 'sandbox', 'viveiro', 'coletor', 'arquivo_dumps', 'arena', 'rotunda'];
 const FORA_DA_ESCOLA = ['casa', 'cidade', 'trem', 'colunas'];
 export function ondeEnsina(p: PassoAula): { lugar: string; ensinamento: boolean } {
   const m = modeloDoLugar(LUGARES.get(p.lugar));

@@ -529,5 +529,5 @@ export async function encenar(momento: Momento | null) {
 /** momento que combina com o lugar quando não há indicação da história */
 export function momentoDoLugar(): Momento | null {
   const m = C.area?.modelo;
-  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' || m === 'vagao' ? 'plateia' : null;
+  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' || m === 'vagao' || m === 'arena' ? 'plateia' : null;
 }
