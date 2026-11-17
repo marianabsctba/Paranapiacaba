@@ -365,3 +365,12 @@ img.foto.carregando { opacity: .35; }
 /* controles de volume nos ajustes */
 .barra-som { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
 .barra-som input { flex: 1; accent-color: #f2c45a; }
+
+/* partida de Capturebol */
+.capt-hud { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+.capt-placar { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: rgba(10, 8, 20, 0.78); border: 1px solid rgba(242, 196, 90, 0.5); border-radius: 12px; padding: 8px 16px; font-weight: 800; font-size: 1.05rem; display: flex; gap: 14px; align-items: center; white-space: nowrap; }
+.capt-placar b { color: #fff; font-family: 'JetBrains Mono', monospace; }
+.capt-msg { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: rgba(10, 8, 20, 0.7); border-radius: 10px; padding: 6px 14px; opacity: 0; transition: opacity 0.4s; text-align: center; max-width: 90vw; }
+.capt-msg.on { opacity: 1; }
+.capt-painel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92vw); max-height: 80vh; overflow-y: auto; background: rgba(20, 14, 38, 0.95); border: 1px solid rgba(242, 196, 90, 0.5); border-radius: 16px; padding: 16px; pointer-events: auto; }
+.capt-titulo { font-weight: 800; color: #f2c45a; margin-bottom: 8px; }

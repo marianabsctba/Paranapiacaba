@@ -11,6 +11,7 @@ import { M } from '../tres/motor3d';
 import { imgFoto } from '../tres/foto';
 import { aviso, botao, h } from './dom';
 import { atenderNaVila } from './vila';
+import { conviteCapturebol } from './capturebol';
 import * as Som from '../motor/som';
 
 interface Acoes {
@@ -156,6 +157,7 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
     }
     const id = alvo.h.id;
     if (atenderNaVila(id, C3.C.lugarId, janela)) return;
+    if (id === 'bia' && C3.C.lugarId === 'campo') return conviteCapturebol(janela, app, () => desenhaObjetivo());
     const p = PERSONAGENS.get(id);
     const ehAmigo = ['tati', 'caua', 'bia', 'jonas', 'enzo'].includes(id);
     const pool = ehAmigo ? FALAS_AMIGOS : /^aluno/.test(id) ? FALAS_FIGURANTES : FALAS_ADULTOS;

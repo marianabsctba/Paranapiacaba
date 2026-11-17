@@ -431,15 +431,31 @@ export function alvoNaMira(): Alvo {
   ray.far = 3.2;
   const cand: THREE.Object3D[] = [...C.portas, ...[...C.npcs.values(), ...C.figurantes].map((h) => h.raiz)];
   const hit = ray.intersectObjects(cand, true)[0];
-  if (!hit) return null;
-  let o: THREE.Object3D | null = hit.object;
+  let o: THREE.Object3D | null = hit?.object ?? null;
   while (o) {
     if (o.userData.porta) return { tipo: 'porta', rotulo: o.userData.porta, destino: o.userData.destino };
     if (o.userData.humano) return { tipo: 'npc', h: o.userData.humano as Humano };
     o = o.parent;
   }
-  return null;
+  // o raio às vezes atravessa a malha animada; vale quem estiver perto e bem na frente (ajuda no celular)
+  const cam = M.camera.position;
+  const frente = M.camera.getWorldDirection(VMIRA);
+  let melhor: Humano | null = null;
+  let melhorAng = 0.3;
+  for (const h of [...C.npcs.values(), ...C.figurantes]) {
+    const alvo = h.cabeca().sub(cam);
+    alvo.y -= 0.3;
+    const d = alvo.length();
+    if (d > 3.2 || d < 0.3) continue;
+    const ang = alvo.normalize().angleTo(frente);
+    if (ang < melhorAng) {
+      melhorAng = ang;
+      melhor = h;
+    }
+  }
+  return melhor ? { tipo: 'npc', h: melhor } : null;
 }
+const VMIRA = new THREE.Vector3();
 
 export function preCarregarElenco() {
   preCarregar(['tati', 'caua', 'bia', 'jonas', 'enzo', 'vo_cida', 'baltazar', 'iolanda', 'otavio', 'aluno1', 'aluno2', 'aluno3', 'aluno4']);
@@ -538,5 +554,5 @@ export async function encenar(momento: Momento | null) {
 /** momento que combina com o lugar quando não há indicação da história */
 export function momentoDoLugar(): Momento | null {
   const m = C.area?.modelo;
-  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' || m === 'vagao' || m === 'arena' ? 'plateia' : null;
+  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' || m === 'vagao' || m === 'arena' || m === 'campo' ? 'plateia' : null;
 }

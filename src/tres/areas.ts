@@ -2141,6 +2141,10 @@ function campo(): Area {
   const madeira = texMat(T.madeira([4, 1], '#5a3a20'));
   for (const x of [-22, 22])
     for (let k = 0; k < 6; k++) caixa(g, 2, 0.5 + k * 0.6, 50, madeira, x + Math.sign(x) * k * 1.1, 0, 0);
+  // lugares na arquibancada para a torcida (degraus de baixo)
+  const torcida: NonNullable<Area['assentos']> = [];
+  for (const x of [-22, 22]) for (let k = 0; k < 3; k++) for (let z = -18; z <= 18; z += 4.5)
+    torcida.push({ x: x + Math.sign(x) * k * 1.1, z: z + k * 1.3, ry: x < 0 ? Math.PI / 2 : -Math.PI / 2, y: 0.5 + k * 0.6 - 0.45 });
   COR_CASA.forEach((c, i) => plano(g, 2, 6, std({ color: c, side: THREE.DoubleSide }), -28 + (i % 2) * 56, 8, -15 + i * 10, 0, Math.PI / 2));
   const flag = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), std({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 2, metalness: 1 }));
   g.add(flag);
@@ -2152,6 +2156,9 @@ function campo(): Area {
   Object.assign(sol.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40 });
   g.add(sol);
   return {
+    // a Bia, goleira, espera no campo para chamar para um amistoso
+    gente: [{ id: 'bia', x: 1.2, z: 11.9, ry: -0.5 }],
+    assentos: torcida,
     modelo: 'campo', grupo: g, entrada: { x: 0, z: 14, yaw: 0 }, palco: [{ x: -1.2, z: 11.6 }, { x: 1.2, z: 11.4 }, { x: 0, z: 11 }, { x: -2.4, z: 12.4 }],
     limites: [-18, 18, -34, 34], obstaculos: [],
     portas: [{ x: 0, z: 33, rotulo: 'Voltar ao castelo' }], ceu: 0x9fbfe0, neblina: 0.018,

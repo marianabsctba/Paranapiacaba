@@ -18,6 +18,7 @@ export const J = {
   teclas: new Set<string>(),
   joy: { x: 0, y: 0 },
   toque: false,
+  voo: 1, // multiplica a velocidade (vassoura-drone no Capturebol)
 };
 
 let canvasRef: HTMLCanvasElement | null = null;
@@ -153,7 +154,7 @@ function atualizar(dt: number, t: number) {
     fz += J.joy.y;
     const n = Math.hypot(fx, fz);
     if (n > 0.05) {
-      const vel = (k.has('ShiftLeft') || k.has('ShiftRight') || n > 0.95 ? 3.6 : 2.2) * Math.min(1, n);
+      const vel = (k.has('ShiftLeft') || k.has('ShiftRight') || n > 0.95 ? 3.6 : 2.2) * Math.min(1, n) * J.voo;
       fx /= Math.max(1, n);
       fz /= Math.max(1, n);
       const s = Math.sin(J.yaw);
@@ -163,7 +164,7 @@ function atualizar(dt: number, t: number) {
       if (!colide(J.pos.x + dx, J.pos.z)) J.pos.x += dx;
       if (!colide(J.pos.x, J.pos.z + dz)) J.pos.z += dz;
       J.olho = OLHO + Math.sin(t * 9) * 0.018 * Math.min(1, n);
-      Som.passo(vel > 3);
+      if (J.voo === 1) Som.passo(vel > 3);
     }
   }
   M.camera.position.set(J.pos.x, J.pos.y + J.olho, J.pos.z);
