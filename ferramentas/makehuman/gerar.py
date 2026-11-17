@@ -120,14 +120,52 @@ def criar(s):
         c = HumanService.add_mhclo_asset(achar("clothes", r), base, asset_type="Clothes", subdiv_levels=0)
         if c:
             c.name = "roupa_" + papel(r)
+            c.data.name = c.name
+            c["asset"] = r
     base.name = "corpo"
     for o in list(bpy.data.objects):
-        if o.type == "MESH" and o.name.startswith("roupa_terno"):
+        # só o blazer do uniforme tem gravata a separar; em outras roupas o laranja é estampa
+        if o.type == "MESH" and o.get("asset", "") == "toigo_male_suit_tie_and_jacket":
             separar_gravata(o)
+    tirar_sobreposicao()
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.name.startswith("roupa_"):
+            for p in o.data.polygons:
+                p.use_smooth = True
     erodir_mascara(base, aneis=3)
     if s["capa"]:
         capa(base, rig, longa=s["capa"] == 2, cachecol=s["capa"] == 1)
     return base, rig
+
+
+def tirar_sobreposicao():
+    """Peça de baixo (calça, saia) perde o que fica escondido sob a de cima (blusa, suéter).
+    Sem isso as duas disputam o mesmo lugar na cintura e aparece um recorte serrilhado."""
+    dg = bpy.context.evaluated_depsgraph_get()
+    def zs(o):
+        ev = o.evaluated_get(dg)
+        me = ev.to_mesh()
+        r = [(o.matrix_world @ v.co).z for v in me.vertices]
+        ev.to_mesh_clear()
+        return r
+    cima = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("roupa_camisa")]
+    baixo = [o for o in bpy.data.objects if o.type == "MESH" and o.name.startswith("roupa_calca")]
+    if not cima or not baixo:
+        return
+    barra = min(min(zs(o)) for o in cima)
+    corpo = bpy.data.objects.get("corpo")
+    altura = max(zs(corpo)) if corpo else 1.7
+    folga = 0.025 * altura
+    for o in baixo:
+        me = o.data
+        mw = o.matrix_world
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        apagar = [fc for fc in bm.faces if all((mw @ v.co).z > barra + folga for v in fc.verts)]
+        bmesh.ops.delete(bm, geom=apagar, context="FACES")
+        bm.to_mesh(me)
+        bm.free()
+        print("sobreposicao", o.name, len(apagar), "faces escondidas apagadas")
 
 
 def separar_gravata(ob):
@@ -177,7 +215,7 @@ def separar_gravata(ob):
         k = (y * w + x) * 4
         return px[k], px[k + 1], px[k + 2]
     sel = set(marcadas)
-    for _ in range(2):
+    for _ in range(4):
         novas = set()
         for i in sel:
             for j in viz.get(i, ()):
@@ -185,7 +223,7 @@ def separar_gravata(ob):
                     continue
                 r, g, b = cor(ob.data.polygons[j])
                 mx, mn = max(r, g, b), min(r, g, b)
-                if mx > 0.2 and r == mx and (mx - mn) / mx > 0.25:
+                if mx > 0.15 and r == mx and (mx - mn) / mx > 0.2:
                     novas.add(j)
         sel |= novas
     for _ in range(3):

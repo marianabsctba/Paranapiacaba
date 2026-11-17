@@ -428,7 +428,28 @@ function sala(variante: 'aula' | 'biblioteca' | 'datacenter' | 'torre' = 'aula')
       }
     }
     repetir(g, 'wooden_bookshelf_worn', estantes, { alt: 2.6 });
-    repetir(g, 'book_encyclopedia_set_01', livrosPos, { larg: 0.62 }, false);
+    // lombadas de livro desenhadas de uma vez só: as coleções 3D pesavam quase 3 milhões de triângulos
+    void livrosPos;
+    const cores = [0x7a2e2e, 0x2e4a7a, 0x2e6a3a, 0x8a6a2a, 0x5a2e6a, 0x3a3a3a, 0x9a4a2a, 0x2a5a5a, 0xc9b26b];
+    const lombadas: { x: number; y: number; z: number; w: number; h: number; c: number }[] = [];
+    for (const e of estantes)
+      for (const y of [0.12, 0.6, 1.08, 1.56, 2.04]) {
+        let x = e.x - 0.74;
+        while (x < e.x + 0.7) {
+          const w = 0.03 + r() * 0.035;
+          if (r() > 0.08) lombadas.push({ x: x + w / 2, y, z: e.z, w, h: 0.26 + r() * 0.12, c: cores[Math.floor(r() * cores.length)] });
+          x += w + 0.004;
+        }
+      }
+    const livro = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 0.24).translate(0, 0.5, 0), std({ color: 0xffffff, roughness: 0.75 }), lombadas.length);
+    const mm = new THREE.Matrix4();
+    lombadas.forEach((l, i) => {
+      mm.makeScale(l.w, l.h, 1).setPosition(l.x, l.y, l.z);
+      livro.setMatrixAt(i, mm);
+      livro.setColorAt(i, new THREE.Color(l.c));
+    });
+    livro.receiveShadow = true;
+    g.add(livro);
     for (const x of [-2.8, 2.8]) {
       movel(g, 'painted_wooden_table', x, 4.3, { larg: 1.6 });
       movel(g, 'book_encyclopedia_set_01', x - 0.3, 4.3, { larg: 0.45, y: 0.76 });

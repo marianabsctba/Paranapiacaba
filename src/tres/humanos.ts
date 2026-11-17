@@ -140,12 +140,24 @@ export class Humano {
           mt.depthWrite = true;
           mt.alphaTest = fio ? 0.45 : /low-poly/i.test(mt.name) ? 0.5 : 0;
           if (!fio) mt.side = THREE.FrontSide;
-          if (/^(roupa_|capa)/.test(me.name)) {
+          // roupa é tudo que não é corpo, olho, cabelo, sobrancelha ou cílio (o nome da malha varia com o asset)
+          const roupa = !fio && !/body|low-poly|eye/i.test(mt.name) && !/^corpo/.test(me.name);
+          if (roupa) {
             // a camisa fica por cima da calça na cintura; sem isso as duas brigam pelo mesmo pixel
-            const prio = /^roupa_(camisa|terno)/.test(me.name) ? -12 : -2;
+            const prio = /shirt|sweater|top|suit|jacket|blouse/i.test(mt.name + me.name) ? -12 : -2;
             mt.polygonOffset = true;
             mt.polygonOffsetFactor = prio;
             mt.polygonOffsetUnits = prio;
+            // tecido é fosco: sem isso blazer e terno brilhavam como plástico
+            if (!/^gravata/.test(mt.name)) {
+              mt.roughness = Math.max(mt.roughness, 0.85);
+              mt.metalness = 0;
+              mt.roughnessMap = null;
+              mt.metalnessMap = null;
+              mt.envMapIntensity = 0.45;
+              // relevo do tecido mais suave: forte demais, o blazer parecia papel amassado
+              if (mt.normalMap) mt.normalScale.set(0.3, 0.3);
+            }
           }
           // gravata do uniforme: tecido liso na cor da casa (ou da escola, para visitantes)
           if (tinta !== undefined && /^gravata/.test(mt.name)) {
