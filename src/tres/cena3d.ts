@@ -290,15 +290,18 @@ export function raio(ida: boolean, oponente: string): Promise<void> {
   if (!h) return Promise.resolve();
   const de = new THREE.Vector3(0.28, -0.25, -0.6).applyQuaternion(M.camera.quaternion).add(M.camera.position);
   const ate = h.cabeca().setY(h.raiz.position.y + h.altura * 0.6);
-  const [a, b] = ida ? [de, ate] : [ate, M.camera.position.clone().add(new THREE.Vector3(0, -0.1, 0))];
+  // o feitiço do oponente para um palmo antes do seu rosto (senão a bola enche a tela)
+  const naCara = new THREE.Vector3(0, -0.12, -0.7).applyQuaternion(M.camera.quaternion).add(M.camera.position);
+  const [a, b] = ida ? [de, ate] : [ate, naCara];
   const cor = ida ? 0x7df9ff : 0xff3d5a;
   const bola = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), new THREE.MeshBasicMaterial({ color: cor }));
   const rastro: THREE.Mesh[] = [];
   M.cena.add(bola);
-  let t = 0;
+  // pelo relógio, não por quadro: com o jogo lento o feitiço não se arrasta
+  const inicio = performance.now();
   return new Promise((fim) => {
-    const f = (dt: number) => {
-      t += dt / 0.45;
+    const f = () => {
+      const t = (performance.now() - inicio) / 450;
       const p = a.clone().lerp(b, Math.min(1, t));
       p.y += Math.sin(Math.min(1, t) * Math.PI) * 0.25;
       bola.position.copy(p);

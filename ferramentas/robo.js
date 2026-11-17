@@ -7,7 +7,7 @@ window.__robo = async function ({ maxPassos = 4000, ate = 'Capítulo concluído'
   const log = [];
   const lugares = [];
   let ultimoLugar = '';
-  let parado = 0;
+  let paradoDesde = Date.now();
   let ultimoTexto = '';
   const clicar = (el) => el && el.click();
   for (let i = 0; i < maxPassos; i++) {
@@ -21,12 +21,11 @@ window.__robo = async function ({ maxPassos = 4000, ate = 'Capítulo concluído'
       if (fotos) await fotos(local);
     }
     const textoTela = (painel && !painel.hidden ? painel.innerText : caixa?.innerText ?? '').slice(0, 80);
-    if (textoTela === ultimoTexto) parado++;
-    else {
-      parado = 0;
+    if (textoTela !== ultimoTexto) {
+      paradoDesde = Date.now();
       ultimoTexto = textoTela;
     }
-    if (parado > 60) {
+    if (Date.now() - paradoDesde > 45000) {
       log.push(`TRAVOU em "${textoTela}" (lugar: ${local})`);
       break;
     }
