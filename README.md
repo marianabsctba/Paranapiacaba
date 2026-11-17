@@ -24,6 +24,7 @@ Enredo e personagens são originais. Toda técnica ofensiva aparece só em labor
 - Pessoas em 3D geradas com [MakeHuman](http://www.makehumancommunity.org/) via MPFB no Blender, com assets CC0.
 - Animações da Universal Animation Library, de [Quaternius](https://quaternius.com/) (CC0), adaptadas ao esqueleto do MPFB.
 - Texturas e móveis 3D do [Poly Haven](https://polyhaven.com/) (CC0), convertidos para WebP e GLB com Draco (`ferramentas/texturas.mjs` e gltf-transform).
+- Sons e músicas CC0 do [OpenGameArt](https://opengameart.org/), convertidos para MP3 em `public/som`: músicas de RandomMind (Exploration, The Old Tower Inn, King's Feast, Minstrel Dance, The Bard's Tale), Epic Boss Battle de Juhani Junkala (SubspaceAudio), Dungeon Ambience de yd, Dark Cavern Ambient de Paul Wortmann, vento de ignasd, ambiente de parque de thimras, Magic Spell SFX de JaggedStone e os pacotes RPG Audio e Interface Sounds de [Kenney](https://kenney.nl/). Os climas sem música gravada (tensão, natureza, viagem) e alguns ambientes são sintetizados no navegador.
 - Motor 3D: [Three.js](https://threejs.org/) (MIT). Arquitetura do castelo, comida do banquete e velas gerados no próprio código.
 - O gerador do elenco está em `ferramentas/makehuman/gerar.py`.
 

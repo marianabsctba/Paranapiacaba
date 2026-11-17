@@ -94,8 +94,91 @@ function iniciar() {
   const r = ruido.getChannelData(0);
   for (let i = 0; i < r.length; i++) r[i] = Math.random() * 2 - 1;
   ajustar({});
+  EFEITOS.forEach((n) => void carregar(n));
   trocarClima(climaPedido, true);
   trocarAmbiente(ambientePedido);
+}
+
+// ---------------------------------------------------------------- sons gravados (CC0, em public/som)
+
+const BASE_SOM = `${import.meta.env.BASE_URL}som/`;
+const buffers = new Map<string, Promise<AudioBuffer | null>>();
+const prontos = new Map<string, AudioBuffer>();
+
+function carregar(nome: string): Promise<AudioBuffer | null> {
+  let p = buffers.get(nome);
+  if (!p) {
+    p = fetch(BASE_SOM + nome + '.mp3?v=' + __VERSAO__)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject()))
+      .then((b) => ctx!.decodeAudioData(b))
+      .then((buf) => {
+        prontos.set(nome, buf);
+        return buf;
+      })
+      .catch(() => null);
+    buffers.set(nome, p);
+  }
+  return p;
+}
+
+/** toca um som curto já carregado; devolve false se ainda não chegou (aí entra o sintetizado) */
+function tocar(nome: string, vol = 1, taxa = 1, quando = 0): boolean {
+  const buf = prontos.get(nome);
+  if (!buf || !ctx) {
+    if (ctx) void carregar(nome);
+    return false;
+  }
+  const s = ctx.createBufferSource();
+  s.buffer = buf;
+  s.playbackRate.value = taxa;
+  const g = ctx.createGain();
+  // os arquivos gravados vêm bem mais altos que os sintetizados
+  g.gain.value = vol * 0.32;
+  s.connect(g).connect(busEfeitos);
+  s.start(ctx.currentTime + quando);
+  return true;
+}
+
+const EFEITOS = ['passo_0', 'passo_1', 'passo_2', 'passo_3', 'porta_abre', 'porta_fecha', 'pagina', 'caneca', 'clique', 'acerto', 'erro', 'brilho', 'feitico_ida', 'feitico_volta'];
+const MUSICA_GRAVADA: Partial<Record<Clima, string>> = {
+  castelo: 'musica_castelo', vila: 'musica_vila', banquete: 'musica_banquete', festa: 'musica_festa',
+  aconchego: 'musica_aconchego', duelo: 'musica_duelo', misterio: 'musica_misterio',
+};
+// volume de cada gravação para todas soarem parecidas (medido no teste de nível)
+const VOL_GRAVADA: Partial<Record<Clima, number>> = { castelo: 0.8, vila: 0.5, banquete: 0.9, festa: 0.6, aconchego: 0.95, duelo: 0.16, misterio: 0.18 };
+const AMBIENTE_GRAVADO: Partial<Record<Ambiente, string>> = { vento: 'amb_vento', passaros: 'amb_passaros', gotas: 'amb_gotas' };
+
+/** música ou ambiente gravado em laço, entrando e saindo devagar */
+function laco(nome: string, destino: AudioNode, vol: number): { parar: () => void } {
+  const c = ctx!;
+  const saida = c.createGain();
+  saida.gain.value = 0;
+  saida.connect(destino);
+  let fonte: AudioBufferSourceNode | null = null;
+  let parou = false;
+  void carregar(nome).then((buf) => {
+    if (!buf || parou) return;
+    fonte = c.createBufferSource();
+    fonte.buffer = buf;
+    fonte.loop = true;
+    fonte.connect(saida);
+    fonte.start();
+    saida.gain.setValueAtTime(0, c.currentTime);
+    saida.gain.linearRampToValueAtTime(vol, c.currentTime + 2.5);
+  });
+  return {
+    parar: () => {
+      parou = true;
+      const t = c.currentTime;
+      saida.gain.cancelScheduledValues(t);
+      saida.gain.setValueAtTime(saida.gain.value, t);
+      saida.gain.linearRampToValueAtTime(0, t + 2);
+      setTimeout(() => {
+        fonte?.stop();
+        saida.disconnect();
+      }, 2300);
+    },
+  };
 }
 
 // ---------------------------------------------------------------- instrumentos
@@ -322,7 +405,8 @@ export function trocarClima(c: Clima, forcar = false) {
   if (!ctx || (c === climaAtual && !forcar)) return;
   climaAtual = c;
   musica?.parar();
-  musica = c === 'silencio' ? null : tocarReceita(RECEITAS[c]);
+  const gravada = MUSICA_GRAVADA[c];
+  musica = c === 'silencio' ? null : gravada ? laco(gravada, busMusica, VOL_GRAVADA[c] ?? 0.55) : tocarReceita(RECEITAS[c]);
 }
 
 // ---------------------------------------------------------------- ambiente do lugar
@@ -349,6 +433,11 @@ export function trocarAmbiente(a: Ambiente) {
   ambiente?.parar();
   ambiente = null;
   if (a === 'nenhum') return;
+  const gravado = AMBIENTE_GRAVADO[a];
+  if (gravado) {
+    ambiente = laco(gravado, busAmbiente, a === 'gotas' ? 0.25 : 0.35);
+    return;
+  }
   const c = ctx;
   const saida = c.createGain();
   saida.gain.value = 0;
@@ -464,6 +553,7 @@ function pronto() {
 
 export function clique() {
   if (!pronto()) return;
+  if (tocar('clique', 0.5)) return;
   const c = ctx!;
   const t = c.currentTime;
   const o = c.createOscillator();
@@ -479,12 +569,14 @@ export function clique() {
 
 export function acerto() {
   if (!pronto()) return;
+  if (tocar('acerto', 0.7)) return;
   const t = ctx!.currentTime;
   [72, 76, 79, 84].forEach((n, i) => harpa(busEfeitos, n, t + i * 0.07, 0.12, 0.8));
 }
 
 export function erro() {
   if (!pronto()) return;
+  if (tocar('erro', 0.6)) return;
   const t = ctx!.currentTime;
   [64, 60].forEach((n, i) => {
     const o = ctx!.createOscillator();
@@ -504,6 +596,7 @@ export function erro() {
 /** brilho de recompensa (XP, figurinha, ponto da casa) */
 export function brilho() {
   if (!pronto()) return;
+  if (tocar('brilho', 0.4)) return;
   const t = ctx!.currentTime;
   [84, 88, 91].forEach((n, i) => sino(busEfeitos, n, t + i * 0.06, 0.04));
 }
@@ -511,6 +604,10 @@ export function brilho() {
 /** porta: sopro de ar e um baque de madeira */
 export function porta() {
   if (!pronto()) return;
+  if (tocar('porta_abre', 0.6)) {
+    tocar('porta_fecha', 0.5, 1, 0.55);
+    return;
+  }
   const c = ctx!;
   const t = c.currentTime;
   const s = c.createBufferSource();
@@ -530,6 +627,7 @@ export function porta() {
 /** feitiço: ida é um zunido que sobe e brilha; volta é um impacto grave */
 export function feitico(ida: boolean) {
   if (!pronto()) return;
+  if (tocar(ida ? 'feitico_ida' : 'feitico_volta', 0.7)) return;
   const c = ctx!;
   const t = c.currentTime;
   const o = c.createOscillator();
@@ -561,6 +659,8 @@ export function passo(correndo: boolean) {
   const t = c.currentTime;
   if (t - ultimoPasso < (correndo ? 0.3 : 0.45)) return;
   ultimoPasso = t;
+  // passo gravado: pedra soa mais seca e aguda, terra mais abafada
+  if (tocar('passo_' + Math.floor(Math.random() * 4), superficie === 'terra' ? 0.35 : 0.5, (superficie === 'pedra' ? 1.12 : superficie === 'terra' ? 0.82 : 1) * (0.95 + Math.random() * 0.1))) return;
   const s = c.createBufferSource();
   s.buffer = ruido;
   const f = c.createBiquadFilter();
@@ -577,6 +677,7 @@ export function passo(correndo: boolean) {
 /** bolhas e um "ahh" quentinho para o quentão */
 export function quentao() {
   if (!pronto()) return;
+  tocar('caneca', 0.5);
   const c = ctx!;
   const t = c.currentTime;
   for (let i = 0; i < 6; i++) {
@@ -647,4 +748,9 @@ export function gravar(segundos: number): Promise<string> {
     rec.start();
     setTimeout(() => rec.stop(), segundos * 1000);
   });
+}
+
+/** virar página (livraria, livro do dia) */
+export function pagina() {
+  if (pronto()) tocar('pagina', 0.6);
 }

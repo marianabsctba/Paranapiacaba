@@ -5,6 +5,7 @@ import { estado, salvar } from '../motor/estado';
 import { aplicar } from '../motor/progresso';
 import { fmt, personaliza } from '../motor/texto';
 import { aviso, botao, embaralha, h } from './dom';
+import * as Som from '../motor/som';
 
 type Janela = (titulo: string, ...conteudo: Node[]) => { fechar: () => void };
 
@@ -50,6 +51,7 @@ function livraria(janela: Janela) {
   const lidos = s.flags.filter((f) => f.startsWith('livro:')).map((f) => f.slice(6));
   const opcoes = LIVROS.filter((l) => !lidos.includes(l.titulo));
   const livro = sorteia(opcoes.length ? opcoes : LIVROS);
+  Som.pagina();
   conteudo.append(
     p('Dona Firmina: Chegou um volume novo. Senta, lê aqui mesmo que eu não cobro aluguel de cadeira.'),
     h('div', { class: 'vila-livro' }, h('b', {}, livro.titulo), p(livro.texto)),
