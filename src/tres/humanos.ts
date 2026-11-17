@@ -17,6 +17,41 @@ export const CURVA = { sinal: 1, eixo: 'z' as 'x' | 'y' | 'z' };
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), V4 = new THREE.Vector3();
 const V5 = new THREE.Vector3(), V6 = new THREE.Vector3(), V7 = new THREE.Vector3(), V8 = new THREE.Vector3();
 const QD = new THREE.Quaternion(), QW = new THREE.Quaternion(), QP = new THREE.Quaternion(), QI = new THREE.Quaternion();
+const repintadas = new Map<string, THREE.Texture>();
+/** troca os pixels laranja (a gravata original) pela cor da casa, mantendo o claro e o escuro do tecido */
+function repintarLaranja(mapa: THREE.Texture, tinta: number): THREE.Texture {
+  const chave = mapa.uuid + tinta;
+  const pronta = repintadas.get(chave);
+  if (pronta) return pronta;
+  const img = mapa.image as HTMLImageElement | ImageBitmap;
+  const cv = document.createElement('canvas');
+  cv.width = img.width;
+  cv.height = img.height;
+  const g = cv.getContext('2d')!;
+  g.drawImage(img as CanvasImageSource, 0, 0);
+  const d = g.getImageData(0, 0, cv.width, cv.height);
+  const alvo = new THREE.Color(tinta);
+  const [tr, tg, tb] = [alvo.r * 255, alvo.g * 255, alvo.b * 255];
+  for (let i = 0; i < d.data.length; i += 4) {
+    const r = d.data[i], gg = d.data[i + 1], b = d.data[i + 2];
+    const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+    if (r === mx && mx > 60 && (mx - mn) / mx > 0.35) {
+      const luz = (0.3 * r + 0.59 * gg + 0.11 * b) / 170;
+      d.data[i] = Math.min(255, tr * luz);
+      d.data[i + 1] = Math.min(255, tg * luz);
+      d.data[i + 2] = Math.min(255, tb * luz);
+    }
+  }
+  g.putImageData(d, 0, 0);
+  const nova = new THREE.CanvasTexture(cv);
+  nova.colorSpace = mapa.colorSpace;
+  nova.flipY = mapa.flipY;
+  nova.wrapS = mapa.wrapS;
+  nova.wrapT = mapa.wrapT;
+  repintadas.set(chave, nova);
+  return nova;
+}
+
 const carregados = new Map<string, Promise<THREE.Object3D | null>>();
 const clipes: Record<string, THREE.AnimationClip> = {};
 let loader: GLTFLoader | null = null;
@@ -158,6 +193,12 @@ export class Humano {
               // relevo do tecido mais suave: forte demais, o blazer parecia papel amassado
               if (mt.normalMap) mt.normalScale.set(0.3, 0.3);
             }
+          }
+          // restos de estampa laranja na textura do blazer do uniforme também ganham a cor da casa
+          if (tinta !== undefined && roupa && mt.map && /suit_tie_and_jacket/.test(mt.name)) {
+            const c = mt.clone();
+            c.map = repintarLaranja(mt.map, tinta);
+            return c;
           }
           // gravata do uniforme: tecido liso na cor da casa (ou da escola, para visitantes)
           if (tinta !== undefined && /^gravata/.test(mt.name)) {

@@ -228,6 +228,26 @@ def separar_gravata(ob):
         sel |= novas
     for _ in range(3):
         sel |= {j for i in sel for j in viz.get(i, ()) if j not in sel and sum(1 for q in viz.get(j, ()) if q in sel) >= max(2, len(viz.get(j, ())) - 1)}
+    # faces soltas (ilhas da malha) perto da gravata também viram gravata: busca por proximidade no espaço
+    from mathutils import kdtree
+    cent = [p.center.copy() for p in ob.data.polygons]
+    alt = max(v.co.z for v in ob.data.vertices) - min(v.co.z for v in ob.data.vertices)
+    for _ in range(2):
+        arv = kdtree.KDTree(len(sel))
+        for k, i in enumerate(sel):
+            arv.insert(cent[i], i)
+        arv.balance()
+        perto = set()
+        for j, c in enumerate(cent):
+            if j in sel:
+                continue
+            _co, _i, d = arv.find(c)
+            if d is not None and d < 0.012 * alt:
+                r, g, b = cor(ob.data.polygons[j])
+                mx, mn = max(r, g, b), min(r, g, b)
+                if r == mx and mx > 0.06 and (mx - mn) / mx > 0.18:
+                    perto.add(j)
+        sel |= perto
     marcadas = sorted(sel)
     if not marcadas:
         return
