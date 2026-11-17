@@ -1,3 +1,4 @@
+import * as Som from '../motor/som';
 // Ajudantes mínimos de DOM.
 type Filho = Node | string | null | undefined | false;
 
@@ -36,6 +37,7 @@ export const espera = (ms: number) => new Promise<void>((r) => setTimeout(r, ms)
 export function aviso(linhas: string[] | string, classe = ''): void {
   const ls = Array.isArray(linhas) ? linhas : [linhas];
   if (ls.length === 0) return;
+  Som.brilho();
   const box = document.getElementById('avisos') ?? document.body.appendChild(h('div', { id: 'avisos' }));
   for (const l of ls) {
     const el = h('div', { class: `aviso ${classe}` }, l);

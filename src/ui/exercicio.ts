@@ -1,5 +1,6 @@
 // Mostra qualquer exercício do contrato e resolve com true (acertou) ou false.
 import type { Exercicio } from '../conteudo/tipos';
+import * as Som from '../motor/som';
 import { fmt } from '../motor/texto';
 import { estado } from '../motor/estado';
 import { h, botao, embaralha } from './dom';
@@ -32,6 +33,8 @@ export function mostrarExercicio(alvo: HTMLElement, ex: Exercicio, op: Opcoes = 
       terminou = true;
       if (relogio) clearInterval(relogio);
       caixa.classList.add(ok ? 'certo' : 'errado');
+      if (ok) Som.acerto();
+      else Som.erro();
       caixa.querySelectorAll('button:not(.btn-continuar), input').forEach((b) => ((b as HTMLButtonElement).disabled = true));
       feedback.innerHTML = `<div class="veredito">${ok ? '✔ Acertou!' : '✘ Não foi dessa vez.'}</div>${extra}<p>${fmt(ex.explicacao)}</p>`;
       feedback.append(botao(op.rotuloContinuar ?? 'Continuar', () => resolver(ok), 'btn-continuar primario'));

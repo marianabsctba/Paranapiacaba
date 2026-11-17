@@ -11,6 +11,7 @@ import { M } from '../tres/motor3d';
 import { imgFoto } from '../tres/foto';
 import { aviso, botao, h } from './dom';
 import { atenderNaVila } from './vila';
+import * as Som from '../motor/som';
 
 interface Acoes {
   menu: () => void;
@@ -119,6 +120,7 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
   // quentão de caramelo salgado: bigode de espuma na tela e um bônus por visita ao vagão
   let quentaoTomado = '';
   const quentao = () => {
+    Som.quentao();
     const bigode = h('div', { class: 'bigode-espuma' });
     app.append(bigode);
     setTimeout(() => bigode.classList.add('some'), 6500);

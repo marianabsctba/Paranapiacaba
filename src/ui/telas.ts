@@ -1,5 +1,6 @@
 // Telas fora da história: início, criação, castelo (hub), mapa, coleções, boletim, ajustes.
 import type { Lugar, PassoAula } from '../conteudo/tipos';
+import * as Som from '../motor/som';
 import { ANOS, CRIATURAS, FEITICOS, FIGURINHAS, ITENS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { ATRIBUTOS, apagar, carregar, estado, exportar, importar, novoEstado, salvar } from '../motor/estado';
 import { lugaresVisiveis, nivel, nivelAmizade, NIVEIS_AMIZADE, ranking, titulo, xpDoNivel } from '../motor/progresso';
@@ -323,6 +324,25 @@ function boletim() {
     ...anos);
 }
 
+/** volume da música e dos efeitos, e o botão de silêncio */
+function secaoSom() {
+  const p = Som.preferencias();
+  const barra = (rotulo: string, valor: number, muda: (v: number) => void) => {
+    const inp = h('input', { type: 'range', min: '0', max: '100', value: String(Math.round(valor * 100)), 'aria-label': rotulo }) as HTMLInputElement;
+    inp.addEventListener('input', () => muda(Number(inp.value) / 100));
+    return h('label', { class: 'barra-som' }, rotulo, inp);
+  };
+  const mudo = botao(p.mudo ? 'Ligar o som' : 'Silenciar tudo', () => {
+    const agora = !Som.preferencias().mudo;
+    Som.ajustar({ mudo: agora });
+    mudo.textContent = agora ? 'Ligar o som' : 'Silenciar tudo';
+  }, 'secundario');
+  return h('section', {}, h('h3', {}, 'Som'),
+    barra('Música', p.musica, (v) => Som.ajustar({ musica: v })),
+    barra('Efeitos e ambiente', p.efeitos, (v) => Som.ajustar({ efeitos: v })),
+    mudo);
+}
+
 function ajustes() {
   const s = estado();
   const area = h('textarea', { readonly: true, rows: '4', 'aria-label': 'código de save' }) as HTMLTextAreaElement;
@@ -349,6 +369,7 @@ function ajustes() {
         if (c && importar(c)) mundo();
         else if (c) alert('Código inválido.');
       }, 'secundario')),
+    secaoSom(),
     h('section', {}, h('h3', {}, 'Aparência'), botao('Mudar aparência', () => trocarAparencia(), 'secundario')),
     h('section', {}, h('h3', {}, 'Partida'), h('p', {}, `${esc(s.nome)}, criada em ${new Date(s.criadoEm).toLocaleDateString('pt-BR')}.`),
       botao('Tela inicial', () => inicio(), 'secundario'),

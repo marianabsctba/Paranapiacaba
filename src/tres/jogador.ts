@@ -1,5 +1,6 @@
 // Primeira pessoa: WASD + mouse no computador, joystick + arrastar no celular.
 import * as THREE from 'three';
+import * as Som from '../motor/som';
 import { M } from './motor3d';
 import type { Area } from './areas';
 
@@ -162,6 +163,7 @@ function atualizar(dt: number, t: number) {
       if (!colide(J.pos.x + dx, J.pos.z)) J.pos.x += dx;
       if (!colide(J.pos.x, J.pos.z + dz)) J.pos.z += dz;
       J.olho = OLHO + Math.sin(t * 9) * 0.018 * Math.min(1, n);
+      Som.passo(vel > 3);
     }
   }
   M.camera.position.set(J.pos.x, J.pos.y + J.olho, J.pos.z);

@@ -6,6 +6,7 @@ import { estado, salvar, temPartida } from '../motor/estado';
 import { CASA_INFO, personaliza } from '../motor/texto';
 import { aplicarAmbiente, construir, modeloDoLugar, type Area } from './areas';
 import { Humano, preCarregar } from './humanos';
+import * as Som from '../motor/som';
 import { M } from './motor3d';
 import { J, OLHO, posicionar } from './jogador';
 import { lousa as texLousa } from './texturas';
@@ -75,6 +76,7 @@ export function remontar() {
 
 export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   if (C.lugarId === lugarId && C.area) return;
+  if (C.area) Som.porta();
   await fade(true);
   if (C.area) descartar(C.area.grupo);
   for (const h of [...C.npcs.values(), ...C.figurantes]) h.raiz.removeFromParent();
@@ -108,6 +110,10 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   }
   C.area = a;
   C.lugarId = lugarId;
+  const som = Som.somDoLugar(a.modelo);
+  Som.trocarClima(som.clima);
+  Som.trocarAmbiente(som.ambiente);
+  Som.chao(som.chao);
   J.area = a;
   posicionar(a.entrada.x, a.entrada.z, a.entrada.yaw);
   if (temPartida()) {
@@ -276,6 +282,7 @@ export async function modoDuelo(oponente: string): Promise<Humano | null> {
   const a = C.area;
   if (!a) return null;
   const h = await falante(oponente);
+  Som.trocarClima('duelo');
   const y = a.duelo?.y ?? 0;
   const eu = a.duelo?.voce ?? a.entrada;
   posicionar(eu.x, eu.z, eu.yaw, OLHO + y);
@@ -326,6 +333,7 @@ export async function modoDuelo(oponente: string): Promise<Humano | null> {
 }
 
 export function fimDuelo(oponente: string) {
+  if (C.area) Som.trocarClima(Som.somDoLugar(C.area.modelo).clima);
   const h = C.npcs.get(oponente);
   if (h) {
     h.raiz.userData.travado = false;
@@ -343,6 +351,7 @@ export function raio(ida: boolean, oponente: string): Promise<void> {
   const naCara = new THREE.Vector3(0, -0.12, -0.7).applyQuaternion(M.camera.quaternion).add(M.camera.position);
   const [a, b] = ida ? [de, ate] : [ate, naCara];
   const cor = ida ? 0x7df9ff : 0xff3d5a;
+  Som.feitico(ida);
   const bola = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), new THREE.MeshBasicMaterial({ color: cor }));
   const rastro: THREE.Mesh[] = [];
   M.cena.add(bola);

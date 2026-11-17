@@ -361,3 +361,7 @@ img.foto.carregando { opacity: .35; }
 .vila-livro { background: rgba(243, 234, 210, 0.08); border-left: 3px solid #e8c66a; padding: 10px 14px; border-radius: 6px; margin: 10px 0; }
 .vila-mensagem { background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.15); padding: 12px 14px; border-radius: 10px; margin: 10px 0; font-size: 1.02rem; }
 .vila-mensagem.term { font-family: 'JetBrains Mono', monospace; color: #7dff9a; }
+
+/* controles de volume nos ajustes */
+.barra-som { display: flex; align-items: center; gap: 12px; margin: 6px 0; }
+.barra-som input { flex: 1; accent-color: #f2c45a; }
