@@ -318,6 +318,13 @@ export const cap03: Capitulo = {
       ],
     },
     {
+      tipo: 'capturebol',
+      lugar: 'campo',
+      rival: 'Veteranos',
+      corRival: '#8a8f99',
+      termina: 'flag-aparece',
+    },
+    {
       tipo: 'desafio',
       lugar: 'campo',
       titulo: 'A Flag Dourada',

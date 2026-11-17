@@ -157,6 +157,17 @@ export interface PassoSelecao {
 }
 
 // Fim de ano: Taça das Casas, boletim, festa. O motor calcula.
+/** partida jogável de Capturebol dentro da história (não tem derrota: a história segue) */
+export interface PassoCapturebol {
+  tipo: 'capturebol';
+  lugar: string;
+  rival: string; // nome do time adversário no placar
+  corRival: string; // '#rrggbb'
+  // 'flag-aparece': a partida para quando a Flag surge (a cena seguinte conta a captura)
+  // 'flag-pega': você joga até pegar a Flag
+  termina: 'flag-aparece' | 'flag-pega';
+}
+
 export interface PassoFimDeAno {
   tipo: 'fimDeAno';
 }
@@ -169,7 +180,8 @@ export type Passo =
   | PassoDuelo
   | PassoRecompensa
   | PassoSelecao
-  | PassoFimDeAno;
+  | PassoFimDeAno
+  | PassoCapturebol;
 
 export interface Efeito {
   xp?: number;

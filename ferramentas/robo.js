@@ -12,7 +12,8 @@ window.__robo = async function ({ maxPassos = 4000, ate = 'Capítulo concluído'
   const clicar = (el) => el && el.click();
   for (let i = 0; i < maxPassos; i++) {
     await dorme(pausa);
-    const painel = document.querySelector('.painel');
+    // na partida de Capturebol, os ataques aparecem no painel da partida
+    const painel = document.querySelector('.capt-painel:not([hidden])') ?? document.querySelector('.painel');
     const caixa = document.querySelector('.caixa');
     const local = document.querySelector('.local')?.textContent ?? '';
     if (local && local !== ultimoLugar) {
@@ -20,7 +21,7 @@ window.__robo = async function ({ maxPassos = 4000, ate = 'Capítulo concluído'
       lugares.push(local);
       if (fotos) await fotos(local);
     }
-    const textoTela = (painel && !painel.hidden ? painel.innerText : caixa?.innerText ?? '').slice(0, 80);
+    const textoTela = (painel && !painel.hidden ? painel.innerText : caixa?.innerText ?? '').slice(0, 80) + (document.querySelector('.capt-placar')?.innerText ?? '');
     if (textoTela !== ultimoTexto) {
       paradoDesde = Date.now();
       ultimoTexto = textoTela;

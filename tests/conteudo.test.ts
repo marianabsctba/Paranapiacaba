@@ -136,6 +136,10 @@ function conferePasso(p: Passo, onde: string) {
     case 'recompensa':
       confereEfeito(p.efeito, onde);
       break;
+    case 'capturebol':
+      confereLugar(p.lugar, onde);
+      expect(p.corRival, onde).toMatch(/^#[0-9a-f]{6}$/i);
+      break;
   }
 }
 

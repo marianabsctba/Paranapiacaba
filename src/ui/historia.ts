@@ -1,5 +1,6 @@
 // Palco da história: falas, aulas, escolhas, desafios, duelos, seleção e fim de ano.
 import type { Capitulo, CasaId, Exercicio, Fala, Passo, PassoAula, PassoDuelo } from '../conteudo/tipos';
+import { partida } from './capturebol';
 import { ANOS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { CASAS, estado, salvar, zeraPontos } from '../motor/estado';
 import { aplicar, nivel, pontuarRivais, ranking, titulo } from '../motor/progresso';
@@ -436,6 +437,10 @@ async function executar(p: Passo, cap: Capitulo, idx: number, g: number) {
       return selecao(g);
     case 'fimDeAno':
       return fimDeAno(g);
+    case 'capturebol':
+      await lugar(p.lugar);
+      if (g !== geracao) return;
+      return partida(document.getElementById('app')!, p);
   }
 }
 

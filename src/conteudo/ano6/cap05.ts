@@ -246,6 +246,19 @@ export const cap05: Capitulo = {
         ['bia', 'NÃO PASSA! Nenhum pacote passa! Eu sou o firewall com política de negar tudo por padrão!'],
         ['caua', '(rebatendo uma Bola de Spam) Essa era "você ganhou um cruzeiro"! Devolvi para o remetente!'],
         ['jonas', '(narrando na arquibancada) A Flag Dourada sobe, / a neblina vai atrás, / se ninguém pegar agora, / o juiz pede mais paz.'],
+      ],
+    },
+    {
+      tipo: 'capturebol',
+      lugar: 'campo',
+      rival: 'Pampa Digital',
+      corRival: '#2e7d4a',
+      termina: 'flag-pega',
+    },
+    {
+      tipo: 'cena',
+      lugar: 'campo',
+      falas: [
         ['narrador', 'O jogo termina com a Flag capturada no último minuto pelo time de vocês. Na arquibancada, um vulto de casaco vermelho escuro filma tudo e some antes do apito.'],
       ],
     },

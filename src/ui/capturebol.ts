@@ -56,11 +56,20 @@ export function conviteCapturebol(janela: Janela, app: HTMLElement, depois: () =
   );
 }
 
-export async function partida(app: HTMLElement): Promise<void> {
+/** na história a partida não tem derrota: ou para quando a Flag aparece, ou segue até você pegá-la */
+export interface PartidaHistoria {
+  rival: string;
+  corRival: string;
+  termina: 'flag-aparece' | 'flag-pega';
+}
+
+export async function partida(app: HTMLElement, hist?: PartidaHistoria): Promise<void> {
   const s = estado();
   const minha = s.casa!;
-  const rival = CASAS.filter((c) => c !== minha)[Math.floor(Math.random() * 3)];
-  const campo = montarPartida(corDe(minha), corDe(rival));
+  const casaRival = CASAS.filter((c) => c !== minha)[Math.floor(Math.random() * 3)];
+  const rivalNome = hist?.rival ?? CASA_INFO[casaRival].nome;
+  const rivalCor = hist?.corRival ?? CASA_INFO[casaRival].cor;
+  const campo = montarPartida(corDe(minha), parseInt(rivalCor.slice(1), 16));
   // quem passeava a pé sai do gramado durante o jogo (a torcida sentada fica)
   const andando = C3.C.figurantes.filter((f) => !f.sentado);
   andando.forEach((f) => (f.raiz.visible = false));
@@ -71,6 +80,7 @@ export async function partida(app: HTMLElement): Promise<void> {
   let tonto = 0;
   let acabou = false;
   let ocupado = false;
+  let prorrogacao = 0;
   const fila = perguntas();
 
   // placar e avisos no alto da tela
@@ -82,7 +92,7 @@ export async function partida(app: HTMLElement): Promise<void> {
   const desenha = () => {
     const m = Math.floor(resto / 60);
     const sg = Math.floor(resto % 60).toString().padStart(2, '0');
-    placar.innerHTML = `<span style="color:${CASA_INFO[minha].cor}">${CASA_INFO[minha].nome} ${nos}</span> <b>${m}:${sg}</b> <span style="color:${CASA_INFO[rival].cor}">${eles} ${CASA_INFO[rival].nome}</span>`;
+    placar.innerHTML = `<span style="color:${CASA_INFO[minha].cor}">${CASA_INFO[minha].nome} ${nos}</span> <b>${m}:${sg}</b> <span style="color:${rivalCor}">${eles} ${rivalNome}</span>`;
   };
   let msgTempo = 0;
   const diz = (t: string) => {
@@ -101,10 +111,12 @@ export async function partida(app: HTMLElement): Promise<void> {
   const velhoLimite = J.area?.limites;
   if (J.area) J.area.limites = [-17, 17, -29, 29];
 
-  let proxAtaque = 14;
-  let proxRival = 22;
-  let proxSpam = 9;
-  const flagEm = 55 + Math.random() * 60;
+  // só no desenvolvimento: o robô de teste pode pedir uma partida curta
+  const rapido = import.meta.env.DEV && !!(window as unknown as { __capturebolRapido?: boolean }).__capturebolRapido;
+  let proxAtaque = rapido ? 2 : 14;
+  let proxRival = rapido ? 4 : 22;
+  let proxSpam = rapido ? 3 : 9;
+  const flagEm = rapido ? 8 : 55 + Math.random() * 60;
 
   const ataque = async () => {
     ocupado = true;
@@ -171,7 +183,7 @@ export async function partida(app: HTMLElement): Promise<void> {
             if (acabou) return;
             if (entra) {
               eles += 10;
-              diz(`${CASA_INFO[rival].nome} marcou. +10 para eles.`);
+              diz(`${rivalNome} marcou. +10 para eles.`);
             } else diz('A Bia defendeu! O firewall segurou o pacote deles.');
             desenha();
           });
@@ -190,22 +202,44 @@ export async function partida(app: HTMLElement): Promise<void> {
           });
         }
       }
-      if (!campo.flagAtiva && DURACAO - resto > flagEm) {
+      if (!campo.flagAtiva && (DURACAO - resto > flagEm || (hist && resto <= 0))) {
         campo.mostrarFlag();
         Som.brilho();
         diz('A FLAG DOURADA apareceu! Persegue!');
+        // no primeiro jogo da história, quem conta a captura é a cena seguinte
+        if (hist?.termina === 'flag-aparece') {
+          acabarHistoria();
+          return;
+        }
+      }
+      // prorrogação da história: ninguém fica preso; a Flag cansa e pousa na sua mão
+      if (hist && resto <= 0 && campo.flagAtiva) {
+        if (prorrogacao === 0) diz('Prorrogação! A Flag está cansando...');
+        prorrogacao += dt;
+        if (prorrogacao > (rapido ? 3 : 25)) {
+          diz('A Flag Dourada cansou e pousou na sua mão!');
+          nos += 150;
+          acabar(true);
+          return;
+        }
       }
       if (campo.flagAtiva && campo.distanciaFlag() < 2.4) {
         nos += 150;
         acabar(true);
         return;
       }
-      if (resto <= 0) {
+      if (resto <= 0 && !hist) {
         eles += 150;
         acabar(false);
         return;
       }
       desenha();
+    };
+    const acabarHistoria = () => {
+      acabou = true;
+      M.atualizar.delete(loop);
+      desenha();
+      fim();
     };
     const acabar = (pegou: boolean) => {
       acabou = true;
@@ -221,21 +255,26 @@ export async function partida(app: HTMLElement): Promise<void> {
   // fim de jogo: resultado e volta para o chão
   J.livre = false;
   await new Promise((r) => setTimeout(r, 1800));
-  const venceu = nos > eles;
-  s.flags.push(`capturebol:${s.pos.ano}:${s.pos.cap}`);
-  salvar();
-  painel.hidden = false;
-  painel.innerHTML = '';
-  const ganhos = aplicar(venceu ? { xp: 40, pontosCasa: 30, amizade: { bia: 1 } } : { xp: 15, amizade: { bia: 1 } });
-  await new Promise<void>((ok) => {
-    painel.append(
-      h('div', { class: 'resultado' }, h('h2', {}, venceu ? 'Vitória no Capturebol!' : 'Derrota com dignidade'),
-        h('p', {}, `${CASA_INFO[minha].nome} ${nos} x ${eles} ${CASA_INFO[rival].nome}`),
-        h('p', { class: 'dica' }, venceu ? 'A arquibancada canta o nome da sua casa. A Bia finge que não está emocionada.' : 'A Bia diz que foi culpa do vento. Não foi.')),
-      botao('Descer da vassoura', () => ok(), 'primario'),
-    );
-  });
-  aviso(ganhos);
+  if (hist) {
+    // na história, as cenas seguintes contam o resto; aqui só o placar e um pouco de XP
+    aviso(aplicar({ xp: 10 + Math.min(30, nos / 5) }));
+  } else {
+    const venceu = nos > eles;
+    s.flags.push(`capturebol:${s.pos.ano}:${s.pos.cap}`);
+    salvar();
+    painel.hidden = false;
+    painel.innerHTML = '';
+    const ganhos = aplicar(venceu ? { xp: 40, pontosCasa: 30, amizade: { bia: 1 } } : { xp: 15, amizade: { bia: 1 } });
+    await new Promise<void>((ok) => {
+      painel.append(
+        h('div', { class: 'resultado' }, h('h2', {}, venceu ? 'Vitória no Capturebol!' : 'Derrota com dignidade'),
+          h('p', {}, `${CASA_INFO[minha].nome} ${nos} x ${eles} ${rivalNome}`),
+          h('p', { class: 'dica' }, venceu ? 'A arquibancada canta o nome da sua casa. A Bia finge que não está emocionada.' : 'A Bia diz que foi culpa do vento. Não foi.')),
+        botao('Descer da vassoura', () => ok(), 'primario'),
+      );
+    });
+    aviso(ganhos);
+  }
   campo.encerrar();
   andando.forEach((f) => (f.raiz.visible = true));
   hud.remove();
@@ -247,5 +286,6 @@ export async function partida(app: HTMLElement): Promise<void> {
     posicionar(a.entrada.x, a.entrada.z, a.entrada.yaw);
     Som.trocarClima(Som.somDoLugar(a.modelo).clima);
   }
-  J.livre = true;
+  // na história quem libera o movimento é a própria história
+  J.livre = !hist;
 }
