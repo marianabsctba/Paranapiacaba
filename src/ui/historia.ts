@@ -23,6 +23,7 @@ export function aoSair(f: () => void) {
 export function cancelarHistoria() {
   geracao++;
   palco = null;
+  C3.remontar();
 }
 
 function montar(app: HTMLElement, cap: Capitulo, anoNum: number) {

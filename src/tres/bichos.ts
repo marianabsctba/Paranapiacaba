@@ -25,7 +25,7 @@ const capsula = (r: number, comp: number, seg = 16) => new THREE.CapsuleGeometry
 
 function gato(): Bicho {
   const g = new THREE.Group();
-  const pelo = mat(0x141416, { roughness: 0.55, sheen: 1 } as THREE.MeshStandardMaterialParameters);
+  const pelo = mat(0x141416, { roughness: 0.55 });
   const rosa = mat(0xd98a9a, { roughness: 0.6 });
   const corpo = new THREE.Group();
   g.add(corpo);

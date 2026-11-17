@@ -66,6 +66,11 @@ function marcadorPorta(x: number, z: number, rotulo: string) {
   return g;
 }
 
+/** depois de uma cena da história, o lugar é remontado no modo normal (sem a montagem da cena) */
+export function remontar() {
+  C.lugarId = '';
+}
+
 export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   if (C.lugarId === lugarId && C.area) return;
   await fade(true);
@@ -116,16 +121,22 @@ function povoar(a: Area) {
   const [x0, x1, z0, z1] = a.limites;
   const livre = (x: number, z: number) => !a.obstaculos.some(([ax0, ax1, az0, az1]) => x > ax0 - 0.6 && x < ax1 + 0.6 && z > az0 - 0.6 && z < az1 + 0.6);
   // o caminho inteiro precisa estar livre, não só o destino (senão atravessam as mesas)
+  // ninguém passa por dentro de você: o caminho mantém distância da sua posição
+  const longeDeVoce = (x: number, z: number) => Math.hypot(x - J.pos.x, z - J.pos.z) > 1.1;
   const caminhoLivre = (ax: number, az: number, bx: number, bz: number) => {
     const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.25);
-    for (let i = 0; i <= n; i++) if (!livre(ax + ((bx - ax) * i) / n, az + ((bz - az) * i) / n)) return false;
+    for (let i = 0; i <= n; i++) {
+      const x = ax + ((bx - ax) * i) / n;
+      const z = az + ((bz - az) * i) / n;
+      if (!livre(x, z) || (i > 0 && !longeDeVoce(x, z))) return false;
+    }
     return true;
   };
   const ponto = (de?: { x: number; z: number }) => {
     for (let i = 0; i < 60; i++) {
       const x = x0 + 0.8 + Math.random() * (x1 - x0 - 1.6);
       const z = z0 + 0.8 + Math.random() * (z1 - z0 - 1.6);
-      if (livre(x, z) && (!de || caminhoLivre(de.x, de.z, x, z))) return { x, z };
+      if (livre(x, z) && longeDeVoce(x, z) && (!de || caminhoLivre(de.x, de.z, x, z))) return { x, z };
     }
     return de ?? { x: 0, z: 0 };
   };
