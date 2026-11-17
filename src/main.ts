@@ -14,7 +14,8 @@ try {
 const mundo = document.getElementById('mundo')!;
 const canvas = iniciar3d(mundo);
 iniciarControles(canvas, mundo);
-preCarregarElenco();
+// os personagens só começam a baixar depois que a tela inicial e o castelo apareceram
+setTimeout(preCarregarElenco, 7000);
 iniciar(document.getElementById('app')!);
 
 if (import.meta.env.DEV) {

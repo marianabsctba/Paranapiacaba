@@ -323,3 +323,35 @@ img.foto.carregando { opacity: .35; }
 
 #app.modo-tela.transparente { max-width: none; }
 .tela.criacao { max-width: none; }
+
+/* bigode de espuma do quentão da vila */
+.bigode-espuma {
+  position: fixed;
+  left: 50%;
+  bottom: 14%;
+  width: min(60vw, 520px);
+  height: min(12vw, 110px);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 30;
+  background:
+    radial-gradient(closest-side, #fffaf0 70%, transparent 72%) 0% 50% / 22% 100% no-repeat,
+    radial-gradient(closest-side, #fff6e6 70%, transparent 72%) 18% 30% / 24% 110% no-repeat,
+    radial-gradient(closest-side, #fffaf0 70%, transparent 72%) 38% 45% / 26% 100% no-repeat,
+    radial-gradient(closest-side, #fff6e6 70%, transparent 72%) 62% 45% / 26% 100% no-repeat,
+    radial-gradient(closest-side, #fffaf0 70%, transparent 72%) 82% 30% / 24% 110% no-repeat,
+    radial-gradient(closest-side, #fff6e6 70%, transparent 72%) 100% 50% / 22% 100% no-repeat;
+  filter: drop-shadow(0 4px 6px rgba(80, 50, 20, 0.35));
+  animation: bigode-chega 0.5s ease-out;
+  transition: opacity 1.4s ease;
+}
+.bigode-espuma.some { opacity: 0; }
+@keyframes bigode-chega { from { transform: translate(-50%, 40%) scale(0.6); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
+
+/* assinatura na tela inicial e tela de carregamento antes do jogo abrir */
+.assinatura { margin-top: 0.4rem; font-size: 0.78rem; letter-spacing: 0.08em; opacity: 0.75; }
+.carregando { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; background: #120e26; color: #f3ead2; font-family: Georgia, serif; text-align: center; }
+.carregando b { font-size: 2.2rem; letter-spacing: 0.06em; }
+.carregando span { opacity: 0.8; animation: pisca-carga 1.4s ease-in-out infinite; }
+.carregando small { position: absolute; bottom: 1.4rem; opacity: 0.7; letter-spacing: 0.08em; }
+@keyframes pisca-carga { 50% { opacity: 0.35; } }

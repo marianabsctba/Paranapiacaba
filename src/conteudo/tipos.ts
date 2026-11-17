@@ -236,6 +236,8 @@ export interface Lugar {
   ano: number; // a partir de qual ano aparece no mapa (se não for liberado antes por efeito)
   cena: 'castelo' | 'sala' | 'masmorra' | 'floresta' | 'cidade' | 'casa' | 'trem' | 'campo' | 'torre' | 'lago' | 'banco' | 'ministerio';
   segredos?: Segredo[];
+  // fica dentro de outro lugar (loja da vila): não aparece no mapa, entra-se pela porta
+  dentro?: string;
 }
 
 export interface Personagem {

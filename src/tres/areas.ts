@@ -21,7 +21,7 @@ export interface Area {
   professor?: { x: number; z: number };
   assento?: { x: number; z: number; yaw: number };
   // lugares onde personagens sentam (cadeira, banco); casa = índice da casa da mesa no refeitório
-  assentos?: { x: number; z: number; ry: number; casa?: number }[];
+  assentos?: { x: number; z: number; ry: number; casa?: number; y?: number }[];
   lousa?: THREE.Mesh;
   // onde cada um fica no duelo (sem isso, o duelo se arranja na frente da entrada)
   duelo?: { voce: { x: number; z: number; yaw: number }; oponente: { x: number; z: number }; y?: number };
@@ -30,7 +30,10 @@ export interface Area {
   limitesNpc?: [number, number, number, number];
   obstaculosNpc?: [number, number, number, number][];
   obstaculos: [number, number, number, number][];
-  portas: { x: number; z: number; rotulo: string }[];
+  // destino: lugar para onde a porta leva direto (sem abrir o mapa); "acao:..." dispara uma ação do lugar
+  portas: { x: number; z: number; rotulo: string; destino?: string }[];
+  // quem já está no lugar quando você chega (dono da loja, atendente)
+  gente?: { id: string; x: number; z: number; ry: number }[];
   ceu: number;
   neblina: number;
   atualizar?: (dt: number, t: number) => void;
@@ -819,6 +822,348 @@ function galeria(): Area {
   };
 }
 
+// ---------------------------------------------------------------- vila de Paranapiacaba
+
+/** telhado de duas águas: prisma triangular de largura w, altura h e comprimento len (ao longo de z) */
+function telhado(g: THREE.Object3D, w: number, h: number, len: number, m: THREE.Material, x: number, y: number, z: number, ry = 0) {
+  const forma = new THREE.Shape();
+  forma.moveTo(-w / 2 - 0.25, 0);
+  forma.lineTo(w / 2 + 0.25, 0);
+  forma.lineTo(0, h);
+  forma.closePath();
+  const geo = new THREE.ExtrudeGeometry(forma, { depth: len + 0.4, bevelEnabled: false });
+  geo.translate(0, 0, -(len + 0.4) / 2);
+  const me = new THREE.Mesh(geo, m);
+  me.position.set(x, y, z);
+  me.rotation.y = ry;
+  me.castShadow = true;
+  me.receiveShadow = true;
+  g.add(me);
+  return me;
+}
+
+/** mostrador de relógio desenhado em canvas */
+function mostradorRelogio(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 256;
+  const c = cv.getContext('2d')!;
+  c.fillStyle = '#f3ead2';
+  c.beginPath();
+  c.arc(128, 128, 124, 0, Math.PI * 2);
+  c.fill();
+  c.strokeStyle = '#2a1c12';
+  c.lineWidth = 6;
+  c.stroke();
+  c.fillStyle = '#2a1c12';
+  c.font = 'bold 28px serif';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  ['XII', 'III', 'VI', 'IX'].forEach((n, i) => c.fillText(n, 128 + Math.sin((i * Math.PI) / 2) * 92, 128 - Math.cos((i * Math.PI) / 2) * 92));
+  c.lineWidth = 7;
+  c.beginPath();
+  c.moveTo(128, 128);
+  c.lineTo(128, 52);
+  c.moveTo(128, 128);
+  c.lineTo(178, 128);
+  c.stroke();
+  const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+/** rua principal da vila: casinhas inglesas de madeira, lojas, lampiões, neblina e a torre do relógio ao fundo */
+function vila(): Area {
+  const g = new THREE.Group();
+  const L = 52;
+  const RUA = 6.4;
+  // chão: paralelepípedo na rua, terra batida nas calçadas
+  plano(g, RUA, L, pbr('paralelepipedo', [3, 24]), 0, 0, 0, -Math.PI / 2);
+  for (const lado of [-1, 1]) plano(g, 30, L, pbr('chao_mata', [8, 14]), lado * (RUA / 2 + 15), -0.01, 0, -Math.PI / 2);
+  // calçada de tábua na frente das casas
+  const tabua = texMat(T.tabuado([1, 12]), { roughness: 0.8 });
+  for (const lado of [-1, 1]) caixa(g, 1.2, 0.12, L - 4, tabua, lado * (RUA / 2 + 0.6), 0, 0);
+
+  const cores = ['#7a2e2a', '#2f4a5c', '#5a6b3a', '#8a6a2a', '#5c3a5a', '#3a5a52'];
+  const branco = std({ color: 0xece4d4, roughness: 0.8 });
+  const telhas = pbr('telhado', [2, 2], { color: 0x6a3a2a });
+  const lojas: { nome: string; destino: string; cor: string }[] = [
+    { nome: 'VAGÃO DO SEU ZÉ', destino: 'vila_vagao', cor: '#f2c45a' },
+    { nome: 'DOCERIA BYTE DOCE', destino: 'vila_doceria', cor: '#ff9fd2' },
+    { nome: 'TECLADOS & CABOS DA SERRA', destino: 'vila_teclados', cor: '#6ef2ff' },
+    { nome: 'LIVRARIA DO PROTOCOLO', destino: 'vila_livraria', cor: '#e8c66a' },
+    { nome: 'CORREIO DE POMBOS', destino: 'vila_correio', cor: '#b8ff9f' },
+    { nome: 'PEGADINHAS DE REDE LTDA', destino: 'vila_pegadinhas', cor: '#ff6ec7' },
+  ];
+  const portas: Area['portas'] = [];
+  const obst: Area['obstaculos'] = [];
+  const brilhos: THREE.MeshStandardMaterial[] = [];
+  let k = 0;
+  for (let z = -18; z <= 18; z += 7.2) {
+    for (const lado of [-1, 1]) {
+      const larg = 5.6;
+      const fundo = 6;
+      const alt = 3.6 + ((k * 37) % 5) * 0.25;
+      const x = lado * (RUA / 2 + 1.2 + fundo / 2);
+      const parede = texMat(T.madeira([3, 2], cores[k % cores.length]), { roughness: 0.75 });
+      caixa(g, fundo, alt, larg, parede, x, 0, z);
+      telhado(g, larg, 1.6, fundo, telhas, x, alt, z, Math.PI / 2);
+      // frente: porta, duas janelas com luz quente e a cornija branca
+      const fx = lado * (RUA / 2 + 1.2) + -lado * 0.0;
+      const ry = lado < 0 ? Math.PI / 2 : -Math.PI / 2;
+      caixa(g, 0.08, 0.15, larg + 0.2, branco, fx, alt - 0.15, z);
+      const porta = caixa(g, 0.08, 2.1, 1.1, texMat(T.madeira([1, 2], '#3a2414'), { roughness: 0.6 }), fx, 0, z);
+      porta.castShadow = false;
+      for (const dz of [-1.7, 1.7]) {
+        const luz = std({ color: 0x2a1a10, emissive: 0xffc070, emissiveIntensity: 0.9 });
+        brilhos.push(luz);
+        const jan = plano(g, 1.1, 1.2, luz, fx + lado * -0.05, 1.7, z + dz, 0, ry);
+        jan.castShadow = false;
+        caixa(g, 0.1, 0.08, 1.3, branco, fx, 1.05, z + dz);
+        caixa(g, 0.1, 0.08, 1.3, branco, fx, 2.3, z + dz);
+        caixa(g, 0.07, 1.2, 0.06, branco, fx, 1.1, z + dz).castShadow = false;
+        caixa(g, 0.07, 0.05, 1.1, branco, fx, 1.68, z + dz).castShadow = false;
+      }
+      // segundo andar: janelinha no telhado
+      const sotao = std({ color: 0x2a1a10, emissive: 0xffd090, emissiveIntensity: 0.6 });
+      plano(g, 0.7, 0.6, sotao, fx + lado * -0.05, alt + 0.55, z, 0, ry).castShadow = false;
+      obst.push([Math.min(x - fundo / 2, x + fundo / 2), Math.max(x - fundo / 2, x + fundo / 2), z - larg / 2, z + larg / 2]);
+      const loja = k < lojas.length ? lojas[k] : null;
+      if (loja) {
+        const tex = T.placa(loja.nome, '#1a120c', loja.cor, 768, 128);
+        const placa = plano(g, 3.4, 0.56, std({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.55 }), fx + lado * -0.09, 2.75, z, 0, ry);
+        placa.castShadow = false;
+        portas.push({ x: lado * (RUA / 2 - 0.2), z, rotulo: `Entrar: ${loja.nome.charAt(0)}${loja.nome.slice(1).toLowerCase()}`, destino: loja.destino });
+      }
+      k++;
+    }
+  }
+  // postes de luz e bancos na calçada
+  for (let z = -21; z <= 21; z += 8.4) {
+    for (const lado of [-1, 1]) movel(g, 'street_lamp_01', lado * (RUA / 2 - 0.3), z + (lado > 0 ? 4.2 : 0), { alt: 3.4 });
+  }
+  for (const z of [-12.6, 4.2, 16.8]) {
+    const l = new THREE.PointLight(0xffc98a, 6, 12, 1.6);
+    l.position.set(z > 0 ? RUA / 2 - 0.5 : -RUA / 2 + 0.5, 3.3, z);
+    g.add(l);
+  }
+  // torre do relógio no fim da rua
+  const tijolo = pbr('tijolo', [2, 6]);
+  caixa(g, 3.4, 12, 3.4, tijolo, 0, 0, -L / 2 - 1.2);
+  telhado(g, 3.4, 2.6, 3.4, telhas, 0, 12, -L / 2 - 1.2);
+  const relogio = new THREE.Mesh(new THREE.CircleGeometry(1.15, 40), (() => { const t = mostradorRelogio(); return std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.5 }); })());
+  relogio.position.set(0, 9.6, -L / 2 + 0.52);
+  g.add(relogio);
+  // céu e luz de fim de tarde com neblina
+  g.add(new THREE.HemisphereLight(0xb8c4d8, 0x3a3428, 1.1));
+  const sol = new THREE.DirectionalLight(0xffe0b8, 1.1);
+  sol.position.set(8, 14, 10);
+  sol.castShadow = true;
+  sol.shadow.mapSize.set(1024, 1024);
+  sol.shadow.camera.left = -14;
+  sol.shadow.camera.right = 14;
+  sol.shadow.camera.top = 28;
+  sol.shadow.camera.bottom = -28;
+  g.add(sol, sol.target);
+  return {
+    modelo: 'vila', grupo: g, entrada: { x: 0, z: L / 2 - 3, yaw: 0 }, palco: [{ x: -1, z: L / 2 - 5.2 }, { x: 1.1, z: L / 2 - 5.4 }, { x: 0, z: L / 2 - 6 }, { x: -1.8, z: L / 2 - 6.4 }],
+    limites: [-RUA / 2 + 0.3, RUA / 2 - 0.3, -L / 2 + 1, L / 2 - 1], obstaculos: obst,
+    portas: [...portas, { x: 0, z: L / 2 - 0.8, rotulo: 'Voltar pela estrada' }], ceu: 0x9aa6b4, neblina: 0.03,
+    atualizar: (_dt, t) => brilhos.forEach((b, i) => (b.emissiveIntensity = 0.85 + Math.sin(t * 1.3 + i) * 0.08)),
+  };
+}
+
+/** barril de madeira com aros de ferro */
+function barril(g: THREE.Object3D, x: number, z: number, alt = 0.95) {
+  const tabuas = texMat(T.madeira([3, 1], '#6a4424'), { roughness: 0.7 });
+  const corpo = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, alt, 16, 4), tabuas);
+  const pos = corpo.geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i) / (alt / 2);
+    const k = 1 + 0.12 * (1 - y * y);
+    pos.setX(i, pos.getX(i) * k);
+    pos.setZ(i, pos.getZ(i) * k);
+  }
+  corpo.geometry.computeVertexNormals();
+  corpo.position.set(x, alt / 2, z);
+  corpo.castShadow = true;
+  g.add(corpo);
+  const ferro = std({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.5 });
+  for (const yy of [0.12, 0.5, 0.88]) {
+    const k = 1 + 0.12 * (1 - Math.pow((yy - 0.5) * 2, 2));
+    const aro = new THREE.Mesh(new THREE.TorusGeometry(0.345 * k, 0.012, 6, 24), ferro);
+    aro.rotation.x = Math.PI / 2;
+    aro.position.set(x, yy * alt, z);
+    g.add(aro);
+  }
+}
+
+/** caneca de quentão de caramelo salgado, com espuma */
+function caneca(g: THREE.Object3D, x: number, y: number, z: number) {
+  const vidro = std({ color: 0xc89a5a, roughness: 0.25, metalness: 0.1 });
+  cil(g, 0.06, 0.055, 0.14, vidro, x, y, z, 12);
+  cil(g, 0.062, 0.062, 0.03, std({ color: 0xf6efe0, roughness: 1 }), x, y + 0.14, z, 12);
+  const asa = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.01, 6, 12, Math.PI), vidro);
+  asa.position.set(x + 0.065, y + 0.07, z);
+  asa.rotation.z = -Math.PI / 2;
+  g.add(asa);
+}
+
+/** bar dentro de um vagão antigo: balcão, banquetas, barris e o quentão */
+function vagao(): Area {
+  const g = new THREE.Group();
+  const W = 4.2;
+  const D = 15;
+  salaFechada(g, W, D, 3, pbr('assoalho', [6, 1.4], { color: 0xc89070 }), texMat(T.tabuado([2, 8])), std({ color: 0x3a2214, roughness: 0.8 }));
+  const madeira = texMat(T.madeira([2, 1], '#3a2214'), { roughness: 0.45 });
+  const metal = std({ color: 0xb08a4a, metalness: 0.9, roughness: 0.3 });
+  // balcão comprido no lado esquerdo, com tampo de cobre
+  caixa(g, 0.7, 1.05, 9, madeira, -W / 2 + 1.05, 0, -1.5);
+  caixa(g, 0.8, 0.05, 9.1, metal, -W / 2 + 1.05, 1.05, -1.5);
+  // prateleira de garrafas atrás do balcão
+  caixa(g, 0.3, 0.04, 8, madeira, -W / 2 + 0.2, 1.4, -1.5);
+  caixa(g, 0.3, 0.04, 8, madeira, -W / 2 + 0.2, 1.9, -1.5);
+  const coresGarrafa = [0x2a5a2a, 0x6a2a1a, 0xc8a050, 0x2a3a6a, 0x8a5a2a];
+  for (let i = 0; i < 26; i++) {
+    const z = -5.2 + (i % 13) * 0.6;
+    cil(g, 0.04, 0.045, 0.28, std({ color: coresGarrafa[i % 5], roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.85 }), -W / 2 + 0.2, i < 13 ? 1.44 : 1.94, z, 8);
+  }
+  // panelão de quentão fumegando no balcão
+  cil(g, 0.28, 0.24, 0.35, std({ color: 0x3a3a3a, metalness: 0.7, roughness: 0.4 }), -W / 2 + 1.05, 1.08, 1.6, 20);
+  cil(g, 0.27, 0.27, 0.02, std({ color: 0xb06a2a, emissive: 0x6a2a0a, emissiveIntensity: 0.4 }), -W / 2 + 1.05, 1.4, 1.6, 20);
+  for (let i = 0; i < 6; i++) caneca(g, -W / 2 + 1.0 + (i % 2) * 0.12, 1.08, -4 + i * 1.1);
+  // banquetas na frente do balcão
+  const assentos: NonNullable<Area['assentos']> = [];
+  for (let i = 0; i < 7; i++) {
+    const z = -5.4 + i * 1.25;
+    cil(g, 0.2, 0.2, 0.06, std({ color: 0x6a1f2b, roughness: 0.8 }), -W / 2 + 1.85, 0.7, z, 14);
+    cil(g, 0.03, 0.05, 0.7, metal, -W / 2 + 1.85, 0, z, 6);
+    // banqueta é mais alta que cadeira: quem senta nela sobe junto
+    if (i % 2 === 0) assentos.push({ x: -W / 2 + 1.85, z, ry: -Math.PI / 2, y: 0.3 });
+  }
+  // mesinhas com barril do outro lado
+  for (const z of [-4.6, -1.6, 1.4]) {
+    barril(g, W / 2 - 0.7, z);
+    caneca(g, W / 2 - 0.7, 0.95, z);
+  }
+  // janelas do vagão com a neblina lá fora
+  for (let z = -5.5; z <= 5.5; z += 2.2) janela(g, W / 2 - 0.02, 1.7, z, 1, 0.8, -Math.PI / 2, 0x8a96a8);
+  for (let z = -5; z <= 5; z += 5) lampiao(g, 0, 2.6, z, 5, 7, 0xffb26b);
+  g.add(new THREE.HemisphereLight(0xffe0c0, 0x3a2010, 0.9));
+  luzPrincipal(g, 0, 2.9, 2, 0xffd6a0, 18, new THREE.Vector3(0, 0, -2));
+  return {
+    modelo: 'vagao', grupo: g, entrada: { x: 0.6, z: D / 2 - 1.6, yaw: 0 }, palco: [{ x: 0.2, z: 3.4 }, { x: 1.1, z: 3.2 }, { x: 0.5, z: 2.6 }, { x: 1.2, z: 4.2 }],
+    limites: [-W / 2 + 2.1, W / 2 - 0.4, -D / 2 + 0.6, D / 2 - 0.5], obstaculos: [[W / 2 - 1.1, W / 2, -5.1, -4.1], [W / 2 - 1.1, W / 2, -2.1, -1.1], [W / 2 - 1.1, W / 2, 0.9, 1.9]],
+    assentos,
+    gente: [{ id: 'seu_ze', x: -W / 2 + 0.55, z: 1.0, ry: Math.PI / 2 }],
+    portas: [
+      { x: -W / 2 + 1.6, z: 1.6, rotulo: 'Pedir um Quentão de Caramelo Salgado', destino: 'acao:quentao' },
+      { x: 0.6, z: D / 2 - 0.4, rotulo: 'Voltar para a rua', destino: 'vila' },
+    ],
+    ceu: 0x2a1a10, neblina: 0.02,
+  };
+}
+
+/** lojas da vila: mesma casinha por dentro, cada uma com o que vende */
+function loja(tipo: 'doceria' | 'teclados' | 'livraria' | 'correio' | 'pegadinhas'): Area {
+  const g = new THREE.Group();
+  const W = 7;
+  const D = 8;
+  const H = 3.4;
+  salaFechada(g, W, D, H, pbr('reboco', [3, 1.5], { color: ({ doceria: 0xf2b8c8, teclados: 0xb8d0d8, livraria: 0xe0cba0, correio: 0xc8d8b0, pegadinhas: 0xb89ad8 } as Record<string, number>)[tipo] }), pbr('assoalho', [3, 3]), std({ color: 0x3a2a1e, roughness: 1 }));
+  const madeira = texMat(T.madeira([2, 1], '#4a2c18'), { roughness: 0.5 });
+  caixa(g, W, 1, 0.05, madeira, 0, 0, -D / 2 + 0.03);
+  caixa(g, 0.05, 1, D, madeira, -W / 2 + 0.03, 0, 0);
+  caixa(g, 0.05, 1, D, madeira, W / 2 - 0.03, 0, 0);
+  // balcão no fundo
+  caixa(g, 4, 1, 0.8, madeira, 0, 0, -D / 2 + 1.6);
+  const atualiza: ((t: number) => void)[] = [];
+  const rr = rnd(tipo.length * 13);
+  const gente: NonNullable<Area['gente']> = [{ id: ['adulta1', 'adulto1', 'adulta2', 'adulto1', 'adulta1'][['doceria', 'teclados', 'livraria', 'correio', 'pegadinhas'].indexOf(tipo)], x: 0.8, z: -D / 2 + 0.8, ry: 0 }];
+  if (tipo === 'doceria') {
+    // vitrine de vidro com doces coloridos
+    const vidro = std({ color: 0xddeeff, roughness: 0.05, metalness: 0, transparent: true, opacity: 0.25 });
+    caixa(g, 3.6, 0.5, 0.6, vidro, 0, 1, -D / 2 + 1.6);
+    const doces = [0xff6ec7, 0xffd166, 0x6ef2ff, 0x9fe79f, 0xff8a5a, 0x8a5a2a];
+    for (let i = 0; i < 40; i++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.05 + rr() * 0.03, 10, 8), std({ color: doces[i % doces.length], roughness: 0.4 }));
+      b.position.set(-1.6 + rr() * 3.2, 1.06, -D / 2 + 1.35 + rr() * 0.5);
+      g.add(b);
+    }
+    // potes nas prateleiras
+    for (const lado of [-1, 1]) for (let fila = 0; fila < 3; fila++) {
+      caixa(g, 0.4, 0.04, 4, madeira, lado * (W / 2 - 0.25), 0.8 + fila * 0.7, 0);
+      for (let i = 0; i < 6; i++) cil(g, 0.12, 0.12, 0.3, std({ color: doces[(i + fila) % doces.length], roughness: 0.2, transparent: true, opacity: 0.8 }), lado * (W / 2 - 0.25), 0.84 + fila * 0.7, -1.5 + i * 0.6, 12);
+    }
+  } else if (tipo === 'teclados') {
+    // parede de teclados encantados e cabos pendurados
+    const teclas = teclado();
+    for (let fila = 0; fila < 4; fila++) for (let col = 0; col < 6; col++) {
+      const brilha = (fila + col) % 5 === 0;
+      const m = std({ map: teclas, roughness: 0.6, emissive: brilha ? 0x7df9ff : 0x000000, emissiveIntensity: brilha ? 0.4 : 0 });
+      const t = plano(g, 0.8, 0.28, m, -2.5 + col * 1, 1.0 + fila * 0.5, -D / 2 + 0.05);
+      t.castShadow = false;
+      if (brilha) atualiza.push((tt) => (m.emissiveIntensity = 0.25 + Math.abs(Math.sin(tt * 2 + col)) * 0.4));
+    }
+    const cabo = std({ color: 0x111111 });
+    for (let i = 0; i < 8; i++) {
+      const c = new THREE.Mesh(new THREE.TorusGeometry(0.25 + rr() * 0.15, 0.015, 6, 20), [cabo, std({ color: 0x2a5aaa }), std({ color: 0xaa2a2a })][i % 3]);
+      c.position.set(W / 2 - 0.1, 1.2 + (i % 3) * 0.55, -2.5 + i * 0.7);
+      c.rotation.y = Math.PI / 2;
+      g.add(c);
+    }
+  } else if (tipo === 'livraria') {
+    for (const lado of [-1, 1]) for (const z of [-1.8, 0.4, 2.6]) {
+      movel(g, 'wooden_bookshelf_worn', lado * (W / 2 - 0.4), z, { alt: 2.3, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2 });
+      for (const y of [0.42, 0.8, 1.18, 1.56, 1.94]) movel(g, 'book_encyclopedia_set_01', lado * (W / 2 - 0.4), z, { larg: 0.75, y, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2 });
+    }
+    movel(g, 'desk_lamp_arm_01', -1.2, -D / 2 + 1.6, { alt: 0.45, y: 1 });
+  } else if (tipo === 'correio') {
+    // escaninhos com pombas e pacotes
+    for (let fila = 0; fila < 4; fila++) for (let col = 0; col < 7; col++) {
+      caixa(g, 0.62, 0.04, 0.5, madeira, -2.1 + col * 0.7, 0.9 + fila * 0.55, -D / 2 + 0.3);
+      caixa(g, 0.04, 0.55, 0.5, madeira, -2.4 + col * 0.7, 0.9 + fila * 0.55, -D / 2 + 0.3);
+    }
+    for (let i = 0; i < 5; i++) {
+      const b = criarBicho('pomba');
+      b.grupo.scale.setScalar(1.1);
+      b.grupo.position.set(-2.1 + ((i * 3) % 7) * 0.7, 0.95 + (i % 4) * 0.55, -D / 2 + 0.35);
+      g.add(b.grupo);
+      const f = rr() * 10;
+      atualiza.push((t) => b.animar(t + f, false));
+    }
+    const papelao = std({ color: 0xb08a5a, roughness: 1 });
+    for (let i = 0; i < 9; i++) caixa(g, 0.3 + rr() * 0.3, 0.2 + rr() * 0.3, 0.3 + rr() * 0.2, papelao, W / 2 - 0.6 - rr() * 0.4, (i % 3) * 0.32, -1.5 + Math.floor(i / 3) * 0.9, rr());
+  } else {
+    // pegadinhas: caixas coloridas, patos de borracha e um letreiro de oferta suspeita
+    const tex = T.placa('PRÊMIO! CLIQUE AQUI', '#000000', '#ff3d5a', 512, 128);
+    const letreiro = std({ map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 1 });
+    plano(g, 2.4, 0.6, letreiro, 0, 2.6, -D / 2 + 0.05).castShadow = false;
+    atualiza.push((t) => (letreiro.emissiveIntensity = Math.sin(t * 6) > 0 ? 1.2 : 0.3));
+    const cores = [0xff6ec7, 0x6ef2ff, 0xffd166, 0x9fe79f];
+    for (const lado of [-1, 1]) for (let fila = 0; fila < 3; fila++) {
+      caixa(g, 0.4, 0.04, 4, madeira, lado * (W / 2 - 0.25), 0.8 + fila * 0.7, 0);
+      for (let i = 0; i < 6; i++) {
+        if ((i + fila) % 2) caixa(g, 0.3, 0.3, 0.3, std({ color: cores[(i + fila) % 4], roughness: 0.5 }), lado * (W / 2 - 0.25), 0.84 + fila * 0.7, -1.5 + i * 0.6, rr());
+        else {
+          const pato = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), std({ color: 0xffd400, roughness: 0.4 }));
+          pato.position.set(lado * (W / 2 - 0.25), 0.96 + fila * 0.7, -1.5 + i * 0.6);
+          g.add(pato);
+        }
+      }
+    }
+  }
+  lampiao(g, 0, H - 0.8, 0, 5, 8, 0xffc98a);
+  luzPrincipal(g, 0, H - 0.1, 2, 0xffe2c0, 16, new THREE.Vector3(0, 0, -2));
+  g.add(new THREE.HemisphereLight(0xfff0dc, 0x4a3020, 1));
+  return {
+    modelo: 'loja_' + tipo, grupo: g, entrada: { x: 0, z: D / 2 - 1.4, yaw: 0 }, palco: [{ x: -0.9, z: 0.2 }, { x: 0.9, z: 0.1 }, { x: 0, z: -0.4 }, { x: 1.6, z: 0.8 }],
+    limites: [-W / 2 + 0.8, W / 2 - 0.8, -D / 2 + 2.2, D / 2 - 0.4], obstaculos: [],
+    gente,
+    portas: [{ x: 0, z: D / 2 - 0.4, rotulo: 'Voltar para a rua', destino: 'vila' }], ceu: 0x2a1a10, neblina: 0.01,
+    atualizar: atualiza.length ? (_dt, t) => atualiza.forEach((fn) => fn(t)) : undefined,
+  };
+}
+
 function dormitorio(): Area {
   const g = new THREE.Group();
   const W = 9;
@@ -1143,9 +1488,10 @@ function campo(): Area {
 export function modeloDoLugar(l: Lugar | undefined): string {
   if (!l) return 'patio';
   const fixo: Record<string, string> = {
+    vila: 'vila', vila_vagao: 'vagao', vila_doceria: 'loja_doceria', vila_teclados: 'loja_teclados', vila_livraria: 'loja_livraria', vila_correio: 'loja_correio', vila_pegadinhas: 'loja_pegadinhas',
     a1_clube_duelos: 'clube', sala_diretora: 'gabinete', a1_pombal: 'pombal', a2_torre_relogio: 'relogio', a1_galeria_formandos: 'galeria', refeitorio: 'salao', dormitorio: 'dormitorio', lab_terminal: 'aula', biblioteca: 'biblioteca', datacenter: 'datacenter',
     casa_vo: 'casa', estacao: 'trem', santa_ifigenia: 'cidade', cripta: 'masmorra', torre_redes: 'torre', viveiro: 'floresta',
-    mata: 'floresta', campo: 'campo', represa: 'lago', vila: 'cidade', secretaria: 'colunas', patio: 'patio',
+    mata: 'floresta', campo: 'campo', represa: 'lago', secretaria: 'colunas', patio: 'patio',
   };
   if (fixo[l.id]) return fixo[l.id];
   const txt = `${l.nome} ${l.descricao}`.toLowerCase();
@@ -1177,6 +1523,13 @@ export function construir(modelo: string): Area {
     case 'lago': return floresta(true);
     case 'campo': return campo();
     case 'clube': return clube();
+    case 'vila': return vila();
+    case 'vagao': return vagao();
+    case 'loja_doceria': return loja('doceria');
+    case 'loja_teclados': return loja('teclados');
+    case 'loja_livraria': return loja('livraria');
+    case 'loja_correio': return loja('correio');
+    case 'loja_pegadinhas': return loja('pegadinhas');
     case 'gabinete': return gabinete();
     case 'pombal': return pombal();
     case 'relogio': return pombal(true);

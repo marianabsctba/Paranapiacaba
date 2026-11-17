@@ -115,10 +115,42 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
   app.append(perfil, botoes, nomeLugar, card, mira, prompt, fala, ajuda);
   setTimeout(() => ajuda.classList.add('some'), 7000);
 
+  // quentão de caramelo salgado: bigode de espuma na tela e um bônus por visita ao vagão
+  let quentaoTomado = '';
+  const quentao = () => {
+    const bigode = h('div', { class: 'bigode-espuma' });
+    app.append(bigode);
+    setTimeout(() => bigode.classList.add('some'), 6500);
+    setTimeout(() => bigode.remove(), 8000);
+    fala.hidden = false;
+    const frases = [
+      'Seu Zé: Quentão de caramelo salgado, sem álcool e com 0% de vulnerabilidade conhecida. Ainda.',
+      'Seu Zé: Bebe devagar que a espuma é por conta da casa. O bigode também.',
+      'Seu Zé: Esse aqui esquenta mais que servidor sem ar-condicionado em fevereiro.',
+    ];
+    fala.innerHTML = `<b style="color:#f2c45a">Vagão do Seu Zé</b><p>${frases[Math.floor(Math.random() * frases.length)]}</p>`;
+    setTimeout(() => (fala.hidden = true), 5000);
+    const visita = String(s.pos.ano) + ':' + String(s.pos.cap);
+    if (quentaoTomado !== visita) {
+      quentaoTomado = visita;
+      aviso(aplicar({ xp: 5, atributos: { social: 1 } }));
+    }
+  };
+
   let alvo: C3.Alvo = null;
   const interagir = () => {
     if (!alvo || !J.livre) return;
-    if (alvo.tipo === 'porta') return mapa();
+    if (alvo.tipo === 'porta') {
+      const d = alvo.destino;
+      if (!d) return mapa();
+      if (d === 'acao:quentao') return quentao();
+      void (async () => {
+        await C3.irPara(d, true);
+        nomeLugar.textContent = LUGARES.get(d)?.nome ?? '';
+        desenhaObjetivo();
+      })();
+      return;
+    }
     const id = alvo.h.id;
     const p = PERSONAGENS.get(id);
     const ehAmigo = ['tati', 'caua', 'bia', 'jonas', 'enzo'].includes(id);

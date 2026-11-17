@@ -56,5 +56,11 @@ export const LUGARES_BASE: Lugar[] = [
   { id: 'sala_diretora', nome: 'Sala da Diretora', descricao: 'Cheia de modems antigos, um quadro de cortiça com post-its de 1998 e uma cafeteira que fala.', ano: 1, cena: 'torre' },
   { id: 'represa', nome: 'Represa do Castelo', descricao: 'Água escura ao pé da serra. O cabo submarino do castelo passa no fundo.', ano: 1, cena: 'lago' },
   { id: 'vila', nome: 'Vila de Paranapiacaba', descricao: 'Casinhas de madeira, neblina e uma padaria que vende pão de queijo com Wi-Fi.', ano: 2, cena: 'cidade' },
+  { id: 'vila_vagao', nome: 'Vagão do Seu Zé', descricao: 'Um vagão antigo virado bar. O quentão de caramelo salgado sai quente e deixa bigode de espuma.', ano: 2, cena: 'cidade', dentro: 'vila' },
+  { id: 'vila_doceria', nome: 'Doceria Byte Doce', descricao: 'Doces que mudam de cor conforme o ping. O brigadeiro de 64 bits é o mais pedido.', ano: 2, cena: 'cidade', dentro: 'vila' },
+  { id: 'vila_teclados', nome: 'Teclados & Cabos da Serra', descricao: 'Teclados que acendem quando gostam de você e cabos que ninguém sabe para que servem.', ano: 2, cena: 'cidade', dentro: 'vila' },
+  { id: 'vila_livraria', nome: 'Livraria do Protocolo', descricao: 'RFCs encadernadas em couro. O vendedor recita a RFC 2324 de cor.', ano: 2, cena: 'cidade', dentro: 'vila' },
+  { id: 'vila_correio', nome: 'Correio de Pombos', descricao: 'Pombos-correio com criptografia de ponta a ponta. O atraso é de fábrica.', ano: 2, cena: 'cidade', dentro: 'vila' },
+  { id: 'vila_pegadinhas', nome: 'Pegadinhas de Rede Ltda', descricao: 'Loja de pegadinhas. Tudo aqui parece golpe, e metade é mesmo: serve de aula.', ano: 2, cena: 'cidade', dentro: 'vila' },
   { id: 'secretaria', nome: 'Secretaria de Bruxaria Digital', descricao: 'Em Brasília, atrás de um orelhão desativado. Tudo tem protocolo e ninguém lê.', ano: 3, cena: 'ministerio' },
 ];

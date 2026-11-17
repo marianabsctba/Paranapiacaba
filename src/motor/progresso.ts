@@ -91,7 +91,7 @@ export const anoAtual = () => ANOS[estado().pos.ano];
 export function lugaresVisiveis() {
   const s = estado();
   const n = s.pos.ano + 1;
-  return [...LUGARES.values()].filter((l) => l.ano <= n || s.lugares.includes(l.id));
+  return [...LUGARES.values()].filter((l) => !l.dentro && (l.ano <= n || s.lugares.includes(l.id)));
 }
 
 export function totalAulasFeitas(): number {

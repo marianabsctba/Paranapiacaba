@@ -52,7 +52,7 @@ function descartar(o: THREE.Object3D) {
   o.removeFromParent();
 }
 
-function marcadorPorta(x: number, z: number, rotulo: string) {
+function marcadorPorta(x: number, z: number, rotulo: string, destino?: string) {
   const g = new THREE.Group();
   const arco = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 32, Math.PI), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xf2c45a, emissiveIntensity: 2.2 }));
   arco.position.y = 1.6;
@@ -63,6 +63,8 @@ function marcadorPorta(x: number, z: number, rotulo: string) {
   g.position.set(x, 0, z);
   g.userData.porta = rotulo;
   alvo.userData.porta = rotulo;
+  g.userData.destino = destino;
+  alvo.userData.destino = destino;
   return g;
 }
 
@@ -91,9 +93,18 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   M.atualizarSombra = true;
   aplicarAmbiente(a);
   for (const p of a.portas) {
-    const m = marcadorPorta(p.x, p.z, p.rotulo);
+    const m = marcadorPorta(p.x, p.z, p.rotulo, p.destino);
     a.grupo.add(m);
     C.portas.push(m);
+  }
+  // quem já está no lugar (atendente, dono da loja)
+  for (const p of a.gente ?? []) {
+    const h = new Humano(p.id, tintaDe(p.id));
+    h.raiz.position.set(p.x, 0, p.z);
+    h.olharPara(p.x + Math.sin(p.ry), p.z + Math.cos(p.ry), true);
+    h.raiz.userData.travado = true;
+    a.grupo.add(h.raiz);
+    C.npcs.set(p.id, h);
   }
   C.area = a;
   C.lugarId = lugarId;
@@ -116,7 +127,7 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
 
 /** alunos andando pelo lugar quando não tem cena acontecendo */
 function povoar(a: Area) {
-  if (!['patio', 'salao', 'biblioteca', 'aula', 'campo', 'cidade'].includes(a.modelo)) return;
+  if (!['patio', 'salao', 'biblioteca', 'aula', 'campo', 'cidade', 'vila'].includes(a.modelo)) return;
   const ids = ['aluno1', 'aluno2', 'aluno3', 'aluno4'];
   const [x0, x1, z0, z1] = a.limites;
   const livre = (x: number, z: number) => !a.obstaculos.some(([ax0, ax1, az0, az1]) => x > ax0 - 0.6 && x < ax1 + 0.6 && z > az0 - 0.6 && z < az1 + 0.6);
@@ -403,7 +414,7 @@ M.atualizar.add((dt, t) => {
 
 const ray = new THREE.Raycaster();
 const centro = new THREE.Vector2(0, 0);
-export type Alvo = { tipo: 'npc'; h: Humano } | { tipo: 'porta'; rotulo: string } | null;
+export type Alvo = { tipo: 'npc'; h: Humano } | { tipo: 'porta'; rotulo: string; destino?: string } | null;
 
 export function alvoNaMira(): Alvo {
   if (!C.area) return null;
@@ -414,7 +425,7 @@ export function alvoNaMira(): Alvo {
   if (!hit) return null;
   let o: THREE.Object3D | null = hit.object;
   while (o) {
-    if (o.userData.porta) return { tipo: 'porta', rotulo: o.userData.porta };
+    if (o.userData.porta) return { tipo: 'porta', rotulo: o.userData.porta, destino: o.userData.destino };
     if (o.userData.humano) return { tipo: 'npc', h: o.userData.humano as Humano };
     o = o.parent;
   }
@@ -432,11 +443,11 @@ let encenado = '';
 const feitos = new Set<Momento>();
 const ROSTOS = ['aluno1', 'aluno2', 'aluno3', 'aluno4', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
 
-function sentar(id: string, p: { x: number; z: number; ry: number }, tinta?: number) {
+function sentar(id: string, p: { x: number; z: number; ry: number; y?: number }, tinta?: number) {
   const a = C.area!;
   const h = new Humano(id, tinta);
   h.sentado = true;
-  h.raiz.position.set(p.x, 0, p.z);
+  h.raiz.position.set(p.x, p.y ?? 0, p.z);
   h.raiz.rotation.y = p.ry;
   h.raiz.userData.travado = true;
   a.grupo.add(h.raiz);
@@ -518,5 +529,5 @@ export async function encenar(momento: Momento | null) {
 /** momento que combina com o lugar quando não há indicação da história */
 export function momentoDoLugar(): Momento | null {
   const m = C.area?.modelo;
-  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' ? 'plateia' : null;
+  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' || m === 'vagao' ? 'plateia' : null;
 }

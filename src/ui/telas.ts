@@ -25,7 +25,7 @@ async function trocarAparencia(obrigatorio = false) {
   const tinta = C3.tintaDe('voce');
   const opcoes = h('div', { class: 'aparencias' });
   APARENCIAS.forEach((id, i) => {
-    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, imgFoto(id, 'foto', tinta));
+    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, h('img', { class: 'foto', src: `${import.meta.env.BASE_URL}fotos/${id}.webp`, alt: '' }));
     b.addEventListener('click', () => {
       modelo = id;
       opcoes.querySelectorAll('.aparencia').forEach((x) => x.classList.remove('sel'));
@@ -34,7 +34,10 @@ async function trocarAparencia(obrigatorio = false) {
     });
     opcoes.append(b);
   });
-  await C3.irPara('dormitorio');
+  // a ficha aparece na hora; o dormitório e a pessoa em pé carregam por trás
+  void C3.irPara('dormitorio').then(() => {
+    if (document.querySelector('.ficha')) C3.vitrine(modelo, OURO);
+  });
   tela('criacao',
     h('div', { class: 'ficha' },
       h('h1', {}, obrigatorio ? 'Escolha sua aparência' : 'Mudar aparência'),
@@ -105,6 +108,7 @@ function inicio() {
         else if (c) alert('Código inválido. Confere se colou inteiro, igual chave Pix.');
       }, 'secundario')),
     h('p', { class: 'rodape' }, 'Grátis, sem anúncio, sem cadastro. Seu progresso fica só no seu navegador.'),
+    h('p', { class: 'assinatura' }, 'Powered by Mariana BS'),
   );
 }
 
@@ -132,7 +136,7 @@ async function criacao() {
   };
   const opcoes = h('div', { class: 'aparencias' });
   APARENCIAS.forEach((id, i) => {
-    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, imgFoto(id, 'foto', OURO));
+    const b = h('button', { class: 'aparencia' + (id === modelo ? ' sel' : ''), type: 'button', 'aria-label': `Aparência ${i + 1}` }, h('img', { class: 'foto', src: `${import.meta.env.BASE_URL}fotos/${id}.webp`, alt: '', loading: 'eager' }));
     b.addEventListener('click', () => {
       modelo = id;
       opcoes.querySelectorAll('.aparencia').forEach((x) => x.classList.remove('sel'));
@@ -166,7 +170,6 @@ async function criacao() {
         inicio();
       }, 'secundario'))),
   );
-  C3.vitrine(modelo, OURO);
 }
 
 // ---------------------------------------------------------------- castelo (hub)
