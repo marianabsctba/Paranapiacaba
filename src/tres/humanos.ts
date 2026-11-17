@@ -60,6 +60,42 @@ function repintarLaranja(mapa: THREE.Texture, tinta: number, tudo = false): THRE
   return nova;
 }
 
+/** uniforme: a gravata do terno fica num canto da textura; pinta só ali com a cor da casa, mantendo o listrado */
+function pintarGravata(mapa: THREE.Texture, tinta: number): THREE.Texture {
+  const chave = mapa.uuid + 'g' + tinta;
+  const pronta = repintadas.get(chave);
+  if (pronta) return pronta;
+  const img = mapa.image as HTMLImageElement | ImageBitmap;
+  const cv = document.createElement('canvas');
+  cv.width = img.width;
+  cv.height = img.height;
+  const g = cv.getContext('2d')!;
+  g.drawImage(img as CanvasImageSource, 0, 0);
+  const [x0, x1, y0, y1] = [0.35, 0.425, 0.075, 0.195].map((v, i) => Math.round(v * (i < 2 ? cv.width : cv.height)));
+  const d = g.getImageData(x0, y0, x1 - x0, y1 - y0);
+  const alvo = new THREE.Color(tinta);
+  for (let i = 0; i < d.data.length; i += 4) {
+    const r = d.data[i], gg = d.data[i + 1], b = d.data[i + 2];
+    const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+    const luz = 0.3 * r + 0.59 * gg + 0.11 * b;
+    // a camisa em volta é quase branca e sem cor; a gravata é colorida ou mais escura
+    if ((mx - mn) / (mx || 1) > 0.15 || luz < 175) {
+      const k = 0.85 + 0.15 * Math.min(1, luz / 160);
+      d.data[i] = Math.min(255, alvo.r * 255 * k);
+      d.data[i + 1] = Math.min(255, alvo.g * 255 * k);
+      d.data[i + 2] = Math.min(255, alvo.b * 255 * k);
+    }
+  }
+  g.putImageData(d, x0, y0);
+  const nova = new THREE.CanvasTexture(cv);
+  nova.colorSpace = mapa.colorSpace;
+  nova.flipY = mapa.flipY;
+  nova.wrapS = mapa.wrapS;
+  nova.wrapT = mapa.wrapT;
+  repintadas.set(chave, nova);
+  return nova;
+}
+
 const carregados = new Map<string, Promise<THREE.Object3D | null>>();
 const clipes: Record<string, THREE.AnimationClip> = {};
 let loader: GLTFLoader | null = null;
@@ -209,8 +245,14 @@ export class Humano {
           if (roupa && /ankle_boots/.test(mt.name)) mt.color.setHex(0x5a3e2e);
           if (roupa && /basic_tucked_t-shirt/.test(mt.name)) mt.color.setHex(0xa9bfd8);
           if (roupa && mt.map && /female_suit_2/.test(mt.name) && !mt.userData.recolorido) {
-            mt.map = repintarLaranja(mt.map, 0x7d4e57, true);
+            // cada uma com sua cor: ameixa da Dalva, marinho da Marlene, grafite para as outras
+            mt.map = repintarLaranja(mt.map, ({ dalva: 0x7d4e57, marlene: 0x2e3b5c } as Record<string, number>)[id] ?? 0x4a4a54, true);
             mt.userData.recolorido = true;
+          }
+          if (tinta !== undefined && roupa && mt.map && /male_elegantsuit01/.test(mt.name)) {
+            const c = mt.clone();
+            c.map = pintarGravata(mt.map, tinta);
+            return c;
           }
           // restos de estampa laranja na textura do blazer do uniforme também ganham a cor da casa
           if (tinta !== undefined && roupa && mt.map && /suit_tie_and_jacket/.test(mt.name)) {

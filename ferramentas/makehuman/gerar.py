@@ -31,27 +31,27 @@ def idade(anos):
 # raca: 'african' | 'caucasian' | 'asian' ou dict com pesos (Brasil é mistura)
 PARDO = {"african": 0.45, "caucasian": 0.45, "asian": 0.1}
 # uniforme: blazer com gravata e calça para todo mundo; a gravata vira peça própria e ganha a cor da casa no jogo
-ALUNO_M = ["toigo_male_suit_tie_and_jacket", "shoes02"]
-ALUNA_F = ["toigo_male_suit_tie_and_jacket", "toigo_ballet_flats"]
-ALUNA_CALCA = ["toigo_male_suit_tie_and_jacket", "toigo_ballet_flats"]
+ALUNO_M = ["male_elegantsuit01", "shoes01"]
+ALUNA_F = ["male_elegantsuit01", "toigo_ballet_flats"]
+ALUNA_CALCA = ["male_elegantsuit01", "toigo_ballet_flats"]
 
 # capa: 0 sem, 1 capa de aluno, 2 capa de professor (mais longa)
 SPECS = [
     # turma (12 anos no primeiro ano)
     dict(id="tati", f=1, anos=12, raca="asian", peso=0.4, musc=0.4, alt=0.4, cabelo="long01", roupas=ALUNA_CALCA, capa=0, pele="young_asian_female"),
     dict(id="caua", f=0, anos=12, raca={"african": 0.55, "caucasian": 0.25, "asian": 0.2}, peso=0.42, musc=0.5, alt=0.45, cabelo="afro01", roupas=ALUNO_M, capa=0, pele="young_african_male"),
-    dict(id="bia", f=1, anos=12, raca="caucasian", peso=0.45, musc=0.55, alt=0.55, cabelo="braid01", roupas=ALUNA_CALCA, capa=0, pele="young_caucasian_female"),
+    dict(id="bia", f=1, anos=12, raca="caucasian", peso=0.45, musc=0.55, alt=0.55, cabelo="ponytail01", roupas=ALUNA_CALCA, capa=0, pele="young_caucasian_female"),
     dict(id="jonas", f=0, anos=12, raca=PARDO, peso=0.4, musc=0.45, alt=0.4, cabelo="short04", roupas=ALUNO_M, capa=0, pele="young_african_male"),
     dict(id="enzo", f=0, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.55, cabelo="short02", roupas=ALUNO_M, capa=0, pele="young_caucasian_male"),
     dict(id="aluno1", f=0, anos=12, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="short03", roupas=ALUNO_M, capa=0, pele="young_caucasian_male"),
     dict(id="aluno2", f=1, anos=12, raca={"african": 0.8, "caucasian": 0.2, "asian": 0.0}, peso=0.45, musc=0.45, alt=0.45, cabelo="ponytail01", roupas=ALUNA_F, capa=0, pele="young_african_female"),
     dict(id="aluno3", f=0, anos=13, raca="caucasian", peso=0.55, musc=0.5, alt=0.6, cabelo="short01", roupas=ALUNO_M, capa=0, pele="young_caucasian_male"),
-    dict(id="aluno4", f=1, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.4, cabelo="bob01", roupas=ALUNA_F, capa=0, pele="young_caucasian_female"),
+    dict(id="aluno4", f=1, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.4, cabelo="long01", roupas=ALUNA_F, capa=0, pele="young_caucasian_female"),
     # aparências que a pessoa escolhe na matrícula (o pronome é escolhido à parte)
     dict(id="voce1", f=1, anos=12, raca="african", peso=0.42, musc=0.45, alt=0.45, cabelo="afro01", roupas=ALUNA_CALCA, capa=0, pele="young_african_female"),
     dict(id="voce2", f=1, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.5, cabelo="long01", roupas=ALUNA_F, capa=0, pele="young_caucasian_female"),
-    dict(id="voce3", f=1, anos=12, raca="asian", peso=0.4, musc=0.4, alt=0.4, cabelo="bob01", roupas=ALUNA_CALCA, capa=0, pele="young_asian_female"),
-    dict(id="voce4", f=1, anos=12, raca=PARDO, peso=0.45, musc=0.45, alt=0.45, cabelo="braid01", roupas=ALUNA_F, capa=0, pele="young_caucasian_female"),
+    dict(id="voce3", f=1, anos=12, raca="asian", peso=0.4, musc=0.4, alt=0.4, cabelo="ponytail01", roupas=ALUNA_CALCA, capa=0, pele="young_asian_female"),
+    dict(id="voce4", f=1, anos=12, raca=PARDO, peso=0.45, musc=0.45, alt=0.45, cabelo="long01", roupas=ALUNA_F, capa=0, pele="young_caucasian_female"),
     dict(id="voce5", f=0, anos=12, raca=PARDO, peso=0.42, musc=0.45, alt=0.5, cabelo="short04", roupas=ALUNO_M, capa=0, pele="young_caucasian_male"),
     dict(id="voce6", f=0, anos=12, raca="african", peso=0.45, musc=0.5, alt=0.5, cabelo="short01", roupas=ALUNO_M, capa=0, pele="young_african_male"),
     dict(id="voce7", f=0, anos=12, raca="caucasian", peso=0.4, musc=0.45, alt=0.45, cabelo="short03", roupas=ALUNO_M, capa=0, pele="young_caucasian_male"),
@@ -65,24 +65,24 @@ SPECS = [
     dict(id="teste_mb", f=0, anos=12, raca={"african": 0.55, "caucasian": 0.25, "asian": 0.2}, peso=0.42, musc=0.5, alt=0.45, cabelo="afro01", roupas=["male_elegantsuit01", "shoes02"], capa=0, pele="young_african_male"),
     dict(id="teste_mc", f=0, anos=12, raca={"african": 0.55, "caucasian": 0.25, "asian": 0.2}, peso=0.42, musc=0.5, alt=0.45, cabelo="afro01", roupas=["male_casualsuit02", "shoes02"], capa=0, pele="young_african_male"),
     # adultos da escola
-    dict(id="iolanda", f=1, anos=66, raca="african", peso=0.55, musc=0.4, alt=0.45, cabelo="bob02", roupas=["female_elegantsuit01", "toigo_ballet_flats"], capa=0, pele="old_african_female"),
-    dict(id="otavio", f=0, anos=62, raca="caucasian", peso=0.45, musc=0.35, alt=0.55, cabelo=None, roupas=["male_elegantsuit01", "shoes01"], capa=0, pele="old_caucasian_male"),
+    dict(id="iolanda", f=1, anos=66, raca="african", peso=0.55, musc=0.4, alt=0.45, cabelo="afro01", roupas=["female_elegantsuit01", "toigo_ballet_flats"], capa=0, pele="old_african_female"),
+    dict(id="otavio", f=0, anos=56, raca="caucasian", peso=0.45, musc=0.35, alt=0.55, cabelo=None, roupas=["male_elegantsuit01", "shoes01"], capa=0, pele="middleage_caucasian_male"),
     dict(id="ruth", f=1, anos=54, raca=PARDO, peso=0.55, musc=0.5, alt=0.45, cabelo="ponytail01", roupas=["toigo_fisherman_sweater", "toigo_wool_pants", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
-    dict(id="heitor", f=0, anos=44, raca="caucasian", peso=0.4, musc=0.45, alt=0.7, cabelo="short02", roupas=["toigo_male_double-breasted_suit", "shoes02"], capa=0, pele="middleage_caucasian_male"),
+    dict(id="heitor", f=0, anos=44, raca="caucasian", peso=0.4, musc=0.45, alt=0.7, cabelo="short04", roupas=["toigo_suit_with_jacket_and_bowtie", "shoes02"], capa=0, pele="middleage_caucasian_male"),
     dict(id="nanda", f=1, anos=41, raca="african", peso=0.6, musc=0.5, alt=0.5, cabelo="afro01", roupas=["female_casualsuit01", "toigo_ballet_flats"], capa=0, pele="middleage_african_female"),
-    dict(id="baltazar", f=0, anos=58, raca=PARDO, peso=0.85, musc=0.7, alt=0.8, cabelo="short01", roupas=["male_worksuit01", "toigo_ankle_boots_male"], capa=0, pele="old_african_male"),
-    dict(id="zuleica", f=1, anos=60, raca="caucasian", peso=0.5, musc=0.35, alt=0.4, cabelo="bob01", roupas=["toigo_fisherman_sweater", "toigo_tiered_skirt", "toigo_ballet_flats"], capa=0, pele="old_caucasian_female"),
-    dict(id="seu_ze", f=0, anos=63, raca=PARDO, peso=0.6, musc=0.5, alt=0.4, cabelo=None, roupas=["namuhekam_male_polo_shirt", "toigo_wool_pants", "shoes03"], capa=0, pele="old_caucasian_male"),
+    dict(id="baltazar", f=0, anos=52, raca=PARDO, peso=0.85, musc=0.7, alt=0.8, cabelo="short01", roupas=["male_worksuit01", "toigo_ankle_boots_male"], capa=0, pele="middleage_african_male"),
+    dict(id="zuleica", f=1, anos=54, raca="caucasian", peso=0.5, musc=0.35, alt=0.4, cabelo="ponytail01", roupas=["toigo_fisherman_sweater", "toigo_tiered_skirt", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="seu_ze", f=0, anos=56, raca=PARDO, peso=0.6, musc=0.5, alt=0.4, cabelo=None, roupas=["namuhekam_male_polo_shirt", "toigo_wool_pants", "shoes03"], capa=0, pele="middleage_caucasian_male"),
     # família e mundo de fora
-    dict(id="vo_cida", f=1, anos=72, raca="african", peso=0.75, musc=0.35, alt=0.3, cabelo="bob02", roupas=["toigo_fisherman_sweater", "toigo_long_full_skirt", "toigo_ballet_flats"], capa=0, pele="old_african_female"),
-    dict(id="deputado", f=0, anos=57, raca="caucasian", peso=0.8, musc=0.4, alt=0.5, cabelo="short01", roupas=["toigo_male_suit_tie_and_jacket", "shoes02"], capa=0, pele="old_caucasian_male"),
-    dict(id="marlene", f=1, anos=46, raca="caucasian", peso=0.4, musc=0.45, alt=0.6, cabelo="long01", roupas=["toigo_female_double-breasted_suit", "toigo_stiletto_booties"], capa=0, pele="middleage_caucasian_female"),
-    dict(id="nulo", f=0, anos=38, raca="caucasian", peso=0.38, musc=0.45, alt=0.72, cabelo="short03", roupas=["toigo_suit_with_dinner_jacket", "shoes01"], capa=0, pele="middleage_caucasian_male"),
+    dict(id="vo_cida", f=1, anos=72, raca="african", peso=0.75, musc=0.35, alt=0.3, cabelo="afro01", roupas=["toigo_fisherman_sweater", "toigo_long_full_skirt", "toigo_ballet_flats"], capa=0, pele="old_african_female"),
+    dict(id="deputado", f=0, anos=52, raca="caucasian", peso=0.8, musc=0.4, alt=0.5, cabelo="short01", roupas=["male_elegantsuit01", "shoes02"], capa=0, pele="middleage_caucasian_male"),
+    dict(id="marlene", f=1, anos=46, raca="caucasian", peso=0.4, musc=0.45, alt=0.6, cabelo="long01", roupas=["toigo_female_suit_2", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="nulo", f=0, anos=38, raca="caucasian", peso=0.38, musc=0.45, alt=0.72, cabelo="short04", roupas=["male_elegantsuit01", "shoes01"], capa=0, pele="middleage_caucasian_male"),
     # figurantes adultos para personagens de cada ano
     dict(id="dalva", f=1, anos=45, raca="caucasian", peso=0.5, musc=0.4, alt=0.5, cabelo="long01", roupas=["toigo_female_suit_2", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
     dict(id="adulto1", f=0, anos=40, raca=PARDO, peso=0.6, musc=0.5, alt=0.55, cabelo="short04", roupas=["male_casualsuit03", "shoes02"], capa=0, pele="middleage_african_male"),
-    dict(id="adulta1", f=1, anos=38, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="long01", roupas=["toigo_basic_tucked_t-shirt", "toigo_wool_pants", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
-    dict(id="adulta2", f=1, anos=50, raca="caucasian", peso=0.55, musc=0.4, alt=0.45, cabelo="bob01", roupas=["toigo_female_suit", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="adulta1", f=1, anos=38, raca=PARDO, peso=0.5, musc=0.45, alt=0.5, cabelo="long01", roupas=["female_elegantsuit01", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
+    dict(id="adulta2", f=1, anos=50, raca="caucasian", peso=0.55, musc=0.4, alt=0.45, cabelo="ponytail01", roupas=["toigo_female_suit_2", "toigo_ballet_flats"], capa=0, pele="middleage_caucasian_female"),
 ]
 
 

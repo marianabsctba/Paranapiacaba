@@ -66,6 +66,11 @@ export function iniciar3d(alvo: HTMLElement): HTMLCanvasElement {
   M.cena.environment = pm.fromScene(new RoomEnvironment(), 0.04).texture;
   M.cena.environmentIntensity = 0.35;
   M.cena.add(M.camera);
+  // luz suave de frente, presa na câmera: tira as órbitas escuras dos rostos (luz só de cima deixava todo mundo com cara de assombração)
+  const frente = new THREE.DirectionalLight(0xfff1e4, 0.55);
+  frente.position.set(0, 0.3, 0);
+  frente.target.position.set(0, -0.2, -1);
+  M.camera.add(frente, frente.target);
   window.addEventListener('resize', redimensionar);
   redimensionar();
   M.ativo = true;
