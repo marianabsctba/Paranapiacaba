@@ -42,8 +42,9 @@ function repintarLaranja(mapa: THREE.Texture, tinta: number, tudo = false): THRE
   for (let i = 0; i < d.data.length; i += 4) {
     const r = d.data[i], gg = d.data[i + 1], b = d.data[i + 2];
     const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
-    if (tudo || (r === mx && mx > 60 && (mx - mn) / mx > 0.35)) {
-      const luz = (0.3 * r + 0.59 * gg + 0.11 * b) / (tudo ? 110 : 170);
+    if (tudo || (r === mx && mx > 35 && (mx - mn) / mx > 0.3)) {
+      // pedaço da gravata que ficou no blazer: cor lisa igual à da gravata, senão o escuro vira pinta marrom
+      const luz = tudo ? (0.3 * r + 0.59 * gg + 0.11 * b) / 110 : 1;
       d.data[i] = Math.min(255, tr * luz);
       d.data[i + 1] = Math.min(255, tg * luz);
       d.data[i + 2] = Math.min(255, tb * luz);
@@ -188,7 +189,8 @@ export class Humano {
           const roupa = !fio && !/body|low-poly|eye/i.test(mt.name) && !/^corpo/.test(me.name);
           if (roupa) {
             // a camisa fica por cima da calça na cintura; sem isso as duas brigam pelo mesmo pixel
-            const prio = /shirt|sweater|top|suit|jacket|blouse/i.test(mt.name + me.name) ? -12 : -2;
+            // a gravata fica acima da camisa (senão aparecem faixas brancas atravessando o nó)
+            const prio = /^gravata/.test(mt.name) ? -16 : /shirt|sweater|top|suit|jacket|blouse/i.test(mt.name + me.name) ? -12 : -2;
             mt.polygonOffset = true;
             mt.polygonOffsetFactor = prio;
             mt.polygonOffsetUnits = prio;
