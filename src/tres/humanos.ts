@@ -17,7 +17,7 @@ export const CURVA = { sinal: 1, eixo: 'z' as 'x' | 'y' | 'z' };
 // dedos juntos (no modelo eles vêm abertos em leque, o que parece garra) e quanto cada um dobra
 // pose parada: quanto corrige a animação (1 = braço solto de vez), afastamento do tronco e cotovelo
 export const RELAX = { parado: 1, falando: 0.35, fora: 0.3, cotovelo: 0.1 };
-export const JUNTA = { sinal: 1, eixo: 'x' as 'x' | 'y' | 'z', ang: 0.12, dobra: 1 };
+export const JUNTA = { sinal: 1, eixo: 'x' as 'x' | 'y' | 'z', ang: 0, dobra: 0.8, fecha: 0.85 };
 // giro extra da palma e polegar encostado na mão (ajustados olhando as fotos)
 export const PALMA = { extra: 0, polegarEixo: 'z' as 'x' | 'y' | 'z', polegar: -0.7 };
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), V4 = new THREE.Vector3();
@@ -362,8 +362,33 @@ export class Humano {
         d.osso.quaternion.multiply(qj);
       }
       if (d.abre) {
-        qj.setFromAxisAngle(eixoJ, d.abre * JUNTA.ang * JUNTA.sinal * d.lado);
+        qj.setFromAxisAngle(eixoJ, d.abre * JUNTA.ang * JUNTA.sinal);
         d.osso.quaternion.multiply(qj);
+      }
+    }
+  }
+
+  /** dedos juntos: cada dedo gira em direção ao do meio, medido na cena (o modelo vem com a mão aberta em leque) */
+  juntarDedos() {
+    const r = this.raiz;
+    for (const lado of ['l', 'r']) {
+      const m1 = r.getObjectByName('middle_01_' + lado);
+      const m2 = r.getObjectByName('middle_02_' + lado);
+      if (!m1 || !m2) continue;
+      for (const nome of ['index', 'ring', 'pinky']) {
+        const a = r.getObjectByName(nome + '_01_' + lado);
+        const b = r.getObjectByName(nome + '_02_' + lado);
+        if (!a || !b) continue;
+        const meio = m2.getWorldPosition(VA).sub(m1.getWorldPosition(VB)).normalize();
+        const dedo = b.getWorldPosition(VC).sub(a.getWorldPosition(VB)).normalize();
+        // só a parte lateral: tira o que é dobra (componente fora do plano dos dois)
+        QD.setFromUnitVectors(dedo, meio);
+        if (JUNTA.fecha < 1) QD.slerp(QI, 1 - JUNTA.fecha);
+        a.getWorldQuaternion(QW);
+        QW.premultiply(QD);
+        a.parent!.getWorldQuaternion(QP).invert();
+        a.quaternion.copy(QP.multiply(QW));
+        a.updateMatrixWorld(true);
       }
     }
   }
@@ -452,6 +477,7 @@ export class Humano {
       if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
       // dedos se mexem de leve, como mão relaxada respirando
       this.curvarDedos(1 + Math.sin(performance.now() / 900 + this.semente) * 0.18);
+      this.juntarDedos();
     } else if (this.bicho) {
       this.bicho.animar(performance.now() / 1000 + this.semente, this.estado === 'falando');
     }
