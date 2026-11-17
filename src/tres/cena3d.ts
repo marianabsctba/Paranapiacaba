@@ -265,13 +265,51 @@ export async function modoDuelo(oponente: string): Promise<Humano | null> {
   const a = C.area;
   if (!a) return null;
   const h = await falante(oponente);
-  posicionar(a.entrada.x, a.entrada.z, a.entrada.yaw, OLHO);
+  const y = a.duelo?.y ?? 0;
+  const eu = a.duelo?.voce ?? a.entrada;
+  posicionar(eu.x, eu.z, eu.yaw, OLHO + y);
+  const fx = -Math.sin(eu.yaw);
+  const fz = -Math.cos(eu.yaw);
+  const [x0, x1, z0, z1] = a.limitesNpc ?? a.limites;
+  const obst = [...a.obstaculos, ...(a.obstaculosNpc ?? [])];
+  const livre = (x: number, z: number) =>
+    x > x0 + 0.3 && x < x1 - 0.3 && z > z0 + 0.3 && z < z1 - 0.3 &&
+    !obst.some(([ax0, ax1, az0, az1]) => x > ax0 - 0.4 && x < ax1 + 0.4 && z > az0 - 0.4 && z < az1 + 0.4);
+  // o oponente fica de frente, na maior distância livre até 4,2 m
+  let op = a.duelo?.oponente;
+  if (!op) {
+    const d = [4.2, 3.6, 3, 2.4].find((r) => livre(eu.x + fx * r, eu.z + fz * r)) ?? 2.4;
+    op = { x: eu.x + fx * d, z: eu.z + fz * d };
+  }
+  // quem estiver no caminho do feitiço vai para a lateral, assistindo
+  const mx = (eu.x + op.x) / 2;
+  const mz = (eu.z + op.z) / 2;
+  let lado = 1;
+  for (const n of C.npcs.values()) {
+    if (n === h) continue;
+    const p = n.raiz.position;
+    const t = Math.max(0, Math.min(1, ((p.x - eu.x) * (op.x - eu.x) + (p.z - eu.z) * (op.z - eu.z)) / ((op.x - eu.x) ** 2 + (op.z - eu.z) ** 2 || 1)));
+    const perto = Math.hypot(p.x - (eu.x + (op.x - eu.x) * t), p.z - (eu.z + (op.z - eu.z) * t));
+    if (perto > 1.3) continue;
+    const nx = Math.min(x1 - 0.3, Math.max(x0 + 0.3, mx - fz * 2 * lado));
+    const nz = Math.min(z1 - 0.3, Math.max(z0 + 0.3, mz + fx * 2 * lado));
+    p.set(nx, 0, nz);
+    n.olharPara(mx, mz, true);
+    lado = -lado;
+  }
   if (h) {
-    h.raiz.position.set(a.entrada.x, 0, a.entrada.z - 4.2);
+    h.raiz.position.set(op.x, y, op.z);
     h.raiz.userData.travado = true;
     h.olharPara(J.pos.x, J.pos.z, true);
     h.tocar('feitico');
-    J.alvoOlhar = h.cabeca();
+    // no computador o painel do duelo fica à direita: a câmera mira ao lado para o oponente aparecer à esquerda
+    const alvo = h.cabeca();
+    if (innerWidth > innerHeight * 1.2) {
+      const d = Math.hypot(alvo.x - eu.x, alvo.z - eu.z);
+      alvo.x += Math.cos(eu.yaw) * d * 0.42;
+      alvo.z += -Math.sin(eu.yaw) * d * 0.42;
+    }
+    J.alvoOlhar = alvo;
   }
   return h;
 }
@@ -389,7 +427,7 @@ export function preCarregarElenco() {
 
 // ---------------------------------------------------------------- encenação (lugar cheio de gente)
 
-export type Momento = 'aula' | 'banquete' | 'selecao' | 'trem';
+export type Momento = 'aula' | 'banquete' | 'selecao' | 'trem' | 'plateia';
 let encenado = '';
 const feitos = new Set<Momento>();
 const ROSTOS = ['aluno1', 'aluno2', 'aluno3', 'aluno4', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
@@ -468,6 +506,10 @@ export async function encenar(momento: Momento | null) {
     posicionar(0, -6.6, 0);
     J.alvoOlhar = new THREE.Vector3(0, 0.95, -10.4);
   }
+  if (momento === 'plateia' && a.assentos) {
+    // arquibancada do Clube de Duelos: gente das quatro casas torcendo
+    a.assentos.filter((_, i) => i % 2 === 0 || !leve).slice(0, leve ? 5 : 12).forEach((p, i) => sentar(proximo(), p, corCasa(CASAS[i % 4])));
+  }
   if (momento === 'trem' && a.assentos) {
     a.assentos.filter((_, i) => i % 3 !== 1).slice(0, leve ? 4 : 8).forEach((p) => sentar(proximo(), p, tintaDe('aluno' + (1 + (k % 4)))));
   }
@@ -476,5 +518,5 @@ export async function encenar(momento: Momento | null) {
 /** momento que combina com o lugar quando não há indicação da história */
 export function momentoDoLugar(): Momento | null {
   const m = C.area?.modelo;
-  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : null;
+  return m === 'salao' ? 'banquete' : m === 'trem' ? 'trem' : m === 'clube' ? 'plateia' : null;
 }

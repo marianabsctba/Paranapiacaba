@@ -234,7 +234,7 @@ export const cap03: Capitulo = {
     },
     {
       tipo: 'duelo',
-      lugar: 'lab_terminal',
+      lugar: 'a1_clube_duelos',
       oponente: 'enzo',
       titulo: 'Clube de Duelos: você contra Enzo',
       atributo: 'redes',

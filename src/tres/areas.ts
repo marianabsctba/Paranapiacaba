@@ -21,6 +21,8 @@ export interface Area {
   // lugares onde personagens sentam (cadeira, banco); casa = índice da casa da mesa no refeitório
   assentos?: { x: number; z: number; ry: number; casa?: number }[];
   lousa?: THREE.Mesh;
+  // onde cada um fica no duelo (sem isso, o duelo se arranja na frente da entrada)
+  duelo?: { voce: { x: number; z: number; yaw: number }; oponente: { x: number; z: number }; y?: number };
   limites: [number, number, number, number];
   // onde os personagens podem ficar, quando é diferente de onde você anda (ex.: entre os bancos do trem)
   limitesNpc?: [number, number, number, number];
@@ -741,6 +743,61 @@ function masmorra(): Area {
   };
 }
 
+/** Clube de Duelos: antigo galpão de locomotivas com tablado no meio e placar de LED meio queimado */
+function clube(): Area {
+  const g = new THREE.Group();
+  const W = 12;
+  const D = 20;
+  const H = 6.5;
+  salaFechada(g, W, D, H, pbr('tijolo', [6, 3]), pbr('concreto', [6, 10], { color: 0x8a847c }), std({ color: 0x3a342e, roughness: 1 }));
+  // tesouras de ferro do telhado e trilhos no chão, que o galpão já foi de locomotiva
+  const ferro = std({ color: 0x2b2e33, metalness: 0.7, roughness: 0.5 });
+  for (let z = -D / 2 + 2; z < D / 2; z += 4) {
+    caixa(g, W, 0.25, 0.18, ferro, 0, H - 0.6, z);
+    for (const x of [-W / 2 + 0.15, W / 2 - 0.15]) caixa(g, 0.25, H, 0.25, ferro, x, 0, z);
+  }
+  const trilho = std({ color: 0x6a6460, metalness: 0.9, roughness: 0.35 });
+  const dormente = texMat(T.madeira([1, 1], '#3a2818'), { roughness: 0.9 });
+  for (const x of [-4.2, 4.2]) {
+    for (const dx of [-0.72, 0.72]) caixa(g, 0.07, 0.07, D - 0.4, trilho, x + dx, 0, 0).castShadow = false;
+    for (let z = -D / 2 + 0.6; z < D / 2; z += 0.9) caixa(g, 1.9, 0.04, 0.22, dormente, x, 0, z).castShadow = false;
+  }
+  // tablado de madeira com faixa de duelo pintada
+  const TZ = 10;
+  caixa(g, 3.2, 0.35, TZ, texMat(T.tabuado([2, 6]), { roughness: 0.7 }), 0, 0, -1);
+  const faixa = std({ color: 0xd8c27a, roughness: 0.8 });
+  for (const z of [-1 - TZ / 2 + 0.6, -1 + TZ / 2 - 0.6]) caixa(g, 2.6, 0.005, 0.08, faixa, 0, 0.35, z).castShadow = false;
+  caixa(g, 0.06, 0.005, TZ - 1.2, faixa, 0, 0.35, -1).castShadow = false;
+  // placar: metade dos segmentos funciona, o resto é fé
+  const led = T.placa('VOCÊ  0 8 : 0 8  OPONENTE', '#0b0a0e', '#ff4a3a', 1024, 160);
+  const placar = plano(g, 5, 0.8, std({ map: led, emissive: 0xffffff, emissiveMap: led, emissiveIntensity: 0.9 }), 0, 4.6, -D / 2 + 0.08);
+  placar.castShadow = false;
+  caixa(g, 5.3, 1.05, 0.1, ferro, 0, 4.07, -D / 2 + 0.01);
+  // bancos de arquibancada dos dois lados
+  const madeira = texMat(T.madeira([2, 1], '#5a3a22'), { roughness: 0.7 });
+  const assentos: NonNullable<Area['assentos']> = [];
+  for (const lado of [-1, 1]) {
+    for (let z = -6; z <= 4; z += 2.5) {
+      caixa(g, 0.42, 0.06, 2, madeira, lado * 2.6, 0.4, z);
+      for (const dz of [-0.85, 0.85]) caixa(g, 0.34, 0.4, 0.07, madeira, lado * 2.6, 0, z + dz);
+      for (const dz of [-0.5, 0.5]) assentos.push({ x: lado * 2.6 + lado * 0.06, z: z + dz, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2 });
+    }
+  }
+  for (let z = -6; z <= 4; z += 5) lampiao(g, 0, 4.4, z, 7, 10, 0xffd6a0);
+  luzPrincipal(g, 0, H - 0.4, 3, 0xffe2c0, 26, new THREE.Vector3(0, 0, -2));
+  g.add(new THREE.HemisphereLight(0xc8c0b8, 0x3a3028, 0.8));
+  janela(g, -W / 2 + 0.02, 3.4, -3, 1.6, 2.2, Math.PI / 2, 0x6a7f9a);
+  janela(g, W / 2 - 0.02, 3.4, 1, 1.6, 2.2, -Math.PI / 2, 0x6a7f9a);
+  return {
+    modelo: 'clube', grupo: g, entrada: { x: 0, z: 7.6, yaw: 0 }, palco: [{ x: -1.1, z: 5.4 }, { x: 1.1, z: 5.3 }, { x: 0, z: 5 }, { x: -2, z: 6 }],
+    limites: [-W / 2 + 0.5, W / 2 - 0.5, -D / 2 + 0.5, D / 2 - 0.5], obstaculos: [],
+    obstaculosNpc: [[-1.7, 1.7, -6.2, 4.2], [-2.9, -2.3, -7.1, 5.1], [2.3, 2.9, -7.1, 5.1]],
+    assentos,
+    duelo: { voce: { x: 0, z: 2.6, yaw: 0 }, oponente: { x: 0, z: -1.6 }, y: 0.35 },
+    portas: [{ x: 0, z: D / 2 - 0.5, rotulo: 'Sair do galpão' }], ceu: 0x6a7f9a, neblina: 0.02,
+  };
+}
+
 function floresta(lago = false): Area {
   const g = new THREE.Group();
   const r = rnd(lago ? 77 : 41);
@@ -831,7 +888,7 @@ function campo(): Area {
 export function modeloDoLugar(l: Lugar | undefined): string {
   if (!l) return 'patio';
   const fixo: Record<string, string> = {
-    refeitorio: 'salao', dormitorio: 'dormitorio', lab_terminal: 'aula', biblioteca: 'biblioteca', datacenter: 'datacenter',
+    a1_clube_duelos: 'clube', refeitorio: 'salao', dormitorio: 'dormitorio', lab_terminal: 'aula', biblioteca: 'biblioteca', datacenter: 'datacenter',
     casa_vo: 'casa', estacao: 'trem', santa_ifigenia: 'cidade', cripta: 'masmorra', torre_redes: 'torre', viveiro: 'floresta',
     mata: 'floresta', campo: 'campo', sala_diretora: 'torre', represa: 'lago', vila: 'cidade', secretaria: 'colunas', patio: 'patio',
   };
@@ -864,6 +921,7 @@ export function construir(modelo: string): Area {
     case 'floresta': return floresta();
     case 'lago': return floresta(true);
     case 'campo': return campo();
+    case 'clube': return clube();
     default: return sala('aula');
   }
 }
