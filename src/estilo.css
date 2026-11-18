@@ -374,3 +374,8 @@ img.foto.carregando { opacity: .35; }
 .capt-msg.on { opacity: 1; }
 .capt-painel { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 92vw); max-height: 80vh; overflow-y: auto; background: rgba(20, 14, 38, 0.95); border: 1px solid rgba(242, 196, 90, 0.5); border-radius: 16px; padding: 16px; pointer-events: auto; }
 .capt-titulo { font-weight: 800; color: #f2c45a; margin-bottom: 8px; }
+
+/* celular: o nome do lugar desce para baixo do cartão com seu nome, sem cobrir nada */
+@media (max-width: 600px) {
+  .hud-lugar { top: 118px; font-size: .85em; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+}
