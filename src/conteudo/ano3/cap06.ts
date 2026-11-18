@@ -222,6 +222,36 @@ export const cap06: Capitulo = {
       ],
     },
     {
+      tipo: 'cena',
+      lugar: 'campo',
+      falas: [
+        ['narrador', 'Domingo de manhã. Os Ferroviários da Vila, time de ex-alunos que moram lá embaixo e jogam de bota de chuva, sobem a serra para o amistoso anual.'],
+        ['bia', 'Eles não ganham de ninguém desde 2009, mas o lanche que trazem é imbatível. {nome}, hoje você vai de {caçador/caçadora/caçadore}. Pega a Flag e acaba o jogo antes do pão de queijo esfriar.'],
+        ['caua', 'O goleiro deles tem setenta anos e não deixou passar nada no aquecimento. Eu acho que ele é um firewall de 1998.'],
+        ['jonas', 'Eu fico na cabine do placar. Prometi à Profa. Dulce que só leio o syslog, não mexo em nada.'],
+      ],
+    },
+    {
+      tipo: 'capturebol',
+      lugar: 'campo',
+      rival: 'Ferroviários da Vila',
+      corRival: '#b5523b',
+      termina: 'flag-pega',
+    },
+    {
+      tipo: 'cena',
+      lugar: 'campo',
+      falas: [
+        ['narrador', 'A Flag Dourada pousa na sua luva. A arquibancada de ex-alunos aplaude de guarda-chuva aberto.'],
+        ['jonas', 'Anotei para o cordel: Flag pega às 16h12!'],
+        ['tati', '(mostrando o tablet) O syslog do placar diz outra coisa: `<134>1 2027-02-14T19:12:07Z placar campo - - - flag capturada`.'],
+        ['jonas', 'Dezenove e doze? O placar está três horas no futuro?'],
+        ['voce', 'Ele está em UTC. O Z no fim quer dizer "Zulu", que é UTC. Brasília é UTC menos 3: 19h12 vira 16h12. Vocês dois estão certos.'],
+        ['tati', 'E o `<134>` no começo é a prioridade: facility local0 vezes 8, mais severidade 6, informativo. Ninguém ia perguntar, mas eu já calculei.'],
+        ['a3_dulce', '(da arquibancada, com garrafa térmica) Por isso eu anoto tudo em UTC e escrevo o fuso do lado. Duas testemunhas honestas com relógios diferentes viram duas versões no tribunal.'],
+      ],
+    },
+    {
       tipo: 'desafio',
       lugar: 'a3_sala_rastros',
       titulo: 'A primeira versão da linha do tempo',

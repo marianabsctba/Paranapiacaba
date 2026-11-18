@@ -235,5 +235,52 @@ export const cap07: Capitulo = {
       texto: 'O hash salvou a prova. Você ganhou a figurinha da mariposa de 1947, o bug mais bem documentado da história.',
       efeito: { figurinha: 'a3_fig_mariposa', xp: 50, pontosCasa: 15, atributos: { cripto: 1, forense: 1 } },
     },
+    {
+      tipo: 'cena',
+      lugar: 'vila',
+      falas: [
+        ['narrador', 'Sábado, 13 de março. Depois da semana do HD, a Profa. Dulce manda todo mundo descansar. Vocês descem até a vila e o cheiro de brigadeiro puxa a turma para a Doceria Byte Doce.'],
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'vila_doceria',
+      falas: [
+        ['vila_lurdinha', 'Ai, ainda bem que vocês chegaram. Um moço levou uma caixa de brigadeiro de 64 bits agorinha, me mostrou o comprovante do Pix no celular e saiu correndo para pegar o trem.'],
+        ['vila_lurdinha', 'Só que o dinheiro não caiu. Ele me mandou o print por mensagem. Olha aqui. Está tudo certinho, não está?'],
+        ['bia', 'Dona Lurdinha, print é só uma imagem. Qualquer um edita em dois minutos no celular, com fonte igualzinha.'],
+      ],
+    },
+    {
+      tipo: 'desafio',
+      lugar: 'vila_doceria',
+      titulo: 'O Comprovante Doce Demais',
+      atributo: 'forense',
+      antes: [
+        ['tati', 'O identificador do Pix tem a data e a hora da transação dentro dele. E a regra do Banco Central manda escrever essa hora em UTC. A Dulce ia amar.'],
+        ['voce', 'Então dá para conferir o print contra ele mesmo. Deixa eu ler linha por linha.'],
+      ],
+      exercicio: {
+        tipo: 'achar',
+        enunciado: 'O moço pagou às 15h20 no horário de Brasília (UTC menos 3). Toque na linha do print que denuncia a montagem.',
+        linhas: [
+          'Comprovante de transferência Pix',
+          'Valor: R$ 48,00',
+          'Data: 13/03/2027, 15:20',
+          'Para: Lurdinha Doces',
+          'ID: E12345678202703131520k3W9aQ2pZx7',
+          'Situação: Concluída',
+        ],
+        corretas: [4],
+        explicacao: 'O ID fim a fim do Pix começa com E, depois vêm 8 dígitos que identificam a instituição e a data e hora em UTC, no formato AAAAMMDDHHMM. Um Pix das 15h20 em Brasília teria 1820 ali, não 1520. Quem montou o print copiou a hora local. E, mais importante: print nunca confirma pagamento; o que confirma é o dinheiro no extrato.',
+      },
+      depois: [
+        ['vila_lurdinha', 'Então era golpe mesmo. E eu ainda dei um brigadeiro de brinde para o filho dele.'],
+        ['voce', 'A regra é simples: antes de entregar, abra o app do banco e veja se o dinheiro entrou. O print vem de quem paga. O extrato vem do banco.'],
+        ['bia', 'E guarda o print, a conversa e a hora em que ele saiu. Com isso dá para fazer o boletim de ocorrência pela delegacia eletrônica.'],
+        ['vila_lurdinha', 'Vou colar um aviso no balcão: "Pix só vale depois que cai. Print é figurinha."'],
+        ['caua', 'Eu compro outra caixa para compensar. Pago em Bitcorona, na mão. Pode contar, Dona Lurdinha.'],
+      ],
+    },
   ],
 };

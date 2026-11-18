@@ -299,5 +299,51 @@ export const cap02: Capitulo = {
       texto: 'O Baltazar aparece no laboratório com uma gaiola nova: uma criatura pequena, de crachá no pescoço, que entrou no castelo com a senha certa.',
       efeito: { criatura: 'a5_sagui', figurinha: 'a5_fig_stoll', xp: 40, pontosCasa: 10 },
     },
+    {
+      tipo: 'cena',
+      lugar: 'vila',
+      falas: [
+        ['narrador', 'Sábado. A Bia precisa mandar a carta do mês para Blumenau e arrasta você e a Tati até o Correio de Pombos. A neblina vai junto, sem ser convidada.'],
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'vila_correio',
+      falas: [
+        ['vila_oswaldo', 'Que bom que vocês vieram. Chegou um pombo estranho hoje cedo, com carta para todos os alunos do castelo. Diz que é da tal consultoria.'],
+        ['vila_oswaldo', '(lendo) "Prezado aluno, a Segurança Garantida Ltda está migrando seus acessos. Recadastre sua senha do castelo em até 24 horas neste link, sob pena de bloqueio."'],
+        ['tati', 'Prazo curto, ameaça de bloqueio e pedido de senha. É o kit completo.'],
+        ['vila_oswaldo', 'E tem mais. Todo pombo que sai de pombal registrado usa anilha com o selo do pombal. Esse aqui veio com anilha pintada à mão. Pombo eu só aceito depois de conferir a anilha.'],
+        ['bia', 'Isso é o SPF e o DKIM dos pombos. A versão por e-mail chegou para mim também. Vamos olhar o cabeçalho.'],
+      ],
+    },
+    {
+      tipo: 'desafio',
+      lugar: 'vila_correio',
+      titulo: 'A Anilha Pintada à Mão',
+      atributo: 'defesa',
+      antes: [
+        ['voce', 'Abri o cabeçalho completo. O campo "From" diz Segurança Garantida, mas isso qualquer um escreve. Quem prova de onde veio é o resto.'],
+      ],
+      exercicio: {
+        tipo: 'achar',
+        enunciado: 'Cabeçalho do e-mail de "recadastramento". Toque nas linhas que mostram que ele não saiu da consultoria.',
+        linhas: [
+          'From: "Segurança Garantida" <suporte@segurancagarantida.example>',
+          'Return-Path: <envio@seguranca-garantlda.example>',
+          'Authentication-Results: mx.castelo.example; spf=fail smtp.mailfrom=seguranca-garantlda.example',
+          'Authentication-Results: mx.castelo.example; dkim=none',
+          'Authentication-Results: mx.castelo.example; dmarc=fail header.from=segurancagarantida.example',
+          'Subject: URGENTE: recadastre sua senha em 24h',
+        ],
+        corretas: [1, 2, 3, 4],
+        explicacao: 'O From é só texto e pode ser forjado. O Return-Path usa "garantlda", com L no lugar do I. O SPF falhou: o servidor que entregou não é autorizado por aquele domínio. Não há assinatura DKIM. E o DMARC, que exige que o domínio do From bata com um SPF ou DKIM aprovado, falhou. O assunto urgente é isca, mas quem prova a origem é a autenticação.',
+      },
+      depois: [
+        ['bia', 'Não clico e não respondo. Vou encaminhar como anexo para a Profa. Nanda, que assim o SOC recebe o cabeçalho inteiro, sem perder nada.'],
+        ['tati', 'E avisar a turma no grupo, sem link nenhum. Golpe que usa o nome de empresa recém-chegada é clássico: o ataque vem junto com a notícia.'],
+        ['vila_oswaldo', 'O pombo falso eu devolvo para o pombal de origem. Ele não tem culpa. Pombo não faz phishing, só é usado.'],
+      ],
+    },
   ],
 };

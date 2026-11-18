@@ -325,5 +325,33 @@ export const cap05: Capitulo = {
       texto: 'A Lacraia de Cobre entrou no seu bestiário. E a Zuleica, emocionada, te deu a figurinha do Worm de Morris, "o primeiro bicho dessa família".',
       efeito: { criatura: 'a2_lacraia_cobre', figurinha: 'a2_morris', xp: 80 },
     },
+    {
+      tipo: 'cena',
+      lugar: 'vila',
+      falas: [
+        ['narrador', 'Sábado. Com a Lacraia na gaiola e a BIBLIOTECA-01 isolada, a turma ganha folga e desce a ladeira até a vila. A neblina chega antes e guarda lugar no Vagão do Seu Zé.'],
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'vila_vagao',
+      falas: [
+        ['seu_ze', 'Entra, entra. Quentão de caramelo salgado, sem álcool. Menor de idade aqui só se embriaga de conhecimento.'],
+        ['caua', 'Seu Zé, o senhor viu a Lacraia? Ela achava porta aberta sozinha.'],
+        ['seu_ze', 'Vi coisa pior, menino. Anos atrás, um ex-aluno, cujo nome a gente não fala, transformou as geladeiras da vila num exército. Sabe por onde ele entrou?'],
+        ['tati', 'Pela 445, igual à Lacraia?'],
+        ['seu_ze', 'Pela 23, do Telnet. As geladeiras vinham de fábrica com o Telnet ligado, aberto para a rede, usuário "admin" e senha "admin". Ninguém trocou. Ninguém nem sabia que geladeira tinha porta.'],
+        ['bia', 'E Telnet ainda manda tudo em texto puro. Até a senha. É entregar a chave e o endereço junto.'],
+        ['seu_ze', 'Pois é. Em 2016, no mundo dos desconectados, um bicho chamado Mirai fez igualzinho com câmeras e roteadores: tentava uma listinha de senhas de fábrica no Telnet e, com o que juntou, derrubou um monte de site famoso num dia só.'],
+        ['jonas', 'Geladeira de porta aberta, / senha de fábrica na mão: / o ladrão nem bateu palma, / foi entrando no portão.'],
+        ['seu_ze', 'Moral da história: o que não precisa escutar, desliga. Senha de fábrica, troca no primeiro dia. E geladeira, câmera e televisão vão numa rede separada do computador que importa.'],
+        ['seu_ze', 'Hoje a padaria do seu Abílio tem o Wi-Fi dos clientes separado do caixa. Fui eu que fiz. Cobrei em pão de queijo.'],
+      ],
+    },
+    {
+      tipo: 'recompensa',
+      texto: 'O Seu Zé te deu um quentão por conta da casa e uma regra para a vida: porta que não precisa, fecha; senha de fábrica, troca.',
+      efeito: { xp: 20, atributos: { redes: 1 }, amizade: { seu_ze: 1 } },
+    },
   ],
 };

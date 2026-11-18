@@ -274,5 +274,48 @@ export const cap02: Capitulo = {
         },
       ],
     },
+    {
+      tipo: 'cena',
+      lugar: 'vila',
+      falas: [
+        ['narrador', 'Sábado. Para respirar depois da descoberta, a turma desce até a vila. O Cauã insiste em entrar na Pegadinhas de Rede Ltda "para rir de alguma coisa que não seja o Nulo".'],
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'vila_pegadinhas',
+      falas: [
+        ['vila_juca', 'Chegou a novidade da semana: o pendrive "Fotos da Festa". A pessoa espeta, clica em `festa.jpg` e sai uma buzina. Só barulho, nenhum estrago.'],
+        ['vila_juca', 'O segredo é que o arquivo se chama `festa.jpg.exe`, com ícone de foto. O Windows esconde a extensão conhecida e mostra só `festa.jpg`.'],
+        ['caua', 'Mas é exatamente o boleto da Zuleica, só que com buzina!'],
+        ['vila_juca', 'Por isso eu vendo. Quem ri de pegadinha aprende a desconfiar. Na caixa vem escrito: "Se você abriu sem conferir, imagina se fosse de verdade".'],
+        ['tati', 'Dá para descobrir sem abrir nada. O `file` lê os bytes mágicos do começo do arquivo e ignora o nome.'],
+      ],
+    },
+    {
+      tipo: 'desafio',
+      lugar: 'vila_pegadinhas',
+      titulo: 'A Buzina Disfarçada',
+      atributo: 'forense',
+      antes: [
+        ['vila_juca', 'Então prova. Tem uma máquina sem rede aqui no balcão, só para isso. O pendrive já está montado. Só não clica no arquivo.'],
+      ],
+      exercicio: {
+        tipo: 'terminal',
+        enunciado: 'Descubra o tipo real de `festa.jpg.exe` sem executar nada.',
+        prompt: 'balcao@pegadinhas:/media/pendrive$',
+        contexto: 'balcao@pegadinhas:/media/pendrive$ ls\nfesta.jpg.exe',
+        aceitos: ['file (\\./)?festa\\.jpg\\.exe', 'file (\\./)?\\*'],
+        exemplo: 'file festa.jpg.exe',
+        saida: 'festa.jpg.exe: PE32 executable (GUI) Intel 80386, for MS Windows',
+        dica: 'Quid Est Filum: `file` seguido do nome inteiro do arquivo.',
+        explicacao: 'O `file` achou `MZ` (4D 5A) no começo: executável do Windows. Uma foto JPEG de verdade começaria com FF D8 FF. Nome e ícone mentem; os bytes mágicos, não.',
+      },
+      depois: [
+        ['vila_juca', 'Passou! Toma, leva um pendrive de brinde. Brincadeira. Nunca aceite pendrive de brinde. Nem de mim.'],
+        ['caua', 'Eu ia aceitar.'],
+        ['voce', 'Regra para levar para casa: extensões visíveis no Windows, `file` antes de abrir, e pendrive desconhecido só em máquina isolada, como o Baltazar faz no Viveiro.'],
+      ],
+    },
   ],
 };

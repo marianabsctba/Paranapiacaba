@@ -277,5 +277,27 @@ export const cap03: Capitulo = {
       texto: 'A Lia te emprestou a cuia dela, que no Pampa Digital é praticamente um contrato de amizade. E na carteira, uma figurinha sobre quem inventou o cookie.',
       efeito: { item: 'a4_cuia', figurinha: 'a4_fig_montulli', xp: 45, pontosCasa: 10, amizade: { a4_lia: 3 } },
     },
+    {
+      tipo: 'cena',
+      lugar: 'vila',
+      falas: [
+        ['narrador', 'Domingo de folga do torneio. A Lia quer conhecer "a tal vila do pão de queijo com Wi-Fi". O Enzo jura que não vai se perder na neblina e se perde duas vezes.'],
+      ],
+    },
+    {
+      tipo: 'cena',
+      lugar: 'vila_livraria',
+      falas: [
+        ['vila_firmina', 'Bom dia. Estou relendo a RFC 6265, de 2011, a que descreve como os cookies funcionam. É o meu romance de domingo.'],
+        ['a4_lia', 'Bah, a senhora lê RFC por gosto?'],
+        ['vila_firmina', 'Leio. E a livraria tem loja on-line. Meu sobrinho fez o site, e o cookie de sessão é `cliente=firmina`. Igualzinho, desde 2019.'],
+        ['enzo', 'Então qualquer um que escrever "firmina" no cookie vira a senhora. Até eu sei que isso é ruim. Desde a última aula.'],
+        ['voce', 'Cookie de sessão é crachá provisório. Tem que ser um valor longo e aleatório, gerado pelo servidor, trocado a cada login e com prazo para expirar. Nunca o nome da pessoa.'],
+        ['a4_lia', 'E com os atributos certos: `HttpOnly`, para o JavaScript da página não ler; `Secure`, para só andar por HTTPS; e `SameSite`, para não ir junto em pedido disparado por outro site.'],
+        ['vila_firmina', 'O `SameSite` não está nesta RFC: ele veio depois, no rascunho que a atualiza. Mas anotei os três a lápis na margem. Livro bom é livro rabiscado.'],
+        ['vila_firmina', 'Falando em torneio: ontem um senhor de colete, com crachá da Secretaria, levou um livro sobre sessões de login e perguntou onde fica o servidor do placar. Eu disse que livraria não é mapa.'],
+        ['a4_lia', 'Anota isso, {nome}. Fato, hora e lugar. Sem acusar ninguém. Ainda.'],
+      ],
+    },
   ],
 };

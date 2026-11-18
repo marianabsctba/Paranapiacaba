@@ -205,6 +205,24 @@ export const cap06: Capitulo = {
       ],
     },
     {
+      tipo: 'cena',
+      lugar: 'campo',
+      falas: [
+        ['narrador', 'O juiz apita a volta do jogo. A arquibancada respira junto com o servidor do placar.'],
+        ['bia', '{nome}, sobe de atacante! O placar voltou a contar, agora a gente precisa dar ponto para ele contar.'],
+        ['caua', 'Eu cuido das Bolas de Spam. Se vier "sua encomenda foi taxada", eu rebato de volta para o remetente.'],
+        ['a2_dandara', '(passando de vassoura) Placar de volta. Ótimo, segundo ano. Assim todo mundo vê quando a gente marcar.'],
+        ['enzo', 'E eu cuido da Flag. Vocês só não atrapalhem.'],
+      ],
+    },
+    {
+      tipo: 'capturebol',
+      lugar: 'campo',
+      rival: 'Jararacas Titulares',
+      corRival: '#2e7d32',
+      termina: 'flag-aparece',
+    },
+    {
       tipo: 'escolha',
       lugar: 'campo',
       pergunta: 'O jogo está empatado e a Flag Dourada aparece perto de você. O Enzo está do outro lado do campo. O que você faz?',
