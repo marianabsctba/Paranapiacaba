@@ -2887,23 +2887,172 @@ function floresta(lago = false): Area {
 
 function campo(): Area {
   const g = new THREE.Group();
-  plano(g, 140, 140, pbr('grama', [46, 46]), 0, 0, 0, -Math.PI / 2);
-  const ouro = std({ color: 0xd9b54f, metalness: 0.9, roughness: 0.3 });
-  for (const z of [-30, 30])
-    for (const [x, h] of [[-4, 12], [0, 15], [4, 10]]) {
-      cil(g, 0.12, 0.15, h, ouro, x, 0, z, 10);
-      const aro = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.09, 10, 32), ouro);
-      aro.position.set(x, h + 1.2, z);
-      g.add(aro);
+  const r = rnd(31);
+  // céu em degradê com nuvens (o céu chapado deixava o campo sem profundidade)
+  const cvc = document.createElement('canvas');
+  cvc.width = 16;
+  cvc.height = 256;
+  const cc = cvc.getContext('2d')!;
+  const gr = cc.createLinearGradient(0, 0, 0, 256);
+  gr.addColorStop(0, '#3f78c0');
+  gr.addColorStop(0.45, '#8fb8e0');
+  gr.addColorStop(0.5, '#d8e6f0');
+  gr.addColorStop(1, '#d8e6f0');
+  cc.fillStyle = gr;
+  cc.fillRect(0, 0, 16, 256);
+  const ceuTex = new THREE.CanvasTexture(cvc);
+  ceuTex.colorSpace = THREE.SRGBColorSpace;
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(260, 24, 16), new THREE.MeshBasicMaterial({ map: ceuTex, side: THREE.BackSide, fog: false })));
+  const nuvem = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, transparent: true, opacity: 0.92 });
+  const nuvens: THREE.Group[] = [];
+  for (let i = 0; i < 9; i++) {
+    const n = new THREE.Group();
+    for (let k = 0; k < 5; k++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(6 + r() * 5, 10, 8), nuvem);
+      b.position.set(k * 7 - 14, r() * 3, (r() - 0.5) * 6);
+      b.scale.y = 0.45;
+      n.add(b);
     }
+    const ang = (i / 9) * Math.PI * 2;
+    n.position.set(Math.cos(ang) * 150, 70 + r() * 30, Math.sin(ang) * 150);
+    g.add(n);
+    nuvens.push(n);
+  }
+  // serra e mata em volta
+  const serra = std({ color: 0x4a6a5a, roughness: 1 });
+  for (let i = 0; i < 16; i++) {
+    const ang = (i / 16) * Math.PI * 2;
+    const m = new THREE.Mesh(new THREE.ConeGeometry(26 + r() * 20, 30 + r() * 26, 6), serra);
+    m.position.set(Math.cos(ang) * 175, 8, Math.sin(ang) * 175);
+    g.add(m);
+  }
+  const tronco = std({ color: 0x3a2a1e, roughness: 1 });
+  const folhas = [std({ color: 0x2c5a2a, roughness: 1 }), std({ color: 0x3a6e30, roughness: 1 }), std({ color: 0x24482a, roughness: 1 })];
+  for (let i = 0; i < 110; i++) {
+    const ang = r() * Math.PI * 2;
+    const d = 46 + r() * 40;
+    const x = Math.cos(ang) * d * 0.9, z = Math.sin(ang) * d * 1.1;
+    const h = 5 + r() * 7;
+    cil(g, 0.18, 0.28, h * 0.55, tronco, x, 0, z, 6);
+    const copa = new THREE.Mesh(new THREE.IcosahedronGeometry(1.8 + r() * 2, 1), folhas[i % 3]);
+    copa.position.set(x, h * 0.55 + 1.4, z);
+    g.add(copa);
+  }
+  // gramado com faixas de corte e linhas pintadas
+  plano(g, 220, 220, pbr('grama', [70, 70], { color: 0x8fd06a }), 0, 0, 0, -Math.PI / 2);
+  const faixa = std({ color: 0xc8f0a0, transparent: true, opacity: 0.13, roughness: 1, depthWrite: false });
+  for (let z = -32; z < 32; z += 8) plano(g, 36, 4, faixa, 0, 0.006, z + 2, -Math.PI / 2).castShadow = false;
+  const cal = std({ color: 0xf4f4ec, roughness: 0.9 });
+  const linha = (w: number, d: number, x: number, z: number) => (plano(g, w, d, cal, x, 0.01, z, -Math.PI / 2).castShadow = false);
+  linha(36, 0.14, 0, -34);
+  linha(36, 0.14, 0, 34);
+  linha(0.14, 68, -18, 0);
+  linha(0.14, 68, 18, 0);
+  linha(36, 0.14, 0, 0);
+  const circulo = new THREE.Mesh(new THREE.RingGeometry(5.9, 6.05, 64), cal);
+  circulo.rotation.x = -Math.PI / 2;
+  circulo.position.y = 0.011;
+  g.add(circulo);
+  for (const z of [-30, 30]) {
+    const area = new THREE.Mesh(new THREE.RingGeometry(8.9, 9.05, 48, 1, z < 0 ? Math.PI : 0, Math.PI), cal);
+    area.rotation.x = -Math.PI / 2;
+    area.position.set(0, 0.011, z);
+    g.add(area);
+  }
+  // gols: portais hexagonais de neon no alto de torres de antena treliçadas, na cor de cada lado
+  const ferro = std({ color: 0x8a8f96, metalness: 0.8, roughness: 0.35 });
+  const piscas: THREE.MeshStandardMaterial[] = [];
+  const portais: THREE.Mesh[] = [];
+  for (const z of [-30, 30]) {
+    const cor = z < 0 ? 0xff4fa0 : 0x3fd7ff;
+    const neon = std({ color: cor, emissive: cor, emissiveIntensity: 4, toneMapped: false });
+    for (const [x, h] of [[-4, 12], [0, 15], [4, 10]] as const) {
+      // torre de três pernas com travessas em diagonal
+      const pernas = [0, 1, 2].map((k) => (k / 3) * Math.PI * 2 + Math.PI / 6);
+      for (const a of pernas) cil(g, 0.05, 0.08, h, ferro, x + Math.cos(a) * 0.35, 0, z + Math.sin(a) * 0.35, 6);
+      for (let y = 1; y < h - 1.4; y += 1.4) {
+        for (let k = 0; k < 3; k++) {
+          const a0 = pernas[k], a1 = pernas[(k + 1) % 3];
+          const p0 = new THREE.Vector3(x + Math.cos(a0) * 0.35, y, z + Math.sin(a0) * 0.35);
+          const p1 = new THREE.Vector3(x + Math.cos(a1) * 0.35, y + 1.4, z + Math.sin(a1) * 0.35);
+          const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, p0.distanceTo(p1), 4), ferro);
+          tr.position.copy(p0).add(p1).multiplyScalar(0.5);
+          tr.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), p1.clone().sub(p0).normalize());
+          g.add(tr);
+        }
+      }
+      // portal de seis lados: moldura de ferro, miolo de neon e um véu de luz
+      const moldura = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.12, 6, 6), ferro);
+      moldura.position.set(x, h + 1.2, z);
+      moldura.rotation.z = Math.PI / 6;
+      g.add(moldura);
+      const miolo = new THREE.Mesh(new THREE.TorusGeometry(1.1, 0.06, 6, 6), neon);
+      miolo.position.set(x, h + 1.2, z);
+      miolo.rotation.z = Math.PI / 6;
+      g.add(miolo);
+      portais.push(miolo);
+      const veu = new THREE.Mesh(new THREE.CircleGeometry(1.05, 6), std({ color: cor, emissive: cor, emissiveIntensity: 1, transparent: true, opacity: 0.18, toneMapped: false, side: THREE.DoubleSide, depthWrite: false }));
+      veu.position.set(x, h + 1.2, z);
+      veu.rotation.z = Math.PI / 6;
+      g.add(veu);
+      // luz de aviação no topo
+      cil(g, 0.03, 0.03, 0.9, ferro, x, h + 1.7, z, 4);
+      const pisca = std({ color: 0x330000, emissive: 0xff2a2a, emissiveIntensity: 2 });
+      const bola = new THREE.Mesh(new THREE.SphereGeometry(0.12, 10, 8), pisca);
+      bola.position.set(x, h + 2.6, z);
+      g.add(bola);
+      piscas.push(pisca);
+    }
+  }
+  // arquibancadas: degraus de madeira com assentos nas cores das escolas, cobertura e bandeirolas
   const madeira = texMat(T.madeira([4, 1], '#5a3a20'));
-  for (const x of [-22, 22])
-    for (let k = 0; k < 6; k++) caixa(g, 2, 0.5 + k * 0.6, 50, madeira, x + Math.sign(x) * k * 1.1, 0, 0);
+  const corAssento = COR_CASA.map((c) => std({ color: c, roughness: 0.6 }));
+  const bandeirolas: THREE.Mesh[] = [];
+  for (const x of [-22, 22]) {
+    const s = Math.sign(x);
+    for (let k = 0; k < 6; k++) {
+      caixa(g, 1.1, 0.5 + k * 0.6, 50, madeira, x + s * k * 1.1, 0, 0);
+      for (let b = 0; b < 4; b++) caixa(g, 0.42, 0.08, 11.6, corAssento[(b + k) % 4], x + s * (k * 1.1 + 0.25), 0.5 + k * 0.6, -18.75 + b * 12.5).castShadow = false;
+    }
+    caixa(g, 0.3, 5.4, 50, madeira, x + s * 6.6, 0, 0);
+    // cobertura apoiada em pilares
+    for (let z = -24; z <= 24; z += 8) {
+      cil(g, 0.12, 0.12, 8.6, ferro, x + s * 6.6, 0, z, 8);
+      cil(g, 0.1, 0.1, 6.4, ferro, x - s * 0.4, 0, z, 8);
+    }
+    const telh = new THREE.Mesh(new THREE.BoxGeometry(7.6, 0.14, 51), std({ color: 0x8a2a2a, roughness: 0.7 }));
+    telh.position.set(x + s * 3.1, 7.5, 0);
+    telh.rotation.z = s * 0.29;
+    telh.castShadow = true;
+    g.add(telh);
+    for (let z = -24; z <= 24; z += 6) {
+      cil(g, 0.03, 0.03, 2, ferro, x + s * 6.6, 8.6, z, 4);
+      const bd = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.6), std({ color: COR_CASA[Math.abs(Math.round(z / 6)) % 4], side: THREE.DoubleSide, roughness: 1 }));
+      bd.position.set(x + s * 6.6, 10.2, z + 0.55);
+      bd.rotation.y = Math.PI / 2;
+      g.add(bd);
+      bandeirolas.push(bd);
+    }
+  }
   // lugares na arquibancada para a torcida (degraus de baixo)
   const torcida: NonNullable<Area['assentos']> = [];
   for (const x of [-22, 22]) for (let k = 0; k < 3; k++) for (let z = -18; z <= 18; z += 4.5)
     torcida.push({ x: x + Math.sign(x) * k * 1.1, z: z + k * 1.3, ry: x < 0 ? Math.PI / 2 : -Math.PI / 2, y: 0.5 + k * 0.6 - 0.45 });
-  COR_CASA.forEach((c, i) => plano(g, 2, 6, std({ color: c, side: THREE.DoubleSide }), -28 + (i % 2) * 56, 8, -15 + i * 10, 0, Math.PI / 2));
+  // telão do placar atrás de um dos gols, com os estandartes das escolas ao lado
+  for (const x of [-5.5, 5.5]) cil(g, 0.25, 0.3, 9.4, ferro, x, 0, -40, 8);
+  caixa(g, 12, 2.8, 0.6, std({ color: 0x15161a, roughness: 0.5 }), 0, 9.4, -39.9);
+  const placar = T.placa('CASTELO  2  ×  1  VISITANTES', '#0b0a0e', '#ffd166', 1024, 192);
+  plano(g, 11.4, 2.2, std({ map: placar, emissive: 0xffffff, emissiveMap: placar, emissiveIntensity: 0.9 }), 0, 10.8, -39.58).castShadow = false;
+  COR_CASA.forEach((c, i) => {
+    const x = [-10, -8, 8, 10][i];
+    cil(g, 0.05, 0.05, 9, ferro, x, 0, -38, 6);
+    plano(g, 1.4, 4, std({ color: c, side: THREE.DoubleSide, roughness: 1 }), x + 0.75, 6.6, -38);
+  });
+  // torre do juiz no meio da lateral
+  caixa(g, 1.6, 4, 1.6, madeira, -19.3, 0, 0);
+  caixa(g, 2.2, 0.1, 2.2, madeira, -19.3, 4, 0);
+  for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) cil(g, 0.04, 0.04, 1.6, ferro, -19.3 + dx, 4, dz, 4);
+  caixa(g, 2.3, 0.12, 2.3, std({ color: 0x8a2a2a }), -19.3, 5.6, 0);
   const flag = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), std({ color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 2, metalness: 1 }));
   g.add(flag);
   g.add(new THREE.HemisphereLight(0xbfd8ff, 0x3a5a2a, 1.2));
@@ -2918,9 +3067,15 @@ function campo(): Area {
     gente: [{ id: 'bia', x: 1.2, z: 11.9, ry: -0.5 }],
     assentos: torcida,
     modelo: 'campo', grupo: g, entrada: { x: 0, z: 14, yaw: 0 }, palco: [{ x: -1.2, z: 11.6 }, { x: 1.2, z: 11.4 }, { x: 0, z: 11 }, { x: -2.4, z: 12.4 }],
-    limites: [-18, 18, -34, 34], obstaculos: [],
-    portas: [{ x: 0, z: 33, rotulo: 'Voltar ao castelo' }], ceu: 0x9fbfe0, neblina: 0.018,
-    atualizar: (_dt, t) => flag.position.set(Math.sin(t * 1.3) * 8, 7 + Math.sin(t * 2.1) * 3, Math.cos(t * 0.9) * 12),
+    limites: [-18, 18, -34, 34], obstaculos: [[-20.2, -18.4, -0.9, 0.9]],
+    portas: [{ x: 0, z: 33, rotulo: 'Voltar ao castelo' }], ceu: 0xd8e6f0, neblina: 0.006,
+    atualizar: (_dt, t) => {
+      flag.position.set(Math.sin(t * 1.3) * 8, 7 + Math.sin(t * 2.1) * 3, Math.cos(t * 0.9) * 12);
+      piscas.forEach((p, i) => (p.emissiveIntensity = Math.sin(t * 3 + i * 0.5) > 0.6 ? 3 : 0.2));
+      portais.forEach((p, i) => (p.rotation.z = Math.PI / 6 + Math.sin(t * 0.8 + i) * 0.05));
+      bandeirolas.forEach((b, i) => (b.rotation.y = Math.PI / 2 + Math.sin(t * 2.2 + i) * 0.35));
+      nuvens.forEach((n, i) => (n.rotation.y = t * 0.004 * (i % 2 ? 1 : -1)));
+    },
   };
 }
 
