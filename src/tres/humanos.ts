@@ -187,6 +187,14 @@ export class Humano {
   private pesoRelax = 1;
   private bicho: Bicho | null = null;
   private semente = Math.random() * 10;
+  // rosto: formas de expressão gravadas no modelo (piscar, boca, sorriso, surpresa, bravo, triste)
+  private rostos: { mesh: THREE.Mesh; dict: Record<string, number> }[] = [];
+  private expr: Record<string, number> = {};
+  // sem expressão nenhuma o rosto parece de cera: todo mundo começa com um sorriso discreto
+  private exprAlvo: Record<string, number> = { sorriso: 0.15 };
+  private proximaPiscada = 1 + Math.random() * 3;
+  private piscando = 0;
+  private bocaFase = Math.random() * 10;
   pronto: Promise<void>;
 
   constructor(public id: string, tinta?: number) {
@@ -287,6 +295,10 @@ export class Humano {
       // mãos um pouco menores: a proporção adulta nos corpos de 12 anos deixava as mãos enormes
       for (const lado of ['l', 'r']) modelo.getObjectByName('hand_' + lado)?.scale.setScalar(0.86);
       this.curvarDedos();
+      modelo.traverse((o) => {
+        const me = o as THREE.Mesh;
+        if (me.isMesh && me.morphTargetDictionary && me.morphTargetInfluences) this.rostos.push({ mesh: me, dict: me.morphTargetDictionary });
+      });
       this.mixer = new THREE.AnimationMixer(modelo);
       this.tocar('parado', 0);
       this.mixer.update(Math.random() * 3);
@@ -440,7 +452,40 @@ export class Humano {
     return this.raiz.getWorldPosition(alvo).setY(this.raiz.position.y + this.altura * 0.92);
   }
 
+  /** cara da pessoa: sorriso, surpresa, bravo ou triste, de 0 a 1 (as outras voltam ao neutro devagar) */
+  expressao(nome: 'sorriso' | 'surpresa' | 'bravo' | 'triste' | 'neutro', forca = 1) {
+    for (const k of ['sorriso', 'surpresa', 'bravo', 'triste']) this.exprAlvo[k] = 0;
+    if (nome !== 'neutro') this.exprAlvo[nome] = forca;
+  }
+
+  private animarRosto(dt: number) {
+    if (!this.rostos.length) return;
+    // piscar sozinho a cada poucos segundos
+    this.proximaPiscada -= dt;
+    if (this.proximaPiscada <= 0) {
+      this.piscando = 0.16;
+      this.proximaPiscada = 2 + Math.random() * 4;
+    }
+    let pisca = 0;
+    if (this.piscando > 0) {
+      this.piscando -= dt;
+      pisca = Math.sin(Math.max(0, this.piscando) / 0.16 * Math.PI);
+    }
+    // boca mexendo enquanto fala, com ritmo irregular de sílabas
+    const falando = this.estado === 'falando' || this.estado === 'sentado_falando';
+    this.bocaFase += dt * 11;
+    const alvoBoca = falando ? Math.max(0, Math.sin(this.bocaFase) * 0.5 + Math.sin(this.bocaFase * 2.3 + 1) * 0.3 + 0.15) : 0;
+    this.expr.boca = (this.expr.boca ?? 0) + (alvoBoca - (this.expr.boca ?? 0)) * Math.min(1, dt * 18);
+    for (const k of ['sorriso', 'surpresa', 'bravo', 'triste']) this.expr[k] = (this.expr[k] ?? 0) + ((this.exprAlvo[k] ?? 0) - (this.expr[k] ?? 0)) * Math.min(1, dt * 4);
+    for (const { mesh, dict } of this.rostos) {
+      const inf = mesh.morphTargetInfluences!;
+      if (dict.piscar !== undefined) inf[dict.piscar] = pisca;
+      for (const k of ['boca', 'sorriso', 'surpresa', 'bravo', 'triste']) if (dict[k] !== undefined) inf[dict[k]] = this.expr[k] ?? 0;
+    }
+  }
+
   update(dt: number) {
+    this.animarRosto(dt);
     const r = this.raiz;
     if (this.caminho.length) {
       const a = this.caminho[0];

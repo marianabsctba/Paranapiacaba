@@ -141,6 +141,7 @@ def criar(s):
     erodir_mascara(base, aneis=3)
     if s["capa"]:
         capa(base, rig, longa=s["capa"] == 2, cachecol=s["capa"] == 1)
+    expressoes(base, s)
     return base, rig
 
 
@@ -423,6 +424,85 @@ def encolher_texturas():
                 print("textura", img.name, e)
 
 
+# ---------------------------------------------------------------- expressões do rosto (formas de deformação)
+
+# cada expressão do jogo mistura unidades de expressão do MakeHuman (arquivo, peso)
+EXPRESSOES = {
+    "piscar": [("eye-left-closure", 1.0), ("eye-right-closure", 1.0)],
+    "boca": [("mouth-open", 0.55), ("mouth-parling", 0.3)],
+    "sorriso": [("mouth-corner-puller", 0.85), ("eye-left-slit", 0.25), ("eye-right-slit", 0.25)],
+    "surpresa": [("eyebrows-left-up", 0.9), ("eyebrows-right-up", 0.9), ("eye-left-opened-up", 0.6), ("eye-right-opened-up", 0.6), ("mouth-open", 0.25)],
+    "bravo": [("eyebrows-left-down", 0.9), ("eyebrows-right-down", 0.9), ("mouth-compression", 0.5)],
+    "triste": [("eyebrows-left-inner-up", 0.9), ("eyebrows-right-inner-up", 0.9), ("mouth-depression", 0.7)],
+}
+
+
+def pasta_unidades(s):
+    raca = s["raca"]
+    if isinstance(raca, dict):
+        raca = max(raca, key=raca.get)
+    return os.path.join(LocationService.get_mpfb_data("targets"), "expression", "units", raca)
+
+
+def expressoes(base, s):
+    """Grava no corpo as expressões do jogo como formas (morph targets) e faz sobrancelha e cílio acompanharem."""
+    from bl_ext.user_default.mpfb.services.targetservice import TargetService
+    pasta = pasta_unidades(s)
+    # o corpo fica com a forma final como base; os alvos de idade, peso etc. viram geometria fixa
+    if base.data.shape_keys:
+        TargetService.bake_targets(base)
+    base.shape_key_add(name="Basis", from_mix=False)
+    for nome, partes in EXPRESSOES.items():
+        tmp = []
+        for arq, peso in partes:
+            k = TargetService.load_target(base, os.path.join(pasta, arq + ".target.gz"), weight=peso, name="tmp_" + arq)
+            tmp.append(k.name if k else "tmp_" + arq)
+        base.shape_key_add(name=nome, from_mix=True)
+        for t in tmp:
+            kb = base.data.shape_keys.key_blocks.get(t)
+            if kb:
+                base.shape_key_remove(kb)
+        base.data.shape_keys.key_blocks[nome].value = 0.0
+    # sobrancelha e cílio são malhas separadas: grudam no rosto e copiam cada expressão
+    bpy.context.view_layer.update()
+    for o in [o for o in bpy.data.objects if o.type == "MESH" and any(p in o.name.lower() for p in ("eyebrow", "eyelash"))]:
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.context.view_layer.objects.active = o
+        o.select_set(True)
+        md = o.modifiers.new("gruda", "SURFACE_DEFORM")
+        md.target = base
+        while o.modifiers[0].name != "gruda":
+            bpy.ops.object.modifier_move_up(modifier="gruda")
+        bpy.ops.object.surfacedeform_bind(modifier="gruda")
+        if not o.data.shape_keys:
+            o.shape_key_add(name="Basis", from_mix=False)
+        for nome in EXPRESSOES:
+            base.data.shape_keys.key_blocks[nome].value = 1.0
+            bpy.context.view_layer.update()
+            bpy.ops.object.modifier_apply_as_shapekey(keep_modifier=True, modifier="gruda")
+            novo = o.data.shape_keys.key_blocks[-1]
+            novo.name = nome
+            novo.value = 0.0
+            base.data.shape_keys.key_blocks[nome].value = 0.0
+        o.modifiers.remove(o.modifiers["gruda"])
+    # o Blender não aplica máscara em malha com formas: as partes escondidas saem na mão, preservando as formas
+    for m in [m for m in base.modifiers if m.type == "MASK"]:
+        g = base.vertex_groups.get(m.vertex_group)
+        if g is None:
+            base.modifiers.remove(m)
+            continue
+        idx = g.index
+        dentro = {v.index for v in base.data.vertices if any(x.group == idx and x.weight > m.threshold for x in v.groups)}
+        bm = bmesh.new()
+        bm.from_mesh(base.data)
+        bm.verts.ensure_lookup_table()
+        apagar = [v for v in bm.verts if (v.index in dentro) == m.invert_vertex_group]
+        bmesh.ops.delete(bm, geom=apagar, context="VERTS")
+        bm.to_mesh(base.data)
+        bm.free()
+        base.modifiers.remove(m)
+
+
 def exportar(caminho, objetos):
     bpy.ops.object.select_all(action="DESELECT")
     for o in objetos:
@@ -431,7 +511,7 @@ def exportar(caminho, objetos):
     bpy.ops.export_scene.gltf(filepath=caminho, export_format="GLB", use_selection=True, export_apply=True,
                               export_animations=False, export_image_format="WEBP", export_image_quality=78, export_yup=True,
                               export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6,
-                              export_morph=False, export_skins=True, export_def_bones=True)
+                              export_morph=True, export_morph_normal=False, export_skins=True, export_def_bones=True)
 
 
 for s in SPECS:

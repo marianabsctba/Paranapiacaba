@@ -91,7 +91,7 @@ async function falar(falas: Fala[], g: number) {
     if (g !== geracao || !palco) return;
     const p = PERSONAGENS.get(quem);
     const nome = quem === 'narrador' ? '' : personaliza(p?.nome ?? quem);
-    await C3.foco(quem);
+    await C3.foco(quem, txt);
     if (!palco) return;
     palco.caixa.className = `caixa ${quem === 'narrador' ? 'narracao' : ''}`;
     palco.caixa.innerHTML = '';

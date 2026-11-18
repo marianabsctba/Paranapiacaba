@@ -240,8 +240,21 @@ export async function falante(id: string): Promise<Humano | null> {
   return h;
 }
 
-export async function foco(id: string) {
+/** cara que combina com a fala: riso, espanto, tristeza ou irritação; o resto fala com um sorriso leve */
+const VILOES = ['nulo', 'a1_dalva', 'deputado'];
+export function emocaoDaFala(id: string, texto: string): ['sorriso' | 'surpresa' | 'bravo' | 'triste' | 'neutro', number] {
+  const t = texto.toLowerCase();
+  if (/k{3,}|haha|hehe|\brs\b|😂|🤣/.test(t)) return ['sorriso', 1];
+  if (/desculp|sinto muito|perdi|saudade|chor|triste|morreu|sozinh/.test(t)) return ['triste', 0.75];
+  if (/droga|chega!|cala a boca|idiota|absurdo|inaceitável|como ousa|não acredito/.test(t)) return ['bravo', 0.7];
+  if (/!/.test(t) && /\?|!!|o quê|como assim|sério|meu deus|nossa/.test(t)) return ['surpresa', 0.7];
+  if (VILOES.includes(id)) return ['bravo', 0.3];
+  return ['sorriso', /!/.test(t) ? 0.55 : 0.3];
+}
+
+export async function foco(id: string, texto = '') {
   const h = await falante(id);
+  if (h && texto) h.expressao(...emocaoDaFala(id, texto));
   for (const n of C.npcs.values()) {
     if (n.raiz.userData.travado) continue;
     n.tocar(n === h ? 'falando' : 'parado');
@@ -331,6 +344,7 @@ export async function modoDuelo(oponente: string): Promise<Humano | null> {
     lado = -lado;
   }
   if (h) {
+    h.expressao('bravo', 0.6);
     h.raiz.position.set(op.x, y, op.z);
     h.raiz.userData.travado = true;
     h.olharPara(J.pos.x, J.pos.z, true);
