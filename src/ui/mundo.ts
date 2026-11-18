@@ -1,6 +1,6 @@
 // Modo livre: andar pelo castelo em primeira pessoa, conversar, usar a varinha e seguir o objetivo.
 import type { Lugar } from '../conteudo/tipos';
-import { ANOS, FEITICOS, LUGARES, PERSONAGENS } from '../conteudo/index';
+import { ANOS, FEITICOS, ITENS, LUGARES, PERSONAGENS } from '../conteudo/index';
 import { estado, salvar } from '../motor/estado';
 import { aplicar, lugaresVisiveis, nivel, titulo, xpDoNivel } from '../motor/progresso';
 import { CASA_INFO, fmt, personaliza } from '../motor/texto';
@@ -141,6 +141,33 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
     }
   };
 
+  // malão: lista o que você tem e pendura ou guarda no seu canto do dormitório
+  const malao3d = () => {
+    const lista = h('div', { class: 'vila-loja' });
+    janela('Malão', lista);
+    const desenha = () => {
+      lista.innerHTML = '';
+      const itens = s.itens.map((id) => ITENS.get(id)).filter((x) => x);
+      if (!itens.length) {
+        lista.append(h('p', {}, 'Malão vazio. Só tem uma meia e um cabo USB que não serve em nada.'));
+        return;
+      }
+      lista.append(h('p', { class: 'dica' }, 'O que estiver no seu canto aparece no quarto: pôster na parede, roupa no gancho, o resto nas prateleiras.'));
+      for (const it of itens) {
+        const no = s.enfeites.includes(it!.id);
+        lista.append(h('div', { class: 'item' }, h('b', {}, it!.nome), h('p', { html: fmt(it!.descricao) }), botao(no ? 'Guardar no malão' : 'Colocar no quarto', () => {
+          const i = s.enfeites.indexOf(it!.id);
+          if (i >= 0) s.enfeites.splice(i, 1);
+          else s.enfeites.push(it!.id);
+          salvar();
+          C3.atualizarEnfeites();
+          desenha();
+        }, 'mini')));
+      }
+    };
+    desenha();
+  };
+
   let alvo: C3.Alvo = null;
   const interagir = () => {
     if (!alvo || !J.livre) return;
@@ -148,6 +175,7 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
       const d = alvo.destino;
       if (!d) return mapa();
       if (d === 'acao:quentao') return quentao();
+      if (d === 'acao:malao') return malao3d();
       void (async () => {
         await C3.irPara(d, true);
         nomeLugar.textContent = LUGARES.get(d)?.nome ?? '';

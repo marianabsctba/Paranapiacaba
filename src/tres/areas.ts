@@ -1866,7 +1866,8 @@ function dormitorio(): Area {
   return {
     modelo: 'dormitorio', grupo: g, entrada: { x: 0, z: 3.6, yaw: 0 }, palco: [{ x: -1, z: 1.4 }, { x: 1, z: 1.4 }, { x: 0, z: 1 }, { x: 2, z: 2 }],
     limites: [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: obst,
-    portas: [{ x: 0, z: D / 2 - 0.5, rotulo: 'Sair do dormitório' }], ceu: 0x0e0b18, neblina: 0.02,
+    // o baú da sua cama é o malão: dali você enfeita o seu canto
+    portas: [{ x: 0, z: D / 2 - 0.5, rotulo: 'Sair do dormitório' }, { x: -2.25, z: 1.95, rotulo: 'Abrir o malão', destino: 'acao:malao' }], ceu: 0x0e0b18, neblina: 0.02,
   };
 }
 

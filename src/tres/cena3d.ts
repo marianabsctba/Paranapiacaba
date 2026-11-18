@@ -7,6 +7,7 @@ import { CASA_INFO, personaliza } from '../motor/texto';
 import { aplicarAmbiente, construir, modeloDoLugar, type Area } from './areas';
 import { Humano, preCarregar } from './humanos';
 import * as Som from '../motor/som';
+import { montarEnfeites } from './enfeites';
 import { M } from './motor3d';
 import { J, OLHO, posicionar } from './jogador';
 import { lousa as texLousa } from './texturas';
@@ -55,11 +56,19 @@ function descartar(o: THREE.Object3D) {
 
 function marcadorPorta(x: number, z: number, rotulo: string, destino?: string) {
   const g = new THREE.Group();
-  const arco = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 32, Math.PI), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xf2c45a, emissiveIntensity: 2.2 }));
-  arco.position.y = 1.6;
-  g.add(arco);
-  const alvo = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.2, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
-  alvo.position.y = 1.1;
+  const acao = destino?.startsWith('acao:');
+  if (acao) {
+    // ação dentro do lugar (malão, balcão): só um brilho pequeno, não um arco de porta
+    const brilho = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xf2c45a, emissiveIntensity: 2.5 }));
+    brilho.position.y = 0.95;
+    g.add(brilho);
+  } else {
+    const arco = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.04, 8, 32, Math.PI), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xf2c45a, emissiveIntensity: 2.2 }));
+    arco.position.y = 1.6;
+    g.add(arco);
+  }
+  const alvo = new THREE.Mesh(acao ? new THREE.BoxGeometry(0.7, 1.2, 0.7) : new THREE.BoxGeometry(1.4, 2.2, 0.3), new THREE.MeshBasicMaterial({ visible: false }));
+  alvo.position.y = acao ? 0.6 : 1.1;
   g.add(alvo);
   g.position.set(x, 0, z);
   g.userData.porta = rotulo;
@@ -67,6 +76,11 @@ function marcadorPorta(x: number, z: number, rotulo: string, destino?: string) {
   g.userData.destino = destino;
   alvo.userData.destino = destino;
   return g;
+}
+
+/** o malão mudou: refaz os enfeites do dormitório se você estiver nele */
+export function atualizarEnfeites() {
+  if (C.area?.modelo === 'dormitorio') montarEnfeites(C.area.grupo, tintaDe('voce') ?? 0xd9a520);
 }
 
 /** depois de uma cena da história, o lugar é remontado no modo normal (sem a montagem da cena) */
@@ -110,6 +124,7 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   }
   C.area = a;
   C.lugarId = lugarId;
+  if (a.modelo === 'dormitorio') montarEnfeites(a.grupo, tintaDe('voce') ?? 0xd9a520);
   const som = Som.somDoLugar(a.modelo);
   Som.trocarClima(som.clima);
   Som.trocarAmbiente(som.ambiente);
