@@ -12,6 +12,9 @@ import { brasaoSvg } from '../arte/brasao';
 import { CASA_INFO } from '../motor/texto';
 import { criarBicho } from './bichos';
 import { foto } from './foto';
+import { L as carregadorGltf } from './humanos';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { rastrear } from './carga';
 
 export interface Area {
   modelo: string;
@@ -1092,6 +1095,8 @@ function vila(): Area {
   const portas: Area['portas'] = [];
   const obst: Area['obstaculos'] = [];
   const brilhos: THREE.MeshStandardMaterial[] = [];
+  const floreiras: { x: number; z: number; lado: number }[] = [];
+  const chamines: { x: number; z: number; y: number }[] = [];
   let k = 0;
   for (let z = -18; z <= 18; z += 7.2) {
     for (const lado of [-1, 1]) {
@@ -1117,7 +1122,9 @@ function vila(): Area {
         caixa(g, 0.1, 0.08, 1.3, branco, fx, 2.3, z + dz);
         caixa(g, 0.07, 1.2, 0.06, branco, fx, 1.1, z + dz).castShadow = false;
         caixa(g, 0.07, 0.05, 1.1, branco, fx, 1.68, z + dz).castShadow = false;
+        floreiras.push({ x: fx + lado * -0.18, z: z + dz, lado });
       }
+      if (k % 3 !== 1) chamines.push({ x: x + lado * 1.2, z: z - 1.4, y: alt + 1.5 });
       // segundo andar: janelinha no telhado
       const sotao = std({ color: 0x2a1a10, emissive: 0xffd090, emissiveIntensity: 0.6 });
       plano(g, 0.7, 0.6, sotao, fx + lado * -0.05, alt + 0.55, z, 0, ry).castShadow = false;
@@ -1143,11 +1150,13 @@ function vila(): Area {
   }
   // torre do relógio no fim da rua
   const tijolo = pbr('tijolo', [2, 6]);
-  caixa(g, 3.4, 12, 3.4, tijolo, 0, 0, -L / 2 - 1.2);
-  telhado(g, 3.4, 2.6, 3.4, telhas, 0, 12, -L / 2 - 1.2);
+  const TZ = -40;
+  caixa(g, 3.4, 12, 3.4, tijolo, 0, 0, TZ);
+  telhado(g, 3.4, 2.6, 3.4, telhas, 0, 12, TZ);
   const relogio = new THREE.Mesh(new THREE.CircleGeometry(1.15, 40), (() => { const t = mostradorRelogio(); return std({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: 0.5 }); })());
-  relogio.position.set(0, 9.6, -L / 2 + 0.52);
+  relogio.position.set(0, 9.6, TZ + 1.72);
   g.add(relogio);
+  const festa = festaDaVila(g, { RUA, floreiras, chamines, branco, telhas });
   // céu e luz de fim de tarde com neblina
   g.add(new THREE.HemisphereLight(0xb8c4d8, 0x3a3428, 1.1));
   const sol = new THREE.DirectionalLight(0xffe0b8, 1.1);
@@ -1161,12 +1170,265 @@ function vila(): Area {
   g.add(sol, sol.target);
   return {
     modelo: 'vila', grupo: g, entrada: { x: 0, z: L / 2 - 3, yaw: 0 }, palco: [{ x: -1, z: L / 2 - 5.2 }, { x: 1.1, z: L / 2 - 5.4 }, { x: 0, z: L / 2 - 6 }, { x: -1.8, z: L / 2 - 6.4 }],
-    limites: [-RUA / 2 + 0.3, RUA / 2 - 0.3, -L / 2 + 1, L / 2 - 1], obstaculos: obst,
+    limites: [-10.5, 10.5, -37, L / 2 - 1],
+    obstaculos: [...obst, [-11, -RUA / 2 - 1.2, -22, L / 2], [RUA / 2 + 1.2, 11, -22, L / 2], ...festa.obst],
     // a Tati e o Cauã passeando na rua
     gente: [{ id: 'tati', x: 1.4, z: L / 2 - 8, ry: Math.PI * 0.8 }, { id: 'caua', x: 0.5, z: L / 2 - 8.6, ry: -Math.PI * 0.85 }],
     portas: [...portas, { x: 0, z: L / 2 - 0.8, rotulo: 'Voltar pela estrada' }], ceu: 0x9aa6b4, neblina: 0.03,
-    atualizar: (_dt, t) => brilhos.forEach((b, i) => (b.emissiveIntensity = 0.85 + Math.sin(t * 1.3 + i) * 0.08)),
+    atualizar: (dt, t) => {
+      brilhos.forEach((b, i) => (b.emissiveIntensity = 0.85 + Math.sin(t * 1.3 + i) * 0.08));
+      festa.atualizar(dt, t);
+    },
   };
+}
+
+/** curva de fio pendurado entre dois pontos (barriga no meio) */
+function fioPendurado(a: THREE.Vector3, b: THREE.Vector3, barriga: number, n: number) {
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n;
+    return new THREE.Vector3().lerpVectors(a, b, t).setY(a.y + (b.y - a.y) * t - barriga * 4 * t * (1 - t));
+  });
+}
+
+/** a vila em dia de festa: praça com coreto e ipês, varais de lâmpada e bandeirinha, floreiras, chaminés e galinhas */
+function festaDaVila(g: THREE.Group, o: { RUA: number; floreiras: { x: number; z: number; lado: number }[]; chamines: { x: number; z: number; y: number }[]; branco: THREE.Material; telhas: THREE.Material }) {
+  const { RUA } = o;
+  const obst: Area['obstaculos'] = [];
+  const anima: ((dt: number, t: number) => void)[] = [];
+  const r = rnd(77);
+  // chão da praça
+  plano(g, 90, 26, pbr('chao_mata', [12, 4]), 0, -0.012, -36, -Math.PI / 2);
+  plano(g, 22, 16, pbr('paralelepipedo', [8, 6], { color: 0xd8cfc0 }), 0, 0.004, -30, -Math.PI / 2);
+  // coreto branco de telhado vermelho
+  const CZ = -30;
+  const branco = std({ color: 0xf2ece0, roughness: 0.7 });
+  const verde = std({ color: 0x2e6a4a, roughness: 0.6 });
+  cil(g, 3.2, 3.35, 0.7, branco, 0, 0, CZ, 8);
+  caixa(g, 1.6, 0.35, 0.8, branco, 0, 0, CZ + 3.4);
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+    const px = Math.cos(a) * 2.9, pz = CZ + Math.sin(a) * 2.9;
+    cil(g, 0.08, 0.09, 2.8, branco, px, 0.7, pz, 8);
+    // guarda-corpo entre os postes (a frente fica aberta)
+    if (i !== 1) {
+      const a2 = a + Math.PI / 8;
+      caixa(g, 2.2, 0.08, 0.08, verde, Math.cos(a2) * 2.75, 1.4, CZ + Math.sin(a2) * 2.75, -a2 + Math.PI / 2);
+      for (let k = -3; k <= 3; k++) caixa(g, 0.04, 0.7, 0.04, branco, Math.cos(a2) * 2.75 + Math.cos(-a2 + Math.PI / 2) * k * 0.3, 0.7, CZ + Math.sin(a2) * 2.75 - Math.sin(-a2 + Math.PI / 2) * k * 0.3).castShadow = false;
+    }
+  }
+  const tetoCoreto = new THREE.Mesh(new THREE.ConeGeometry(3.7, 1.9, 8), o.telhas);
+  tetoCoreto.position.set(0, 3.5 + 0.95, CZ);
+  tetoCoreto.rotation.y = Math.PI / 8;
+  tetoCoreto.castShadow = true;
+  g.add(tetoCoreto);
+  caixa(g, 0.1, 0.25, 0.1, verde, 0, 3.3, CZ).castShadow = false;
+  const pinaculo = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 8), std({ color: 0xd4b030, metalness: 0.8, roughness: 0.3 }));
+  pinaculo.position.set(0, 5.55, CZ);
+  g.add(pinaculo);
+  obst.push([-3.4, 3.4, CZ - 3.4, CZ + 3.0]);
+  const luzCoreto = new THREE.PointLight(0xffc070, 7, 14, 1.5);
+  luzCoreto.position.set(0, 3, CZ);
+  g.add(luzCoreto);
+  // ipês amarelos e rosas nos cantos, com flor caída no chão
+  for (const [x, z, cor] of [[-8.3, -24.5, 0xf2c230], [8.3, -24.5, 0xd96aa8], [-8.3, -35.5, 0xd96aa8], [8.3, -35.5, 0xf2c230]] as const) {
+    cil(g, 0.16, 0.24, 3.2, std({ color: 0x4a3626, roughness: 1 }), x, 0, z, 8);
+    const flor = std({ color: cor, roughness: 0.9 });
+    for (let i = 0; i < 6; i++) {
+      const c = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9 + r() * 0.5, 1), flor);
+      c.position.set(x + (r() - 0.5) * 1.8, 3.4 + r() * 1.2, z + (r() - 0.5) * 1.8);
+      c.castShadow = true;
+      g.add(c);
+    }
+    const chao = new THREE.Mesh(new THREE.CircleGeometry(2.2, 20), std({ color: cor, roughness: 1, transparent: true, opacity: 0.55 }));
+    chao.rotation.x = -Math.PI / 2;
+    chao.position.set(x, 0.008, z);
+    g.add(chao);
+    obst.push([x - 0.4, x + 0.4, z - 0.4, z + 0.4]);
+  }
+  // casinhas em volta da praça, para o fundo não ficar vazio
+  const coresCasa = ['#2f4a5c', '#8a6a2a', '#5c3a5a', '#3a5a52', '#7a2e2a', '#5a6b3a'];
+  const casinha = (x: number, z: number, ry: number, i: number) => {
+    const c = new THREE.Group();
+    c.position.set(x, 0, z);
+    c.rotation.y = ry;
+    g.add(c);
+    const alt = 3.4 + (i % 3) * 0.35;
+    caixa(c, 5.4, alt, 5, texMat(T.madeira([3, 2], coresCasa[i % coresCasa.length]), { roughness: 0.75 }), 0, 0, 0);
+    telhado(c, 5.4, 1.5, 5, o.telhas, 0, alt, 0);
+    caixa(c, 1, 2.1, 0.08, texMat(T.madeira([1, 2], '#3a2414'), { roughness: 0.6 }), 0, 0, 2.52);
+    for (const dx of [-1.6, 1.6]) {
+      plano(c, 1, 1.1, std({ color: 0x2a1a10, emissive: 0xffc070, emissiveIntensity: 0.8 }), dx, 1.7, 2.53).castShadow = false;
+      caixa(c, 1.2, 0.08, 0.1, o.branco, dx, 1.1, 2.54).castShadow = false;
+      caixa(c, 0.2, 0.14, 0.2, caixaFlorCasa, dx, 0.95, 2.62).castShadow = false;
+    }
+  };
+  const caixaFlorCasa = texMat(T.madeira([1, 1], '#4a2e1a'), { roughness: 0.8 });
+  [[-13.8, -26.5], [-13.8, -33.5]].forEach(([x, z], i) => casinha(x, z, Math.PI / 2, i));
+  [[13.8, -26.5], [13.8, -33.5]].forEach(([x, z], i) => casinha(x, z, -Math.PI / 2, i + 2));
+  [[-6.5, -41], [6.5, -41]].forEach(([x, z], i) => casinha(x, z, 0, i + 4));
+  // bancos e postes da praça
+  for (const lado of [-1, 1]) {
+    movel(g, 'painted_wooden_bench', lado * 5.6, CZ, { larg: 1.8, ry: lado < 0 ? Math.PI / 2 : -Math.PI / 2 });
+    obst.push([lado * 5.6 - 0.5, lado * 5.6 + 0.5, CZ - 1, CZ + 1]);
+    for (const z of [-23.5, -36.5]) movel(g, 'street_lamp_01', lado * 9.6, z, { alt: 3.4 });
+  }
+  // barraca de quentão e pinhão
+  const BX = 7.6, BZ = -29;
+  caixa(g, 2.2, 1, 0.8, texMat(T.madeira([2, 1], '#6a4424'), { roughness: 0.7 }), BX, 0, BZ);
+  for (const dx of [-1, 1]) for (const dz of [-0.4, 0.4]) cil(g, 0.04, 0.04, 2.3, std({ color: 0x5a3a22 }), BX + dx * 1.05, 0, BZ + dz, 6);
+  const cvL = document.createElement('canvas');
+  cvL.width = 128;
+  cvL.height = 16;
+  const cl = cvL.getContext('2d')!;
+  for (let i = 0; i < 8; i++) {
+    cl.fillStyle = i % 2 ? '#f4efe4' : '#c0392b';
+    cl.fillRect(i * 16, 0, 16, 16);
+  }
+  const listra = new THREE.CanvasTexture(cvL);
+  listra.colorSpace = THREE.SRGBColorSpace;
+  const lona = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 1.3), std({ map: listra, side: THREE.DoubleSide, roughness: 1 }));
+  lona.rotation.set(-Math.PI / 2 + 0.35, 0, 0);
+  lona.rotation.order = 'YXZ';
+  lona.rotation.y = -Math.PI / 2;
+  lona.position.set(BX, 2.35, BZ);
+  g.add(lona);
+  const placa = T.placa('QUENTÃO · PINHÃO', '#2a1a0e', '#ffd166', 512, 96);
+  plano(g, 1.8, 0.34, std({ map: placa, emissive: 0xffffff, emissiveMap: placa, emissiveIntensity: 0.4 }), BX - 0.42, 0.7, BZ, 0, -Math.PI / 2).castShadow = false;
+  for (let i = 0; i < 4; i++) caneca(g, BX - 0.1, 1, BZ - 0.6 + i * 0.4);
+  obst.push([BX - 1.2, BX + 1.2, BZ - 0.6, BZ + 0.6]);
+  // varal de lâmpadas em zigue-zague sobre a rua e do coreto para os cantos da praça
+  const pontosLuz: THREE.Vector3[] = [];
+  const fio = new THREE.LineBasicMaterial({ color: 0x1a1a1a });
+  const pendurar = (a: THREE.Vector3, b: THREE.Vector3, barriga: number, cada: number) => {
+    const pts = fioPendurado(a, b, barriga, 24);
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), fio));
+    const n = Math.max(2, Math.round(a.distanceTo(b) / cada));
+    fioPendurado(a, b, barriga, n).slice(1, -1).forEach((p) => pontosLuz.push(p.clone().setY(p.y - 0.06)));
+  };
+  const borda = RUA / 2 + 1.2;
+  for (let z = -19, i = 0; z < 19; z += 3.6, i++) {
+    const s = i % 2 ? 1 : -1;
+    pendurar(new THREE.Vector3(s * borda, 3.3, z), new THREE.Vector3(-s * borda, 3.3, z + 3.6), 0.55, 0.45);
+  }
+  for (const [x, z] of [[-9.6, -23.5], [9.6, -23.5], [-9.6, -36.5], [9.6, -36.5]]) pendurar(new THREE.Vector3(0, 4.3, CZ), new THREE.Vector3(x, 3.2, z), 0.7, 0.5);
+  const lampadas = new THREE.InstancedMesh(new THREE.SphereGeometry(0.055, 8, 6), std({ color: 0xfff2c8, emissive: 0xffc070, emissiveIntensity: 2.6 }), pontosLuz.length);
+  const mtx = new THREE.Matrix4();
+  pontosLuz.forEach((p, i) => lampadas.setMatrixAt(i, mtx.makeTranslation(p.x, p.y, p.z)));
+  lampadas.castShadow = false;
+  g.add(lampadas);
+  const corLamp = lampadas.material as THREE.MeshStandardMaterial;
+  anima.push((_dt, t) => (corLamp.emissiveIntensity = 2.4 + Math.sin(t * 2.1) * 0.25));
+  // bandeirinhas de festa atravessando a rua
+  const coresBand = [0xe74c3c, 0xf2c94c, 0x2e86de, 0x27ae60, 0xff7ab8, 0xf39c12];
+  const triangulo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.13, 0, 0), new THREE.Vector3(0.13, 0, 0), new THREE.Vector3(0, -0.3, 0)]);
+  triangulo.computeVertexNormals();
+  const bandeiras: THREE.Mesh[] = [];
+  for (const z of [-17.2, -10, -2.8, 4.4, 11.6, 18.8]) {
+    const a = new THREE.Vector3(-borda, 3.75, z), b = new THREE.Vector3(borda, 3.75, z);
+    const pts = fioPendurado(a, b, 0.6, 24);
+    g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), fio));
+    fioPendurado(a, b, 0.6, 28).slice(1, -1).forEach((p, i) => {
+      const m = new THREE.Mesh(triangulo, std({ color: coresBand[(((i + Math.round(z)) % coresBand.length) + coresBand.length) % coresBand.length], side: THREE.DoubleSide, roughness: 1 }));
+      m.position.copy(p);
+      g.add(m);
+      bandeiras.push(m);
+    });
+  }
+  anima.push((_dt, t) => bandeiras.forEach((b, i) => (b.rotation.x = Math.sin(t * 2.4 + i * 0.7) * 0.3)));
+  // floreiras debaixo das janelas
+  const caixaFlor = texMat(T.madeira([1, 1], '#4a2e1a'), { roughness: 0.8 });
+  const flores = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.065, 0), std({ roughness: 0.8 }), o.floreiras.length * 9);
+  let nf = 0;
+  const corF = [0xe74c3c, 0xf2c94c, 0xffffff, 0xff7ab8, 0xb06ad8];
+  for (const f of o.floreiras) {
+    caixa(g, 0.22, 0.16, 1.15, caixaFlor, f.x, 0.88, f.z).castShadow = false;
+    for (let i = 0; i < 9; i++) {
+      flores.setMatrixAt(nf, mtx.makeTranslation(f.x + (r() - 0.5) * 0.12, 1.08 + r() * 0.06, f.z - 0.48 + i * 0.12));
+      flores.setColorAt(nf, new THREE.Color(corF[(nf * 7) % corF.length]));
+      nf++;
+    }
+  }
+  flores.castShadow = false;
+  g.add(flores);
+  // chaminés soltando fumaça
+  const fumacas: { m: THREE.Mesh; mat: THREE.MeshStandardMaterial; x: number; z: number; y: number; f: number }[] = [];
+  for (const c of o.chamines) {
+    caixa(g, 0.5, 1.5, 0.5, pbr('tijolo', [1, 2]), c.x, c.y - 1.1, c.z);
+    for (let i = 0; i < 5; i++) {
+      const mat = std({ color: 0xc8c4bc, roughness: 1, transparent: true, opacity: 0.4, depthWrite: false });
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), mat);
+      m.castShadow = false;
+      g.add(m);
+      fumacas.push({ m, mat, x: c.x, z: c.z, y: c.y + 0.4, f: i / 5 });
+    }
+  }
+  anima.push((_dt, t) => {
+    for (const s of fumacas) {
+      const k = (t * 0.22 + s.f) % 1;
+      s.m.position.set(s.x + Math.sin(k * 3 + s.x) * 0.3 + k * 0.6, s.y + k * 3.2, s.z + k * 0.3);
+      s.m.scale.setScalar(0.6 + k * 1.8);
+      s.mat.opacity = 0.42 * (1 - k);
+    }
+  });
+  // galinhas ciscando pela praça (Quaternius, CC0)
+  const galinhas: { raiz: THREE.Object3D; mixer: THREE.AnimationMixer; acoes: Record<string, THREE.AnimationAction>; alvo: THREE.Vector2; espera: number; atual: string }[] = [];
+  const sortearAlvo = () => {
+    for (;;) {
+      const v = new THREE.Vector2((r() - 0.5) * 17, -24 - r() * 12);
+      if (Math.hypot(v.x, v.y - CZ) > 3.9 && !(Math.abs(v.x - BX) < 1.6 && Math.abs(v.y - BZ) < 1)) return v;
+    }
+  };
+  rastrear(carregadorGltf().loadAsync(`${import.meta.env.BASE_URL}ambiente/bichos/galinha.glb?v=${__VERSAO__}`)).then((gl) => {
+    const caixaG = new THREE.Box3().setFromObject(gl.scene);
+    const k = 0.42 / Math.max(0.01, caixaG.getSize(new THREE.Vector3()).y);
+    for (let i = 0; i < 7; i++) {
+      const raiz = SkeletonUtils.clone(gl.scene);
+      raiz.scale.setScalar(k * (0.85 + r() * 0.3));
+      raiz.traverse((x) => ((x as THREE.Mesh).isMesh && ((x as THREE.Mesh).castShadow = true)));
+      const p = sortearAlvo();
+      raiz.position.set(p.x, -caixaG.min.y * k, p.y);
+      g.add(raiz);
+      const mixer = new THREE.AnimationMixer(raiz);
+      const acoes: Record<string, THREE.AnimationAction> = {};
+      for (const nome of ['Idle', 'Idle_Peck', 'Run']) {
+        const clip = gl.animations.find((a) => a.name.endsWith('|' + nome));
+        if (clip) acoes[nome] = mixer.clipAction(clip);
+      }
+      acoes.Idle_Peck?.play();
+      mixer.update(r() * 2);
+      galinhas.push({ raiz, mixer, acoes, alvo: sortearAlvo(), espera: 1 + r() * 4, atual: 'Idle_Peck' });
+    }
+  });
+  const tocar = (gn: (typeof galinhas)[number], nome: string) => {
+    if (gn.atual === nome || !gn.acoes[nome]) return;
+    gn.acoes[nome].reset().play();
+    gn.acoes[gn.atual]?.crossFadeTo(gn.acoes[nome], 0.2, false);
+    gn.atual = nome;
+  };
+  anima.push((dt) => {
+    for (const gn of galinhas) {
+      gn.mixer.update(dt);
+      if (gn.espera > 0) {
+        gn.espera -= dt;
+        if (gn.espera <= 0) gn.alvo = sortearAlvo();
+        continue;
+      }
+      const p = gn.raiz.position;
+      const dx = gn.alvo.x - p.x, dz = gn.alvo.y - p.z, d = Math.hypot(dx, dz);
+      if (d < 0.15) {
+        gn.espera = 2 + r() * 5;
+        tocar(gn, r() < 0.7 ? 'Idle_Peck' : 'Idle');
+        continue;
+      }
+      tocar(gn, 'Run');
+      if (gn.acoes.Run) gn.acoes.Run.timeScale = 0.7;
+      const passo = Math.min(d, 0.9 * dt);
+      p.x += (dx / d) * passo;
+      p.z += (dz / d) * passo;
+      gn.raiz.rotation.y = Math.atan2(dx, dz);
+    }
+  });
+  return { obst, atualizar: (dt: number, t: number) => anima.forEach((f) => f(dt, t)) };
 }
 
 /** barril de madeira com aros de ferro */

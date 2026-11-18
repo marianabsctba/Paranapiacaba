@@ -33,7 +33,11 @@ function tex(arquivo: string, rep: [number, number], cor: boolean): THREE.Textur
     }
     t = im.t.clone();
     if (im.pronta) t.needsUpdate = true;
-    else im.copias.push(t);
+    else {
+      // a cópia nasce marcada para subir; sem imagem ainda, espera o carregamento avisar
+      t.version = 0;
+      im.copias.push(t);
+    }
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(rep[0], rep[1]);
     t.anisotropy = 8;
