@@ -1,16 +1,39 @@
 // Materiais fotográficos (texturas CC0 do Poly Haven convertidas para WebP em public/ambiente/texturas).
 import * as THREE from 'three';
+import { rastrear } from './carga';
 
 const BASE = `${import.meta.env.BASE_URL}ambiente/texturas/`;
 const ARM = new Set(['leafy_grass', 'medieval_red_brick', 'old_wood_floor']);
 const tl = new THREE.TextureLoader();
 const cache = new Map<string, THREE.Texture>();
+// uma imagem por arquivo; cada repetição é uma cópia leve que divide a mesma imagem (sobe para a placa de vídeo uma vez só)
+const imagens = new Map<string, { t: THREE.Texture; copias: THREE.Texture[]; pronta: boolean }>();
 
 function tex(arquivo: string, rep: [number, number], cor: boolean): THREE.Texture {
   const chave = `${arquivo}|${rep.join('x')}`;
   let t = cache.get(chave);
   if (!t) {
-    t = tl.load(BASE + arquivo + '.webp?v=' + __VERSAO__);
+    let im = imagens.get(arquivo);
+    if (!im) {
+      let fim!: () => void;
+      rastrear(new Promise<void>((r) => (fim = r)));
+      const nova = { t: null as unknown as THREE.Texture, copias: [] as THREE.Texture[], pronta: false };
+      nova.t = tl.load(
+        BASE + arquivo + '.webp?v=' + __VERSAO__,
+        () => {
+          nova.pronta = true;
+          nova.copias.forEach((c) => (c.needsUpdate = true));
+          fim();
+        },
+        undefined,
+        () => fim(),
+      );
+      imagens.set(arquivo, nova);
+      im = nova;
+    }
+    t = im.t.clone();
+    if (im.pronta) t.needsUpdate = true;
+    else im.copias.push(t);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(rep[0], rep[1]);
     t.anisotropy = 8;
@@ -32,6 +55,15 @@ const ID: Record<Superficie, string> = {
   grama: 'leafy_grass',
   concreto: 'concrete_wall_003',
 };
+
+/** baixa todas as texturas de superfície de uma vez (em segundo plano, logo depois da tela inicial) */
+export function preCarregarTexturas() {
+  for (const id of Object.values(ID)) {
+    tex(`${id}_cor`, [1, 1], true);
+    tex(`${id}_normal`, [1, 1], false);
+    tex(`${id}_${ARM.has(id) ? 'arm' : 'aspereza'}`, [1, 1], false);
+  }
+}
 
 /** material com cor, relevo (normal) e aspereza; rep = quantas vezes a textura repete na superfície */
 export function pbr(s: Superficie, rep: [number, number], extra: THREE.MeshStandardMaterialParameters = {}): THREE.MeshStandardMaterial {

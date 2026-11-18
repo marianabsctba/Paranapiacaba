@@ -2,6 +2,7 @@
 // Cada móvel é escalado para a medida pedida e apoiado no chão; aparece assim que termina de carregar.
 import * as THREE from 'three';
 import { L } from './humanos';
+import { rastrear } from './carga';
 
 const BASE = `${import.meta.env.BASE_URL}ambiente/moveis/`;
 const cache = new Map<string, Promise<THREE.Object3D | null>>();
@@ -24,6 +25,8 @@ function carregar(id: Movel) {
           if (m.isMesh) {
             m.castShadow = true;
             m.receiveShadow = true;
+            // a geometria fica no cache e serve a todas as salas: trocar de lugar não a descarta
+            m.userData.compartilhado = true;
           }
         });
         return g.scene;
@@ -47,7 +50,7 @@ export function movel(g: THREE.Object3D, id: Movel, x: number, z: number, m: Med
   ancora.position.set(x, m.y ?? 0, z);
   ancora.rotation.y = m.ry ?? 0;
   g.add(ancora);
-  carregar(id).then((orig) => {
+  rastrear(carregar(id)).then((orig) => {
     if (!orig || !ancora.parent) return;
     const c = orig.clone(true);
     const caixa = new THREE.Box3().setFromObject(c);
@@ -69,7 +72,7 @@ export function repetir(g: THREE.Object3D, id: Movel, posicoes: { x: number; z: 
   if (!posicoes.length) return;
   const grupo = new THREE.Group();
   g.add(grupo);
-  carregar(id).then((orig) => {
+  rastrear(carregar(id)).then((orig) => {
     if (!orig || !grupo.parent) return;
     const base = orig.clone(true);
     const caixa = new THREE.Box3().setFromObject(base);
@@ -92,6 +95,7 @@ export function repetir(g: THREE.Object3D, id: Movel, posicoes: { x: number; z: 
         lugar.compose(new THREE.Vector3(p.x, p.y ?? m.y ?? 0, p.z), q, new THREE.Vector3(1, 1, 1));
         im.setMatrixAt(i, new THREE.Matrix4().multiplyMatrices(lugar, local));
       });
+      im.userData.compartilhado = true;
       im.castShadow = sombra;
       im.receiveShadow = true;
       im.computeBoundingSphere();
@@ -100,6 +104,13 @@ export function repetir(g: THREE.Object3D, id: Movel, posicoes: { x: number; z: 
   });
 }
 
-export function preCarregarMoveis(ids: Movel[]) {
+export const TODOS_MOVEIS: Movel[] = [
+  'SchoolDesk_01', 'SchoolChair_01', 'classic_laptop', 'wooden_bookshelf_worn', 'book_encyclopedia_set_01', 'GothicBed_01', 'treasure_chest',
+  'ClassicNightstand_01', 'Chandelier_01', 'street_lamp_01', 'vintage_grandfather_clock_01', 'Sofa_01', 'Television_01', 'CoffeeTable_01',
+  'potted_plant_01', 'WoodenTable_02', 'painted_wooden_bench', 'wooden_lantern_01', 'desk_lamp_arm_01', 'Barrel_01', 'steel_frame_shelves_01',
+  'wooden_candlestick', 'dining_table', 'painted_wooden_table',
+];
+
+export function preCarregarMoveis(ids: Movel[] = TODOS_MOVEIS) {
   ids.forEach(carregar);
 }

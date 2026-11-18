@@ -11,7 +11,9 @@ import { montarEnfeites } from './enfeites';
 import { M } from './motor3d';
 import { J, OLHO, posicionar } from './jogador';
 import { lousa as texLousa } from './texturas';
-import { repetir } from './moveis';
+import { repetir, preCarregarMoveis } from './moveis';
+import { preCarregarTexturas } from './pbr';
+import { esperarCarga } from './carga';
 
 export const C = {
   area: null as Area | null,
@@ -154,6 +156,13 @@ export async function irPara(lugarId: string, ambiente = false): Promise<void> {
   if (ambiente) {
     povoar(a);
     await encenar(momentoDoLugar());
+  }
+  // a cortina só sai quando a sala chegou inteira (com limite, para nunca travar) e os materiais já estão compilados
+  await esperarCarga(6000);
+  try {
+    await Promise.race([M.renderer.compileAsync(M.cena, M.camera), new Promise((r) => setTimeout(r, 1500))]);
+  } catch {
+    /* sem compilação antecipada: segue normal */
   }
   await fade(false);
 }
@@ -524,6 +533,12 @@ export function alvoNaMira(): Alvo {
   return melhor ? { tipo: 'npc', h: melhor } : null;
 }
 const VMIRA = new THREE.Vector3();
+
+/** móveis e texturas primeiro (leves e usados em todo lugar), depois o elenco */
+export function preCarregarCenario() {
+  preCarregarTexturas();
+  preCarregarMoveis();
+}
 
 export function preCarregarElenco() {
   preCarregar(['tati', 'caua', 'bia', 'jonas', 'enzo', 'vo_cida', 'baltazar', 'iolanda', 'otavio', 'aluno1', 'aluno2', 'aluno3', 'aluno4']);

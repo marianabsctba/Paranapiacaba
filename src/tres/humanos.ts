@@ -6,6 +6,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { PERSONAGENS } from '../conteudo/index';
 import { criarBicho, type Bicho } from './bichos';
+import { rastrear } from './carga';
 
 const BASE = import.meta.env.BASE_URL;
 export const MODELOS = ['tati', 'caua', 'bia', 'jonas', 'enzo', 'aluno1', 'aluno2', 'aluno3', 'aluno4', 'iolanda', 'otavio', 'ruth', 'heitor', 'nanda', 'baltazar', 'zuleica', 'seu_ze', 'vo_cida', 'deputado', 'marlene', 'nulo', 'adulto1', 'adulta1', 'adulta2', 'dalva', 'vila_lurdinha', 'vila_kenji', 'vila_firmina', 'vila_oswaldo', 'vila_juca', 'voce1', 'voce2', 'voce3', 'voce4', 'voce5', 'voce6', 'voce7', 'voce8'];
@@ -133,7 +134,11 @@ function carregarModelo(id: string): Promise<THREE.Object3D | null> {
   if (!p) {
     p = L()
       .loadAsync(`${BASE}modelos/gente/${id}.glb?v=${__VERSAO__}`)
-      .then((g) => g.scene)
+      .then((g) => {
+        // a malha original fica no cache e cada pessoa é uma cópia que divide a geometria: trocar de lugar não a descarta
+        g.scene.traverse((o) => (o.userData.compartilhado = true));
+        return g.scene;
+      })
       .catch(() => null);
     carregados.set(id, p);
   }
@@ -215,7 +220,7 @@ export class Humano {
       this.pronto = Promise.resolve();
       return;
     }
-    this.pronto = Promise.all([carregarModelo(m), carregarAnimacoes()]).then(([fonte]) => {
+    this.pronto = rastrear(Promise.all([carregarModelo(m), carregarAnimacoes()])).then(([fonte]) => {
       if (!fonte) {
         this.bicho = criarBicho(id);
         this.raiz.add(this.bicho.grupo);
