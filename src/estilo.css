@@ -379,3 +379,7 @@ img.foto.carregando { opacity: .35; }
 @media (max-width: 600px) {
   .hud-lugar { top: 118px; font-size: .85em; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* terminal da varinha embaixo, deixando o castelo à mostra para o efeito do feitiço */
+.hud-janela.compacta { inset: auto 10px 10px 10px; height: 40vh; max-height: 360px; background: rgba(12, 10, 24, 0.86); }
+@media (max-width: 600px) { .hud-janela.compacta { height: 46vh; } }

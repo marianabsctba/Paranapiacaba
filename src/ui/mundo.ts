@@ -13,6 +13,7 @@ import { aviso, botao, h } from './dom';
 import { atenderNaVila } from './vila';
 import { conviteCapturebol } from './capturebol';
 import * as Som from '../motor/som';
+import { lancarEfeito } from '../tres/efeitos';
 
 interface Acoes {
   menu: () => void;
@@ -318,7 +319,8 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
     const saida = (t: string, classe = '') => tela.insertBefore(h('pre', { class: classe }, t), linha);
     const tot = l.segredos?.length ?? 0;
     tela.append(h('pre', { class: 'term-dica' }, `# Varinha conectada em ${l.nome}. ${tot ? `${tot} segredo(s) aqui.` : 'Nada parece escondido aqui.'} Digite "ajuda".`), linha);
-    janela('Varinha', tela);
+    // o terminal da varinha fica embaixo, para o feitiço aparecer no castelo em cima
+    janela('Varinha', tela).box.classList.add('compacta');
     const aprendidos = s.feiticos.map((id) => FEITICOS.get(id)).filter((f) => f) as NonNullable<ReturnType<typeof FEITICOS.get>>[];
     const base = (c: string) => c.trim().split(/\s+/)[0]?.toLowerCase() ?? '';
     linha.addEventListener('submit', (ev) => {
@@ -330,6 +332,8 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
       const b = base(cmd);
       if (b === 'ajuda' || b === 'help') return void saida(aprendidos.length ? 'Feitiços que você sabe:\n' + aprendidos.map((f) => `  ${f.comando.padEnd(22)} ${f.nome}`).join('\n') : 'Você ainda não aprendeu feitiços. Vai pra aula, criatura.');
       if (b === 'clear' || b === 'cls') return void tela.querySelectorAll('pre').forEach((p) => p.remove());
+      if (b === 'whoami') lancarEfeito('whoami', s.nome, false);
+      if (b === 'sudo') lancarEfeito('sudo', s.nome, false);
       if (b === 'whoami') return void saida(`${s.nome} (${s.casa ? CASA_INFO[s.casa].nome : 'sem casa'}), nível ${nivel(s.xp)}`);
       if (b === 'sudo') return void saida(`${s.nome} não está no arquivo sudoers. Este incidente será reportado à Diretora Iolanda.`, 'term-erro');
       if (/^rm\s+-rf\s+\/\s*$/.test(cmd)) return void saida('Seu Zé do Rack apareceu do nada, tirou o teclado da sua mão e saiu sem dizer uma palavra.', 'term-erro');
@@ -339,6 +343,7 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
         return void saida(existe ? 'Você ainda não aprendeu esse feitiço. A varinha faz um barulhinho de erro do Windows 98.' : `${b}: comando não encontrado. O Bitu pisou no teclado?`, 'term-erro');
       }
       const segs = (l.segredos ?? []).map((sg, i) => ({ sg, i })).filter((x) => x.sg.feitico === f.id);
+      lancarEfeito(cmd, s.nome, segs.some(({ i }) => !s.segredos.includes(`${l.id}#${i}`)));
       if (!segs.length) return void saida(`${f.nome}! O feitiço sai bonito, mas nada nesta sala reage.`);
       for (const { sg, i } of segs) {
         const k = `${l.id}#${i}`;
