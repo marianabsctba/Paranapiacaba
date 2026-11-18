@@ -1,7 +1,7 @@
 // Orquestra o mundo 3D: troca de lugar, quem fala, aula, duelo e interação.
 import * as THREE from 'three';
 import type { CasaId, PassoAula } from '../conteudo/tipos';
-import { LUGARES } from '../conteudo/index';
+import { LUGARES, PERSONAGENS } from '../conteudo/index';
 import { estado, salvar, temPartida } from '../motor/estado';
 import { CASA_INFO, personaliza } from '../motor/texto';
 import { aplicarAmbiente, construir, modeloDoLugar, type Area } from './areas';
@@ -28,7 +28,17 @@ function corCasa(c: CasaId) {
   return new THREE.Color(CASA_INFO[c].cor).getHex();
 }
 
-/** casa de cada aluno, para pintar a capa e o cachecol */
+// escolas visitantes do torneio (ano 4): gravata na cor da escola
+export const ESCOLAS: Record<'pampa' | 'sertao', { nome: string; cor: number }> = {
+  pampa: { nome: 'Pampa Digital', cor: 0x7cc5db },
+  sertao: { nome: 'Academia do Sertão', cor: 0xe0b45a },
+};
+function escolaDe(id: string): 'pampa' | 'sertao' | null {
+  const papel = PERSONAGENS.get(id)?.papel ?? '';
+  return /pampa/i.test(papel) ? 'pampa' : /sert[aã]o/i.test(papel) ? 'sertao' : null;
+}
+
+/** cor da gravata de cada aluno: a casa, ou a escola de quem vem de fora */
 export function tintaDe(id: string): number | undefined {
   if (!temPartida()) return undefined;
   const minha = estado().casa ?? 'capivarias';
@@ -37,6 +47,8 @@ export function tintaDe(id: string): number | undefined {
   if (id === 'enzo') return corCasa(minha === 'jararacas' ? 'oncarina' : 'jararacas');
   const m = /^aluno(\d)$/.exec(id);
   if (m) return corCasa(CASAS[Number(m[1]) % 4]);
+  const esc = escolaDe(id);
+  if (esc) return ESCOLAS[esc].cor;
   return undefined;
 }
 
@@ -573,7 +585,9 @@ export async function encenar(momento: Momento | null) {
   }
   if (momento === 'plateia' && a.assentos) {
     // arquibancada do Clube de Duelos: gente das quatro casas torcendo
-    a.assentos.filter((_, i) => i % 2 === 0 || !leve).slice(0, leve ? 5 : 12).forEach((p, i) => sentar(proximo(), p, corCasa(CASAS[i % 4])));
+    // na Arena das Bandeiras a torcida mistura as quatro casas com as duas escolas visitantes
+    const cores = a.modelo === 'arena' ? [...CASAS.map(corCasa), ESCOLAS.pampa.cor, ESCOLAS.sertao.cor] : CASAS.map(corCasa);
+    a.assentos.filter((_, i) => i % 2 === 0 || !leve).slice(0, leve ? 5 : 12).forEach((p, i) => sentar(proximo(), p, cores[i % cores.length]));
   }
   if (momento === 'trem' && a.assentos) {
     a.assentos.filter((_, i) => i % 3 !== 1).slice(0, leve ? 4 : 8).forEach((p) => sentar(proximo(), p, tintaDe('aluno' + (1 + (k % 4)))));

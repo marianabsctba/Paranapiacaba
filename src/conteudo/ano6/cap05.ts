@@ -252,7 +252,7 @@ export const cap05: Capitulo = {
       tipo: 'capturebol',
       lugar: 'campo',
       rival: 'Pampa Digital',
-      corRival: '#2e7d4a',
+      corRival: '#7cc5db',
       termina: 'flag-pega',
     },
     {

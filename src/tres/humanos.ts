@@ -157,7 +157,10 @@ export function modeloDe(id: string): string | null {
   if (p.estilo === 'bicho' || /pomba|pombo|gato|siri|robô|bot\b/i.test(p.nome)) return null;
   const txt = `${p.nome} ${p.papel}`.toLowerCase();
   const nome = p.nome.replace(/^(prof\.?|profa\.?|dona|seu|sr\.?|sra\.?|dr\.?|dra\.?|técnico|técnica)\s+/i, '').split(' ')[0].toLowerCase();
-  const fem = /^(profa|dona|sra|dra)/i.test(p.nome) || /[aeiy]$/.test(nome);
+  // gênero pelo papel (professora, mentor, pai...) e, na dúvida, pelo fim do nome; "Davi" e "Rui" não são nomes femininos
+  const fPapel = /\b(professora|aluna|mentora|diretora|goleira|capitã|técnica|monitora|organizadora|juíza|perita|delegada|secretária|doceira|livreira|filha|mãe|avó|tia|irmã|dona|senhora)\b/.test(txt);
+  const mPapel = /\b(professor|aluno|mentor|diretor|goleiro|capitão|técnico|monitor|organizador|juiz|perito|delegado|secretário|filho|pai|avô|tio|irmão|senhor|dono|carteiro|zelador)\b/.test(txt);
+  const fem = /^(profa|dona|sra|dra)/i.test(p.nome) || fPapel || (!mPapel && /(a|ane|ine|ice|elle|ete)$/.test(nome));
   const jovem = /alun|estudante|colega|calour|time de|capitã|capitão|goleir|monitor/.test(txt) && !/professor|técnic|diretor/.test(txt);
   const h = hash(id);
   if (jovem) return fem ? ['aluno2', 'aluno4'][h % 2] : ['aluno1', 'aluno3'][h % 2];

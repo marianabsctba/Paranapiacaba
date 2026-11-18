@@ -1742,7 +1742,7 @@ function arena(): Area {
       caixa(g, 10, 0.5, 3, madeiraEscura(), 0, 0, -D / 2 + 2.6);
       obst.push([-5, 5, -D / 2 + 1.1, -D / 2 + 4.1]);
       // as bandeiras das três escolas penduradas no alto
-      const escolas: [string, string, string][] = [['PARANAPIACABA', '#2a1a4a', '#f2c45a'], ['PAMPA DIGITAL', '#1a3a2a', '#9fe79f'], ['ACADEMIA DO SERTÃO', '#4a2a10', '#ffb366']];
+      const escolas: [string, string, string][] = [['PARANAPIACABA', '#2a1a4a', '#f2c45a'], ['PAMPA DIGITAL', '#19465c', '#7cc5db'], ['ACADEMIA DO SERTÃO', '#4a2a10', '#e0b45a']];
       const panos: THREE.Mesh[] = [];
       escolas.forEach(([nome, fundo, cor], i) => {
         const cv = document.createElement('canvas');
