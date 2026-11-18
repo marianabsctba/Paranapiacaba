@@ -313,23 +313,113 @@ function patio(): Area {
   };
   const hora = ponteiro(0.9, 0.12);
   const minuto = ponteiro(1.4, 0.07);
-  // alas laterais com torreões
+  // alas laterais com torreões redondos de telhado cônico
+  const pedraBase = pbr('pedra', [8, 1], { color: 0x9a948a });
+  const pedraClara = pbr('concreto', [1, 1], { color: 0xd6ccb8 });
+  const torreao = (x: number, z: number, r0: number, h: number) => {
+    cil(g, r0, r0 * 1.06, h, pbr('pedra', [4, h / 3], { color: 0xa49c90 }), x, 0, z, 24);
+    // cinta de pedra e ameias no alto da torre
+    cil(g, r0 + 0.25, r0 + 0.25, 0.5, pedraClara, x, h - 0.5, z, 24);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      caixa(g, 0.6, 0.7, 0.45, pedraClara, x + Math.cos(a) * (r0 + 0.1), h, z + Math.sin(a) * (r0 + 0.1), -a + Math.PI / 2);
+    }
+    const c = new THREE.Mesh(new THREE.ConeGeometry(r0 + 0.35, r0 * 2.6, 24), tel);
+    c.position.set(x, h + r0 * 1.3 + 0.2, z);
+    c.castShadow = true;
+    g.add(c);
+    // bandeirola no topo
+    cil(g, 0.04, 0.04, 1.6, std({ color: 0x222222, metalness: 0.8 }), x, h + r0 * 2.6, z, 6);
+    const fl = plano(g, 1, 0.5, std({ color: 0x7a2a3a, side: THREE.DoubleSide, roughness: 1 }), x + 0.5, h + r0 * 2.6 + 1.3, z);
+    fl.castShadow = false;
+    bandeiras.push(fl);
+    // seteiras acesas subindo a torre
+    for (let y = 3; y < h - 2; y += 3.4) {
+      const fresta = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 1), std({ color: 0x000000, emissive: 0xffb85c, emissiveIntensity: 1.6 }));
+      fresta.position.set(x, y, z + r0 + 0.06);
+      g.add(fresta);
+    }
+  };
+  const bandeiras: THREE.Mesh[] = [];
+  const chamas: THREE.Mesh[] = [];
+  const luzesTocha: THREE.PointLight[] = [];
   for (const lado of [-1, 1]) {
     caixa(g, 10, 9, 14, tij, lado * 22, 0, -22);
-    caixa(g, 4.4, 17, 4.4, tijT, lado * 17.5, 0, -15.8);
-    const c = new THREE.Mesh(new THREE.ConeGeometry(3.2, 5, 4), tel);
-    c.position.set(lado * 17.5, 20, -15.8);
-    c.rotation.y = Math.PI / 4;
-    g.add(c);
+    caixa(g, 10.3, 1.1, 14.3, pedraBase, lado * 22, 0, -22);
+    // ameias no alto das alas
+    for (let x = -4.6; x <= 4.6; x += 1.15) caixa(g, 0.6, 0.75, 0.5, pedraClara, lado * 22 + x, 9, -15.2);
+    for (let z = -28.6; z <= -15.6; z += 1.15) caixa(g, 0.5, 0.75, 0.6, pedraClara, lado * 27.1, 9, z);
+    caixa(g, 10.4, 0.3, 14.4, pedraClara, lado * 22, 8.8, -22);
+    torreao(lado * 17.5, -15.8, 2.4, 17);
+    torreao(lado * 27, -15.4, 1.9, 13);
+    // janelas das alas
+    for (const dx of [-2.4, 2.4]) for (const y of [2.6, 6]) janela(g, lado * 22 + dx, y, -14.94, 1.2, 2, 0, 0xffb85c);
   }
-  // janelas acesas
+  // base de pedra e cornija do corpo principal
+  caixa(g, 34.4, 1.2, 10.4, pedraBase, 0, 0, -26);
+  caixa(g, 34.6, 0.35, 10.6, pedraClara, 0, 11.7, -26);
+  caixa(g, 5.3, 0.4, 5.3, pedraClara, 0, 17, -20.2);
+  caixa(g, 5.4, 0.45, 5.4, pedraClara, 0, 25.6, -20.2);
+  // aro de pedra em volta do relógio
+  const aro = new THREE.Mesh(new THREE.TorusGeometry(1.85, 0.16, 8, 40), pedraClara);
+  aro.position.set(0, 21, -17.64);
+  g.add(aro);
+  // contrafortes entre as janelas
+  for (const x of [-14.7, -10.5, -6.3, 6.3, 10.5, 14.7]) {
+    const cf = caixa(g, 0.7, 10.5, 1.2, pbr('pedra', [1, 4], { color: 0xa49c90 }), x, 0, -20.6);
+    void cf;
+  }
+  // chaminés no telhado
+  for (const x of [-12, -4, 9]) caixa(g, 0.9, 3.2, 0.9, tij, x, 13.6, -27.5);
+  // janelas acesas, com arco ogival por cima
+  const vidroArco = std({ color: 0xffb85c, emissive: 0xffb85c, emissiveIntensity: 0.9, roughness: 0.1 });
   for (let i = -3; i <= 3; i++) {
     if (i === 0) continue;
-    for (const y of [3.4, 7.6]) janela(g, i * 4.2, y, -20.94, 1.4, 2.4, 0, 0xffb85c);
+    for (const y of [3.4, 7.6]) {
+      janela(g, i * 4.2, y, -20.94, 1.4, 2.4, 0, 0xffb85c);
+      const arco = new THREE.Mesh(new THREE.CircleGeometry(0.7, 20, 0, Math.PI), vidroArco);
+      arco.position.set(i * 4.2, y + 1.2, -20.93);
+      g.add(arco);
+      const pedraArco = new THREE.Mesh(new THREE.TorusGeometry(0.76, 0.08, 6, 20, Math.PI), pedraClara);
+      pedraArco.position.set(i * 4.2, y + 1.2, -20.9);
+      g.add(pedraArco);
+    }
   }
-  // portal de entrada
-  caixa(g, 3.6, 4.4, 0.6, std({ color: 0x3a2412, roughness: 0.6 }), 0, 0, -17.4);
-  caixa(g, 4.6, 0.5, 1.2, madeiraClara, 0, 4.4, -17.2);
+  // portal de entrada: arco de pedra, porta de madeira com ferragens e degraus
+  void madeiraClara;
+  const portaMat = texMat(T.madeira([1, 2], '#3a2412'), { roughness: 0.7 });
+  caixa(g, 3.6, 4.4, 0.6, portaMat, 0, 0, -17.4);
+  const topoPorta = new THREE.Mesh(new THREE.CircleGeometry(1.8, 24, 0, Math.PI), portaMat);
+  topoPorta.position.set(0, 4.4, -17.09);
+  g.add(topoPorta);
+  for (const x of [-2.3, 2.3]) caixa(g, 0.8, 4.6, 0.9, pedraClara, x, 0, -17.2);
+  const arcoPortal = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.42, 8, 28, Math.PI), pedraClara);
+  arcoPortal.position.set(0, 4.5, -17.2);
+  arcoPortal.castShadow = true;
+  g.add(arcoPortal);
+  const ferragem = std({ color: 0x1a1a1a, metalness: 0.8, roughness: 0.4 });
+  for (const y of [1, 2.6, 4]) caixa(g, 3.4, 0.1, 0.05, ferragem, 0, y, -17.08);
+  for (const x of [-0.5, 0.5]) {
+    const arg = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.03, 6, 16), std({ color: 0xc9a227, metalness: 0.9, roughness: 0.3 }));
+    arg.position.set(x, 2.1, -17.05);
+    g.add(arg);
+  }
+  caixa(g, 7.2, 0.12, 1.6, pedraClara, 0, 0, -16.4);
+  caixa(g, 6.2, 0.12, 1.0, pedraClara, 0, 0.12, -16.7);
+  // tochas dos dois lados do portal
+  for (const x of [-3.2, 3.2]) {
+    caixa(g, 0.12, 0.5, 0.2, ferragem, x, 2.6, -17.1);
+    const chama = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.42, 8), std({ color: 0xffa040, emissive: 0xff8020, emissiveIntensity: 3 }));
+    chama.position.set(x, 3.35, -16.95);
+    g.add(chama);
+    chamas.push(chama);
+    const l = new THREE.PointLight(0xff9a40, 5, 9, 1.6);
+    l.position.set(x, 3.4, -16.6);
+    g.add(l);
+    luzesTocha.push(l);
+  }
+  // estandartes das quatro escolas na fachada
+  (['oncarina', 'tucanal', 'capivarias', 'jararacas'] as const).forEach((casa, i) => estandarte(g, casa, [-10.5, -6.3, 6.3, 10.5][i], 7.4, -19.9));
   // trilhos da serra cruzando o pátio
   const ferro = std({ color: 0x5a5148, metalness: 0.8, roughness: 0.45 });
   for (const xz of [-0.72, 0.72]) caixa(g, 120, 0.12, 0.08, ferro, 0, 0, 6 + xz);
@@ -368,6 +458,94 @@ function patio(): Area {
     m.position.set(-90 + i * 22, 6, -95 - r() * 20);
     g.add(m);
   }
+  // caminho de pedra clara do portão até o portal
+  const laje = pbr('paralelepipedo', [2, 18], { color: 0xe6dccb });
+  plano(g, 3.2, 34, laje, 0, 0.012, 2, -Math.PI / 2).castShadow = false;
+  // chafariz no meio do pátio, com água correndo
+  const FZ = -8;
+  cil(g, 2.3, 2.4, 0.6, pedraClara, 0, 0, FZ, 32);
+  const agua = new THREE.Mesh(new THREE.CircleGeometry(2.05, 40), std({ color: 0x2a5a78, roughness: 0.05, metalness: 0.4, emissive: 0x0a2030, transparent: true, opacity: 0.88 }));
+  agua.rotation.x = -Math.PI / 2;
+  agua.position.set(0, 0.52, FZ);
+  g.add(agua);
+  cil(g, 0.28, 0.4, 1.6, pedraClara, 0, 0.5, FZ, 16);
+  cil(g, 0.9, 0.3, 0.3, pedraClara, 0, 1.9, FZ, 24);
+  cil(g, 0.12, 0.18, 0.7, pedraClara, 0, 2.2, FZ, 10);
+  const jatoMat = std({ color: 0xbfe4ff, emissive: 0x4a7a9a, transparent: true, opacity: 0.25, roughness: 0.05, depthWrite: false });
+  const jatos: THREE.Mesh[] = [];
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const jato = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 1.5, 6, 1, true), jatoMat);
+    jato.position.set(Math.cos(a) * 1.05, 1.4, FZ + Math.sin(a) * 1.05);
+    jato.rotation.set(Math.sin(a) * 0.35, 0, -Math.cos(a) * 0.35);
+    g.add(jato);
+    jatos.push(jato);
+  }
+  // canteiros com sebe aparada e flores dos dois lados do caminho
+  const sebe = pbr('grama', [3, 1], { color: 0x3f6a36, roughness: 1 });
+  const corFlor = [0xe85a8a, 0xf2c94c, 0xf4f1ea, 0xb06ad8, 0xff8a3d];
+  const flor = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.09, 0), std({ roughness: 0.8 }), 360);
+  let nf = 0;
+  const mF = new THREE.Matrix4();
+  const canteiros: [number, number, number, number][] = [[-7.5, -3, -14.6, -11], [3, 7.5, -14.6, -11], [-7.5, -3, 0, 3.4], [3, 7.5, 0, 3.4]];
+  for (const [x0, x1, z0, z1] of canteiros) {
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, d = z1 - z0;
+    caixa(g, w, 0.18, d, pedraClara, cx, 0, cz);
+    plano(g, w - 0.2, d - 0.2, pbr('grama', [2, 2]), cx, 0.19, cz, -Math.PI / 2).castShadow = false;
+    // sebe em volta, aberta para o caminho
+    caixa(g, w, 0.45, 0.4, sebe, cx, 0.18, z0 + 0.2);
+    caixa(g, w, 0.45, 0.4, sebe, cx, 0.18, z1 - 0.2);
+    caixa(g, 0.4, 0.45, d, sebe, x0 < 0 ? x0 + 0.2 : x1 - 0.2, 0.18, cz);
+    for (let i = 0; i < 90 && nf < 360; i++) {
+      mF.makeTranslation(x0 + 0.6 + r() * (w - 1.2), 0.25 + r() * 0.12, z0 + 0.6 + r() * (d - 1.2));
+      flor.setMatrixAt(nf, mF);
+      flor.setColorAt(nf, new THREE.Color(corFlor[nf % corFlor.length]));
+      nf++;
+    }
+  }
+  flor.count = nf;
+  g.add(flor);
+  // muro baixo de pedra com portão de ferro na frente do pátio
+  for (const lado of [-1, 1]) {
+    caixa(g, 25, 1.2, 0.6, pedraBase, lado * 15.5, 0, 20);
+    caixa(g, 25.2, 0.18, 0.75, pedraClara, lado * 15.5, 1.2, 20);
+    caixa(g, 1, 3, 1, pedraClara, lado * 3, 0, 20);
+    const bola = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 12), pedraClara);
+    bola.position.set(lado * 3, 3.4, 20);
+    g.add(bola);
+    lampiao(g, lado * 3, 3.2, 20.7, 3, 7);
+    // folha do portão aberta para dentro
+    const folhaPortao = new THREE.Group();
+    for (let i = 0; i <= 6; i++) {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 2.4, 6), ferragem);
+      b.position.set(-lado * (0.15 + i * 0.4), 1.2, 0);
+      folhaPortao.add(b);
+      const ponta = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.2, 6), ferragem);
+      ponta.position.set(-lado * (0.15 + i * 0.4), 2.5, 0);
+      folhaPortao.add(ponta);
+    }
+    for (const y of [0.4, 2]) {
+      const t = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.06, 0.06), ferragem);
+      t.position.set(-lado * 1.35, y, 0);
+      folhaPortao.add(t);
+    }
+    folhaPortao.position.set(lado * 2.5, 0, 20);
+    folhaPortao.rotation.y = lado * 1.2;
+    g.add(folhaPortao);
+  }
+  // vaga-lumes na neblina
+  const NV = 90;
+  const posV = new Float32Array(NV * 3);
+  const baseV: number[] = [];
+  for (let i = 0; i < NV; i++) {
+    const x = (r() - 0.5) * 44, y = 0.5 + r() * 3, z = -14 + r() * 32;
+    baseV.push(x, y, z, r() * 10);
+  }
+  const geoV = new THREE.BufferGeometry();
+  geoV.setAttribute('position', new THREE.BufferAttribute(posV, 3));
+  const vaga = new THREE.Points(geoV, new THREE.PointsMaterial({ color: 0xd8ff8a, size: 0.12, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  vaga.frustumCulled = false;
+  g.add(vaga);
   // luz da lua e céu
   const hemi = new THREE.HemisphereLight(0x8a9ccf, 0x1c1a14, 0.9);
   g.add(hemi);
@@ -384,9 +562,25 @@ function patio(): Area {
   g.add(disco);
   return {
     modelo: 'patio', grupo: g, entrada: { x: 0, z: 12, yaw: 0 }, palco: [{ x: -1.6, z: 8.4 }, { x: 1.4, z: 8.6 }, { x: 0, z: 7.8 }, { x: -3, z: 9.6 }],
-    limites: [-28, 28, -16.6, 26], obstaculos: [[-17, 17, -31, -17], [-27, -15, -29, -15], [15, 27, -29, -15], [-6, -4, -4.5, -3.5], [4, 6, -4.5, -3.5], [-12.5, -11.5, 9, 11], [11.5, 12.5, 9, 11]],
+    limites: [-28, 28, -16.6, 26],
+    obstaculos: [[-17, 17, -31, -17], [-27, -15, -29, -15], [15, 27, -29, -15], [-6, -4, -4.5, -3.5], [4, 6, -4.5, -3.5], [-12.5, -11.5, 9, 11], [11.5, 12.5, 9, 11],
+      [-2.5, 2.5, FZ - 2.5, FZ + 2.5], ...canteiros, [-28, -2.5, 19.6, 20.4], [2.5, 28, 19.6, 20.4], [-20, -14.9, -18.4, -13.2], [14.9, 20, -18.4, -13.2], [-29, -25, -17.4, -13.4], [25, 29, -17.4, -13.4]],
     portas: [{ x: 0, z: -16.8, rotulo: 'Entrar no castelo' }], ceu: 0x1a2235, neblina: 0.028,
-    atualizar: () => {
+    atualizar: (_dt: number, t: number) => {
+      // água, tochas, bandeirolas e vaga-lumes
+      jatos.forEach((j, i) => ((j.material as THREE.MeshStandardMaterial).opacity = 0.24 + Math.sin(t * 9 + i) * 0.06));
+      (agua.material as THREE.MeshStandardMaterial).emissiveIntensity = 0.8 + Math.sin(t * 2.3) * 0.2;
+      chamas.forEach((c, i) => c.scale.set(1, 0.85 + Math.sin(t * 13 + i * 2) * 0.15 + Math.sin(t * 29 + i) * 0.06, 1));
+      luzesTocha.forEach((l, i) => (l.intensity = 4.6 + Math.sin(t * 11 + i * 3) * 0.8));
+      bandeiras.forEach((b, i) => (b.rotation.y = Math.sin(t * 2 + i) * 0.35));
+      for (let i = 0; i < NV; i++) {
+        const [x, y, z, f] = baseV.slice(i * 4, i * 4 + 4);
+        posV[i * 3] = x + Math.sin(t * 0.4 + f) * 0.8;
+        posV[i * 3 + 1] = y + Math.sin(t * 0.7 + f * 2) * 0.4;
+        posV[i * 3 + 2] = z + Math.cos(t * 0.35 + f) * 0.8;
+      }
+      geoV.attributes.position.needsUpdate = true;
+      (vaga.material as THREE.PointsMaterial).opacity = 0.55 + Math.sin(t * 3) * 0.35;
       const d = new Date();
       minuto.rotation.z = -(d.getMinutes() / 60) * Math.PI * 2;
       hora.rotation.z = -((d.getHours() % 12) / 12 + d.getMinutes() / 720) * Math.PI * 2;
@@ -2036,7 +2230,7 @@ function trem(): Area {
     modelo: 'trem', grupo: g, entrada: { x: 0, z: 6.5, yaw: 0 }, palco: [{ x: -0.6, z: 4.6 }, { x: 0.6, z: 4.4 }, { x: 0, z: 4 }, { x: 0, z: 3 }],
     limites: [-0.5, 0.5, -D / 2 + 0.4, D / 2 - 0.4], obstaculos: [],
     limitesNpc: [-1.45, 1.45, -D / 2 + 0.4, D / 2 - 0.4],
-    assentos: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [{ x: -1.05, z: z - 0.05, ry: Math.PI }, { x: 1.05, z: z - 0.05, ry: Math.PI }]),
+    assentos: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [{ x: -1.05, z: z - 0.24, ry: Math.PI }, { x: 1.05, z: z - 0.24, ry: Math.PI }]),
     obstaculosNpc: Array.from({ length: 9 }, (_, i) => -6.5 + i * 1.6).flatMap((z) => [[-1.55, -0.55, z - 0.3, z + 0.32], [0.55, 1.55, z - 0.3, z + 0.32]] as [number, number, number, number][]),
     portas: [{ x: 0, z: -D / 2 + 0.5, rotulo: 'Descer do trem' }], ceu: 0x6f8098, neblina: 0.01,
     atualizar: (_dt, t) => {
