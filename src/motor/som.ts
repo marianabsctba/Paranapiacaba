@@ -143,9 +143,10 @@ const EFEITOS = ['passo_0', 'passo_1', 'passo_2', 'passo_3', 'porta_abre', 'port
 const MUSICA_GRAVADA: Partial<Record<Clima, string>> = {
   castelo: 'musica_castelo', vila: 'musica_vila', banquete: 'musica_banquete', festa: 'musica_festa',
   aconchego: 'musica_aconchego', duelo: 'musica_duelo', misterio: 'musica_misterio',
+  tensao: 'musica_tensao', natureza: 'musica_natureza', viagem: 'musica_viagem',
 };
 // volume de cada gravação para todas soarem parecidas (medido no teste de nível)
-const VOL_GRAVADA: Partial<Record<Clima, number>> = { castelo: 0.8, vila: 0.5, banquete: 0.9, festa: 0.6, aconchego: 0.95, duelo: 0.16, misterio: 0.18 };
+const VOL_GRAVADA: Partial<Record<Clima, number>> = { castelo: 0.8, vila: 0.5, banquete: 0.9, festa: 0.6, aconchego: 0.95, duelo: 0.16, misterio: 0.18, tensao: 1, natureza: 0.5, viagem: 0.4 };
 const AMBIENTE_GRAVADO: Partial<Record<Ambiente, string>> = { vento: 'amb_vento', passaros: 'amb_passaros', gotas: 'amb_gotas' };
 
 /** música ou ambiente gravado em laço, entrando e saindo devagar */
