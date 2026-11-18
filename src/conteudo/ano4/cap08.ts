@@ -138,7 +138,7 @@ export const cap08: Capitulo = {
         ['tati', 'Se alguém mexeu nessa página, as senhas de todo mundo podem estar indo para outro lugar.'],
         ['nanda', 'Calma. A gente tem uma suspeita boa e nenhuma prova ainda. Amanhã a gente confere a página de login de verdade, com hash, contra a versão original do repositório.'],
         ['enzo', 'E o "manutenção de rotina" no comentário?'],
-        ['bia', 'Foi o que o Rubens disse na porta da arbitragem. Mas comentário qualquer um escreve. Anota e espera.'],
+        ['bia', 'É a desculpa mais velha da infraestrutura, e o Rubens entrou sozinho na arbitragem no meio da segunda prova. Mas comentário qualquer um escreve. Anota e espera.'],
         ['narrador', 'O Baltazar leva a cópia lacrada para uma gaiola de contenção do Viveiro. "Lagarta nova", ele diz, "não morde ninguém aqui dentro".'],
       ],
       atributo: 'forense',
@@ -256,7 +256,7 @@ export const cap08: Capitulo = {
           texto: 'Mandar um pombo para a Vó Cida contando tudo',
           efeito: { amizade: { vo_cida: 3 }, xp: 10 },
           resposta: [
-            ['vo_cida', '(áudio de 5 minutos, transcrito pela Edite) Meu bem, técnico que entra sozinho na sala e diz "manutenção de rotina" é igual o moço da operadora que aparece sem chamado. A gente não abre o portão.'],
+            ['vo_cida', '(áudio de 5 minutos, transcrito pela Edite) Meu bem, técnico que entra sozinho na sala do servidor e depois aparece comentário escrito "manutenção de rotina" é igual o moço da operadora que aparece sem chamado. A gente não abre o portão.'],
             ['vo_cida', 'E outra: troca a sua senha também. E a da Edite, se ela tiver.'],
           ],
         },

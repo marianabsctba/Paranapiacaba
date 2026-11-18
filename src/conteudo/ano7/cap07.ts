@@ -29,7 +29,7 @@ export const cap07: Capitulo = {
         ['a7_rui', '(levantando a cabeça devagar) Lena.'],
         ['a7_lena', 'Rui.'],
         ['narrador', 'Ninguém diz mais nada por um tempo. Ela se ajoelha na frente dele e encosta a testa na dele. Ele chora sem barulho, do jeito que gente cansada chora.'],
-        ['a7_rui', '(olhando para você por cima do ombro dela) E... não pode ser. Você tinha quatro anos. Você tinha um pijama de bem-te-vi.'],
+        ['a7_rui', '(olhando para você por cima do ombro dela) E... não pode ser. Você tinha seis anos. Você tinha um pijama de bem-te-vi.'],
         ['voce', 'Oi, pai.'],
         ['a7_rui', '"Oi, pai". (rindo e chorando) Onze anos e a primeira coisa que eu ouço é "oi, pai". É a melhor frase já registrada em qualquer log.'],
         ['narrador', 'Ele te abraça. Ele cheira a frio, a café velho e a servidor. Você não se importa nem um pouco.'],
@@ -38,6 +38,8 @@ export const cap07: Capitulo = {
         ['a7_rui', 'Heitor. Você continua de óculos escuros em ambiente fechado.'],
         ['heitor', 'E você continua perguntando a hora em UTC para a polícia. Bem-vindo de volta, seu chato.'],
         ['a7_rui', '(mostrando o relógio parado) Parou às 23h50 de 2015. Não acertei. É evidência. Mas agora... agora eu dou corda junto com você, {nome}. No dia em que ele for preso.'],
+        ['a7_sonia', 'Se é evidência, Senhor Rui, vai para a perícia junto com o disco. Saco, lacre e termo de custódia. Eu fotografo, registro a hora parada e, depois do laudo, devolvo com termo de devolução.'],
+        ['a7_rui', '(tirando o relógio do pulso) Justo. Ele esperou onze anos. Espera mais um pouco.'],
       ],
     },
     {
@@ -56,8 +58,8 @@ export const cap07: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'Seu pai deixou com você o relógio de pulso parado às 23h50 de 2015, embrulhado num saco de evidência com lacre assinado pela Delegada Sônia. "Guarda. No dia em que ele for preso, a gente dá corda junto."',
-      efeito: { item: 'a7_relogio_rui', xp: 80, amizade: { a7_rui: 4, a7_lena: 2 }, flag: 'a7_pai_resgatado', lugar: 'a7_instalacao' },
+      texto: 'A Delegada Sônia lacra o relógio parado às 23h50 de 2015 num saco de evidência, anota no termo de custódia e leva para a perícia junto com o disco. Seu pai assina embaixo e diz para você: "Quando voltar, no dia em que ele for preso, a gente dá corda junto."',
+      efeito: { xp: 80, amizade: { a7_rui: 4, a7_lena: 2 }, flag: 'a7_pai_resgatado', lugar: 'a7_instalacao' },
     },
     {
       tipo: 'cena',

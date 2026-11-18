@@ -416,8 +416,8 @@ export const cap09: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'O Nulo foi preso por evidência, sem violência. Você e seu pai deram corda juntos no relógio parado, ali mesmo, às 2h41: "o julgamento vai demorar, mas o tempo já pode andar". A Delegada Sônia mandou uma figurinha "para quem guardou o registro certo pelo tempo certo".',
-      efeito: { figurinha: 'a7_fig_marco_civil', xp: 150, pontosCasa: 80, atributos: { forense: 2, defesa: 2 }, amizade: { a7_rui: 3, a7_lena: 3, a7_sonia: 3 }, flag: 'a7_nulo_preso' },
+      texto: 'O Nulo foi preso por evidência, sem violência. Você e seu pai deram corda juntos no relógio parado, que a perícia tinha devolvido na véspera, ali mesmo, às 2h41: "o julgamento vai demorar, mas o tempo já pode andar". Depois ele prende o relógio no seu pulso. A Delegada Sônia mandou uma figurinha "para quem guardou o registro certo pelo tempo certo".',
+      efeito: { item: 'a7_relogio_rui', figurinha: 'a7_fig_marco_civil', xp: 150, pontosCasa: 80, atributos: { forense: 2, defesa: 2 }, amizade: { a7_rui: 3, a7_lena: 3, a7_sonia: 3 }, flag: 'a7_nulo_preso' },
     },
   ],
 };

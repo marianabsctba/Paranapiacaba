@@ -80,7 +80,7 @@ export const cap04: Capitulo = {
         },
         {
           tipo: 'multipla',
-          pergunta: 'Por que "bemtevi" apareceu repetido várias vezes no strings da amostra?',
+          pergunta: 'Por que "bemtevi" apareceu emendado várias vezes, `bemtevibemtevibemtevibemtevi`, no strings da amostra?',
           opcoes: [
             'Porque o Nulo é fã de passarinho',
             'Porque é a chave XOR, vazada nas regiões onde o dado original era zero',

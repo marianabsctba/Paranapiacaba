@@ -329,7 +329,7 @@ export const lugares6: Lugar[] = [
       },
       {
         feitico: 'a6_jq',
-        texto: 'Stixus Legendum num pacote antigo da prateleira lista um objeto `identity` com o nome "Oficina do Bem-te-vi". Você já viu esse nome no notebook da sua mãe.',
+        texto: 'Stixus Legendum num pacote antigo da prateleira lista um objeto `location` com o nome "Oficina do Bem-te-vi". Você já viu esse nome no notebook da sua mãe.',
         efeito: { xp: 25, atributos: { forense: 1 } },
       },
     ],

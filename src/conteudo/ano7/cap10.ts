@@ -297,7 +297,7 @@ export const cap10: Capitulo = {
         ['narrador', 'Noite da formatura. Na Cripta de Criptografia, entre os cofres antigos, o notebook da sua mãe está aberto numa bancada. Só falta uma camada da pasta NAO_ABRA: a sétima.'],
         ['heitor', 'A Camada 7 é cifrada com uma chave dividida em duas partes. Nenhuma das duas, sozinha, revela nada. Juntas, reconstroem a chave. Foi a última coisa que vocês fizeram em 2015, antes do Apagão.'],
         ['a7_lena', 'Eu fiquei com uma metade. O Rui ficou com a outra. A ideia era simples: se só um de nós voltasse, a pasta continuaria fechada. Ela só abriria com a família inteira.'],
-        ['a7_rui', '(abrindo a tampa de trás do relógio de pulso que você guardou e tirando um papel dobrado) Onze anos aqui dentro. O Nulo revistou tudo, menos o relógio parado. Ninguém revista relógio parado.'],
+        ['a7_rui', '(pedindo o relógio do seu pulso, abrindo a tampa de trás e tirando um papel dobrado) Onze anos aqui dentro. O Nulo revistou tudo, menos o relógio parado. Ninguém revista relógio parado. Nem a perícia: a evidência era a hora, e a Sônia examinou só o mostrador.'],
         ['vo_cida', 'Eu sabia que esse relógio era importante. Eu falei. Ninguém me ouve.'],
         ['narrador', 'Sua mãe digita a metade dela. Seu pai digita a dele. A tela pede uma confirmação final, com um campo só: "quem abre?".'],
         ['a7_lena', '(empurrando o notebook para você) Você.'],

@@ -348,7 +348,7 @@ export const itensAno7: Item[] = [
   {
     id: 'a7_relogio_rui',
     nome: 'Relógio Parado do Pai',
-    descricao: 'O relógio de pulso do seu pai, parado às 23h50 de 2015. Ele se recusou a acertar: "é evidência". Prometeu dar corda junto com você no dia em que o Nulo fosse preso. Cumpriu.',
+    descricao: 'O relógio de pulso do seu pai, parado às 23h50 de 2015. Ele se recusou a acertar: "é evidência". Passou pela perícia com lacre e termo, voltou com o laudo pronto, e ele prometeu dar corda junto com você no dia em que o Nulo fosse preso. Cumpriu.',
   },
   {
     id: 'a7_diploma',

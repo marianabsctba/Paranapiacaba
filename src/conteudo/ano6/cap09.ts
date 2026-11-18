@@ -71,7 +71,7 @@ export const cap09: Capitulo = {
             'Senha nova do painel do nobreak do Seu Zé',
             'Mutex Global\\cm_mtx_0x7e1',
             'Nome completo e CPF da Zuleica, vítima do e-mail',
-            'IP 203.0.113.66, porta 443, visto em março e abril',
+            'IP 203.0.113.66, porta 443, visto de fevereiro a abril',
           ],
           corretas: [0, 1, 3, 5],
           explicacao: 'Hash, domínio, mutex e IP com data são indicadores do atacante. Senha nova e dados pessoais de vítima não são IOC e jamais vão no compartilhamento.',
@@ -135,7 +135,7 @@ export const cap09: Capitulo = {
         ['heitor', 'Estou sendo preciso, Jonas. Às vezes coincide.'],
       ],
       explicacao: [
-        '**Inteligência de ameaças** (threat intelligence, ou CTI) é informação sobre ameaças **analisada e contextualizada** para apoiar uma decisão. A diferença entre dado e inteligência: "o IP 203.0.113.66 é malicioso" é dado; "o grupo do Nulo usa esse IP como C2 de um RAT que entra por infostealer comprado da Marlene, mira escolas e foi visto em março e abril, então reforcem a revogação de sessões e monitorem a 443" é inteligência.',
+        '**Inteligência de ameaças** (threat intelligence, ou CTI) é informação sobre ameaças **analisada e contextualizada** para apoiar uma decisão. A diferença entre dado e inteligência: "o IP 203.0.113.66 é malicioso" é dado; "o grupo do Nulo usa esse IP como C2 de um RAT que entra por infostealer comprado da Marlene, mira escolas e foi visto de fevereiro a abril, então reforcem a revogação de sessões e monitorem a 443" é inteligência.',
         'Ela costuma ser dividida em níveis. **Estratégica**: para a direção, em linguagem de negócio ("grupos estão atacando escolas bruxas com wipers; precisamos de backup offline"). **Operacional**: sobre campanhas e atores, para quem coordena a defesa. **Tática**: TTPs, para quem escreve detecção. **Técnica**: IOCs, para bloquear e varrer. Todos são úteis; o erro é entregar IOC para a Diretora e relatório de negócio para o SOC.',
         'O **ciclo de inteligência** tem seis etapas: **planejamento e direção** (que pergunta precisamos responder?), **coleta** (amostras, logs, fontes abertas, parceiros), **processamento** (organizar, traduzir, normalizar), **análise** (transformar em conclusão), **disseminação** (entregar para quem decide, no formato certo) e **feedback** (foi útil? o que faltou?). E volta ao começo.',
         'Para compartilhar com segurança, usa-se o **TLP** (Traffic Light Protocol), na versão 2.0 do FIRST: **TLP:RED** (só para quem está na conversa, não repassar), **TLP:AMBER** (pode repassar dentro da própria organização e para clientes, se necessário para se proteger), **TLP:AMBER+STRICT** (só dentro da própria organização), **TLP:GREEN** (pode circular na comunidade, mas não publicamente) e **TLP:CLEAR** (público, antigo TLP:WHITE).',

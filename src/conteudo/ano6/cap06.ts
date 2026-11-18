@@ -219,6 +219,11 @@ export const cap06: Capitulo = {
       feitico: 'a6_tshark',
     },
     {
+      tipo: 'recompensa',
+      texto: 'Depois da aula, a Profa. Ruth mostra no telão da torre um C2 que o sinkhole da Secretaria derrubou no ano passado: oito mil câmeras de portaria e duas geladeiras conectadas, todas ligando para o mesmo endereço e esperando ordem. O Bestiário registra o Formigueiro Zumbi.',
+      efeito: { criatura: 'a6_formigueiro_zumbi', xp: 30, atributos: { redes: 1 } },
+    },
+    {
       tipo: 'cena',
       lugar: 'a6_lab_reverso',
       falas: [

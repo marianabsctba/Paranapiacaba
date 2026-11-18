@@ -20,7 +20,7 @@ const ENFEITES: Record<string, Desenho> = {
   a5_slide_emoldurado: { tipo: 'poster', fundo: '#f4f1ea', tinta: '#1a1a2e', linhas: ['RISCO:', 'BAIXO', '(semana do', 'incidente)'] },
   a2_mapa_tuneis: { tipo: 'poster', fundo: '#e8dcc0', tinta: '#3a2a1a', linhas: ['TÚNEIS', '─┬─┼─┬─', ' │ ⬚ │ ', '─┴─┼─┴─', 'rato aqui'] },
   a2_mapa_mae: { tipo: 'poster', fundo: '#efe6d0', tinta: '#2a2a6a', linhas: ['◯──◯──◯', '│  ╳  │', '◯──◉──◯', 'APAGÃO'] },
-  a6_camada6: { tipo: 'poster', fundo: '#101820', tinta: '#e8c66a', linhas: ['location', 'lat -23.77', 'lon -46.30', 'assinado: Lena'] },
+  a6_camada6: { tipo: 'poster', fundo: '#101820', tinta: '#e8c66a', linhas: ['location', 'lat -24.7', 'lon -48.1', 'assinado: Lena'] },
   a1_moletom_casa: { tipo: 'roupa', fundo: 'casa', tinta: '#f2eee2', linhas: ['♛'] },
   a2_camiseta_ttl: { tipo: 'roupa', fundo: '#151515', tinta: '#f2eee2', linhas: ['MEU TTL', 'ZEROU'] },
   a3_moletom_utc: { tipo: 'roupa', fundo: '#8a8a8a', tinta: '#1a1a1a', linhas: ['UTC', '◷'] },

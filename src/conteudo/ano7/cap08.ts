@@ -136,13 +136,13 @@ export const cap08: Capitulo = {
       exercicios: [
         {
           tipo: 'terminal',
-          enunciado: 'Antes da segunda troca, confira o resumo da replicação entre os DCs.',
+          enunciado: 'Ensaio do roteiro: é 12 de maio, Dia D, e a primeira troca foi às 16h. Antes da segunda, confira o resumo da replicação entre os DCs.',
           prompt: 'PS C:\\Users\\admin0.lena>',
           aceitos: ['repadmin /replsummary', 'repadmin /replsum'],
           exemplo: 'repadmin /replsummary',
-          saida: 'Início da replicação: 2027-04-24 16:00:12\nDSA de origem      maior delta  falhas/total %  erro\n DC-TORRE-01            04m:51s     0 /   5    0\n DC-CRIPTA-02           05m:02s     0 /   5    0\nDSA de destino     maior delta  falhas/total %  erro\n DC-CRIPTA-02           04m:51s     0 /   5    0\n DC-TORRE-01            05m:02s     0 /   5    0',
+          saida: 'Início da replicação: 2027-05-12 16:20:12\nDSA de origem      maior delta  falhas/total %  erro\n DC-TORRE-01            04m:51s     0 /   5    0\n DC-CRIPTA-02           05m:02s     0 /   5    0\nDSA de destino     maior delta  falhas/total %  erro\n DC-CRIPTA-02           04m:51s     0 /   5    0\n DC-TORRE-01            05m:02s     0 /   5    0',
           dica: 'Replicatio Summa: `repadmin /replsummary`.',
-          explicacao: 'Zero falhas, atrasos de cerca de cinco minutos. A primeira troca chegou a todos os DCs. Pode seguir para a segunda, depois do intervalo dos tíquetes.',
+          explicacao: 'Zero falhas, atrasos de cerca de cinco minutos. A primeira troca chegou a todos os DCs. Pode seguir para a segunda, às 2h, depois das 10 horas de vida dos tíquetes.',
         },
         {
           tipo: 'ordenar',
@@ -260,6 +260,7 @@ export const cap08: Capitulo = {
       lugar: 'torre_redes',
       falas: [
         ['narrador', 'Véspera do Dia D. Topo da Torre das Antenas, perto da meia-noite. A neblina cobre a serra inteira. Você, sua mãe e seu pai, sentados na mureta, como uma família normal que só por acaso vai salvar a rede de um país amanhã.'],
+        ['narrador', 'No colo do seu pai, um saco de evidência aberto e um papel: o termo de devolução. A Delegada Sônia trouxe hoje à tarde, com o laudo pronto. "Hora parada registrada, fotografado, liberado." O relógio continua parado.'],
         ['a7_rui', 'Quando você nasceu, a gente estava de plantão. Sua mãe foi para a maternidade com o notebook.'],
         ['a7_lena', 'E você ficou respondendo e-mail do hospital, Rui.'],
         ['a7_rui', 'Era um incidente!'],
