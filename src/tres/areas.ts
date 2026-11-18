@@ -1669,6 +1669,101 @@ const TEMAS: Record<string, () => Area> = {
       for (let i = 0; i < 3; i++) barril(g, -W / 2 + 1.2 + i * 0.8, 5.6, 0.8);
     },
   }),
+  // loja de laboratório do torneio: bancadas com a loja falsa nas telas e a autorização colada na parede
+  lojalab: () => salaTematica({
+    modelo: 'lojalab', W: 13, D: 14, H: 4.4, parede: pbr('reboco', [3, 1.5], { color: 0xdfe6e0 }), piso: pbr('concreto', [4, 4], { color: 0x9aa09a }),
+    lousa: 'Empório Fictício da Serra', carteiras: { fileiras: 3, colunas: 4, laptop: false }, luz: 0xf0f4ff, porta: 'Sair da loja de laboratório',
+    deco: (g, _o, atualiza, { W, D }) => {
+      for (let f = 0; f < 3; f++) for (let c = 0; c < 4; c++) monitor(g, (c - 1.5) * 2.2, 0.76, -D / 2 + 3.4 + f * 2.3 - 0.15, 0, telaFalsa('slide', 'PÃO DE QUEIJO R$ 0,00', f * 4 + c));
+      const termo = T.placa('AUTORIZADO PARA TESTE · ESCOPO: SÓ ESTA LOJA', '#f4f1ea', '#1a1a2e', 1024, 128);
+      plano(g, 5, 0.62, std({ map: termo, roughness: 0.9 }), -W / 2 + 0.06, 2.9, 0, 0, Math.PI / 2).castShadow = false;
+      const aviso = std({ color: 0x000000, emissive: 0xffffff, emissiveMap: telaFalsa('alerta', 'LABORATÓRIO'), emissiveIntensity: 0.8 });
+      plano(g, 1.8, 1.1, aviso, W / 2 - 0.06, 2.6, -2, 0, -Math.PI / 2).castShadow = false;
+      atualiza.push((t) => (aviso.emissiveIntensity = 0.6 + Math.sin(t * 2) * 0.2));
+    },
+  }),
+  // alojamento das escolas visitantes: redes, beliches e a cuia na janela
+  alojamento: () => salaTematica({
+    modelo: 'alojamento', W: 10, D: 11, H: 4, parede: pbr('pedra', [3, 2]), piso: pbr('assoalho', [3, 3]),
+    luz: 0xffd6a0, porta: 'Sair do alojamento',
+    deco: (g, obst, atualiza, { W, D }) => {
+      const cores = [0xc0392b, 0xf2c45a, 0x2e7dd1, 0x2e8b57];
+      const redes: THREE.Mesh[] = [];
+      for (let i = 0; i < 3; i++) {
+        const z = -3.5 + i * 2.6;
+        const rede = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 2.4, 16, 1, true, Math.PI, Math.PI), std({ color: cores[i], roughness: 1, side: THREE.DoubleSide }));
+        rede.rotation.z = Math.PI / 2;
+        rede.position.set(-W / 2 + 1.5, 1.3, z);
+        g.add(rede);
+        redes.push(rede);
+        for (const s of [-1, 1]) cil(g, 0.02, 0.02, 1.2, std({ color: 0xd8c8a8 }), -W / 2 + 1.5 + s * 1.3, 1.3, z, 6);
+        obst.push([-W / 2, -W / 2 + 2.8, z - 0.7, z + 0.7]);
+      }
+      atualiza.push((t) => redes.forEach((r, i) => (r.rotation.x = Math.sin(t * 0.8 + i) * 0.08)));
+      for (const z of [-3.2, 0.6]) {
+        movel(g, 'GothicBed_01', W / 2 - 1.1, z, { larg: 2.1, ry: -Math.PI / 2 });
+        obst.push([W / 2 - 2.2, W / 2, z - 0.7, z + 0.7]);
+      }
+      janela(g, 0, 2.2, -D / 2 + 0.02, 1.6, 1.8, 0, 0x9aa8c0);
+      // cuia de chimarrão no peitoril
+      cil(g, 0.07, 0.05, 0.12, std({ color: 0x8a5a2a, roughness: 0.7 }), 0.4, 1.3, -D / 2 + 0.15, 12);
+      cil(g, 0.006, 0.006, 0.2, std({ color: 0xc0c0c0, metalness: 0.9 }), 0.43, 1.38, -D / 2 + 0.15, 6);
+      caixa(g, 1.8, 0.06, 0.25, texMat(T.madeira([1, 1], '#5a3a22')), 0, 1.24, -D / 2 + 0.15);
+      movel(g, 'Barrel_01', 2.6, 3.8, { alt: 0.7 });
+    },
+  }),
+  // sala da arbitragem: o servidor do placar, três monitores, o livro de ocorrências e a cafeteira
+  arbitragem: () => salaTematica({
+    modelo: 'arbitragem', W: 8, D: 8, H: 3.4, parede: pbr('reboco', [3, 1.5], { color: 0xcfc8bc }), piso: pbr('assoalho', [3, 3]),
+    lousa: 'Livro de Ocorrências', luz: 0xe8f0ff, porta: 'Voltar ao palco',
+    deco: (g, obst, atualiza, { W, D }) => {
+      caixa(g, 3.4, 0.76, 0.9, madeiraEscura(), 0, 0, -D / 2 + 1.4);
+      obst.push([-1.8, 1.8, -D / 2 + 0.9, -D / 2 + 1.9]);
+      (['graf', 'log', 'mapa'] as const).forEach((tp, i) => monitor(g, -1.1 + i * 1.1, 0.76, -D / 2 + 1.25, 0, telaFalsa(tp, '', i + 20), 0.5, 0.32));
+      const rack = caixa(g, 0.7, 1.8, 0.7, std({ color: 0x1a1c20, metalness: 0.6, roughness: 0.4 }), W / 2 - 0.6, 0, -D / 2 + 0.6);
+      void rack;
+      obst.push([W / 2 - 1, W / 2, -D / 2, -D / 2 + 1]);
+      const led = std({ color: 0x000000, emissive: 0x33ff55, emissiveIntensity: 2 });
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.01), led);
+      p.position.set(W / 2 - 0.6, 1.4, -D / 2 + 0.96);
+      g.add(p);
+      atualiza.push((t) => (led.emissiveIntensity = Math.sin(t * 7) > 0 ? 2.4 : 0.2));
+      // livro de ocorrências aberto e a cafeteira da Nanda
+      caixa(g, 0.42, 0.04, 0.3, std({ color: 0xf2eee2 }), 1.2, 0.76, -D / 2 + 1.6);
+      caixa(g, 0.2, 0.3, 0.2, std({ color: 0x1c1c1c, metalness: 0.4 }), -1.5, 0.76, -D / 2 + 1.1);
+    },
+  }),
+  // frigorífico abandonado que o Nulo virou data center: ganchos no teto, cortina de tiras e racks no lugar das carnes
+  frigorifico: () => salaTematica({
+    modelo: 'frigorifico', W: 12, D: 16, H: 4.2, parede: pbr('concreto', [4, 2], { color: 0xb8c8d8 }), piso: pbr('concreto', [4, 6], { color: 0x8a96a2 }),
+    luz: 0xbfe0ff, ceu: 0x0a1018, neblina: 0.05, porta: 'Sair do frigorífico',
+    deco: (g, obst, atualiza, { W, D, H }) => {
+      const aco = std({ color: 0x9aa4ae, metalness: 0.8, roughness: 0.35 });
+      for (const x of [-3, 3]) caixa(g, 0.1, 0.1, D - 2, aco, x, H - 0.4, 0);
+      for (const x of [-3, 3]) for (let z = -6; z <= 6; z += 1.5) {
+        const gancho = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.012, 6, 12, Math.PI * 1.4), aco);
+        gancho.position.set(x, H - 0.75, z);
+        g.add(gancho);
+        cil(g, 0.008, 0.008, 0.3, aco, x, H - 0.7, z, 4);
+      }
+      // racks clandestinos piscando onde ficavam as carnes
+      const leds: THREE.MeshStandardMaterial[] = [];
+      for (const x of [-W / 2 + 0.7, W / 2 - 0.7]) for (let z = -5; z <= 3; z += 2.6) {
+        caixa(g, 0.9, 2, 0.9, std({ color: 0x15171c, metalness: 0.6, roughness: 0.4 }), x, 0, z);
+        obst.push([x - 0.5, x + 0.5, z - 0.5, z + 0.5]);
+        const l = std({ color: 0x000000, emissive: Math.random() < 0.3 ? 0xff3344 : 0x33ff66, emissiveIntensity: 2 });
+        leds.push(l);
+        const p = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.6, 0.5), l);
+        p.position.set(x + (x < 0 ? 0.46 : -0.46), 1.2, z);
+        g.add(p);
+      }
+      atualiza.push((t) => leds.forEach((l, i) => (l.emissiveIntensity = Math.sin(t * (4 + i)) > 0 ? 2.2 : 0.3)));
+      // cortina de tiras de PVC na porta e gelo nas paredes
+      for (let i = 0; i < 9; i++) plano(g, 0.22, 2.4, std({ color: 0xd8f0ff, transparent: true, opacity: 0.35, roughness: 0.1, side: THREE.DoubleSide }), -0.9 + i * 0.23, 1.2, D / 2 - 1.1).castShadow = false;
+      const cadeado = caixa(g, 0.14, 0.18, 0.06, std({ color: 0xd4b030, metalness: 0.9, roughness: 0.3 }), 1.3, 1.1, D / 2 - 1.05);
+      void cadeado;
+    },
+  }),
   // sala do coletor central: o servidor Fofoqueiro e as telas de log
   coletor: () => salaTematica({
     modelo: 'coletor', W: 9, D: 9, H: 3.6, parede: pbr('concreto', [3, 1.5], { color: 0x7a8088 }), piso: pbr('concreto', [3, 3], { color: 0x5a5f66 }),
@@ -1697,12 +1792,12 @@ const TEMAS: Record<string, () => Area> = {
 };
 
 /** arquivo morto: estantes de aço com caixas, gaiolas antigas, fitas de backup ou discos de memória */
-function arquivo(tipo: 'logs' | 'gaiolas' | 'fitas' | 'dumps'): Area {
-  const frio = tipo === 'dumps';
+function arquivo(tipo: 'logs' | 'gaiolas' | 'fitas' | 'dumps' | 'backup'): Area {
+  const frio = tipo === 'dumps' || tipo === 'backup';
   return salaTematica({
     modelo: 'arquivo_' + tipo, W: 12, D: 14, H: 4, parede: frio ? pbr('concreto', [3, 1.5], { color: 0xa0b0c0 }) : pbr('pedra', [4, 2]), piso: pbr('concreto', [3, 3], { color: 0x8a8a88 }),
-    lousa: frio ? 'Galeria dos Dumps' : undefined, luz: frio ? 0xb8d8ff : 0xffc070, ceu: 0x050508, neblina: frio ? 0.02 : 0.035,
-    porta: tipo === 'fitas' ? 'Sair do cofre' : 'Subir a escada',
+    lousa: tipo === 'dumps' ? 'Galeria dos Dumps' : tipo === 'backup' ? 'Cofre de Backup' : undefined, luz: frio ? 0xb8d8ff : 0xffc070, ceu: 0x050508, neblina: frio ? 0.02 : 0.035,
+    porta: tipo === 'fitas' || tipo === 'backup' ? 'Sair do cofre' : 'Subir a escada',
     deco: (g, obst) => {
       const papelao = std({ color: 0xb08a5a, roughness: 1 });
       const r = rnd(tipo.length * 7);
@@ -1714,7 +1809,7 @@ function arquivo(tipo: 'logs' | 'gaiolas' | 'fitas' | 'dumps'): Area {
             const y = 0.12 + n * 0.55;
             const zz = z - 0.9 + k * 0.9;
             if (tipo === 'logs') caixa(g, 0.5, 0.32, 0.42, papelao, x, y, zz, (r() - 0.5) * 0.2);
-            else if (tipo === 'fitas') for (let f = 0; f < 3; f++) cil(g, 0.13, 0.13, 0.04, std({ color: f % 2 ? 0x1a1a1a : 0x3a2a1a, roughness: 0.4 }), x - 0.15 + f * 0.15, y + 0.12, zz, 16).rotation.z = Math.PI / 2;
+            else if (tipo === 'fitas' || tipo === 'backup') for (let f = 0; f < 3; f++) cil(g, 0.13, 0.13, 0.04, std({ color: f % 2 ? 0x1a1a1a : 0x3a2a1a, roughness: 0.4 }), x - 0.15 + f * 0.15, y + 0.12, zz, 16).rotation.z = Math.PI / 2;
             else if (tipo === 'dumps') {
               caixa(g, 0.38, 0.06, 0.28, std({ color: 0x9aa0a8, metalness: 0.8, roughness: 0.3 }), x, y, zz);
               plano(g, 0.16, 0.05, std({ color: 0xf2eee2 }), x, y + 0.03, zz + 0.142).castShadow = false;
@@ -1724,6 +1819,19 @@ function arquivo(tipo: 'logs' | 'gaiolas' | 'fitas' | 'dumps'): Area {
             }
           }
         }
+      }
+      if (tipo === 'backup') {
+        // porta redonda de caixa-forte, com as duas fechaduras (uma chave do Seu Zé, outra da Diretora)
+        const aco = std({ color: 0x8a9098, metalness: 0.9, roughness: 0.3 });
+        const portaCofre = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.25, 40), aco);
+        portaCofre.rotation.z = Math.PI / 2;
+        portaCofre.position.set(-5.85, 1.5, -3);
+        g.add(portaCofre);
+        const volante = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.05, 8, 24), std({ color: 0xc8a050, metalness: 0.9, roughness: 0.3 }));
+        volante.rotation.y = Math.PI / 2;
+        volante.position.set(-5.7, 1.5, -3);
+        g.add(volante);
+        for (const dz of [-0.7, 0.7]) caixa(g, 0.06, 0.16, 0.1, std({ color: 0x1a1a1a }), -5.72, 2.2, -3 + dz);
       }
       if (tipo === 'fitas') {
         // a geladeira desligada onde o Seu Zé guarda as fitas mais importantes
@@ -2176,7 +2284,7 @@ export function modeloDoLugar(l: Lugar | undefined): string {
     a1_sala_persuasao: 'persuasao', a2_casa_maquinas: 'maquinas', a2_sala_comutacao: 'comutacao', a3_sala_rastros: 'rastros', a5_sala_sinergia: 'sinergia',
     a6_lab_reverso: 'reverso', a2_tuneis: 'tunel', a7_centro_crise: 'crise', a5_galpao: 'galpao', a5_cabine_sinais: 'cabine', a6_caixa_areia: 'sandbox',
     a7_oficina: 'oficina', a3_sala_coletor: 'coletor', a3_arquivo_morto: 'arquivo_logs', a6_arquivo_morto: 'arquivo_gaiolas', a3_cofre_fitas: 'arquivo_fitas',
-    a6_galeria_dumps: 'arquivo_dumps', a4_arena: 'arena', a5_rotunda: 'rotunda', viveiro: 'viveiro',
+    a6_galeria_dumps: 'arquivo_dumps', a4_loja_lab: 'lojalab', a4_alojamento: 'alojamento', a4_sala_arbitragem: 'arbitragem', a7_cofre_backup: 'arquivo_backup', a7_instalacao: 'frigorifico', a4_arena: 'arena', a5_rotunda: 'rotunda', viveiro: 'viveiro',
     vila: 'vila', vila_vagao: 'vagao', vila_doceria: 'loja_doceria', vila_teclados: 'loja_teclados', vila_livraria: 'loja_livraria', vila_correio: 'loja_correio', vila_pegadinhas: 'loja_pegadinhas',
     a1_clube_duelos: 'clube', sala_diretora: 'gabinete', a1_pombal: 'pombal', a2_torre_relogio: 'relogio', a1_galeria_formandos: 'galeria', refeitorio: 'salao', dormitorio: 'dormitorio', lab_terminal: 'aula', biblioteca: 'biblioteca', datacenter: 'datacenter',
     casa_vo: 'casa', estacao: 'trem', santa_ifigenia: 'cidade', cripta: 'masmorra', torre_redes: 'torre',
@@ -2227,7 +2335,7 @@ export function construir(modelo: string): Area {
     case 'galeria': return galeria();
     default:
       if (TEMAS[modelo]) return TEMAS[modelo]();
-      if (modelo.startsWith('arquivo_')) return arquivo(modelo.slice(8) as 'logs' | 'gaiolas' | 'fitas' | 'dumps');
+      if (modelo.startsWith('arquivo_')) return arquivo(modelo.slice(8) as 'logs' | 'gaiolas' | 'fitas' | 'dumps' | 'backup');
       return sala('aula');
   }
 }

@@ -42,6 +42,15 @@ const ENFEITES: Record<string, Desenho> = {
   a5_gravacao_lena: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'fita', cor: 0x1a1a1a },
   a6_caneca_yara: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'caneca', cor: 0xf2eee2 },
   a6_pendrive_lacrado: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'pendrive', cor: 0x3a6ad1 },
+  a4_termo: { tipo: 'poster', fundo: '#f4f1ea', tinta: '#1a1a2e', linhas: ['TERMO DE', 'AUTORIZAÇÃO', 'escopo · horário', '3 assinaturas'] },
+  a4_cordel_caio: { tipo: 'poster', fundo: '#e8dcc0', tinta: '#2a1a10', linhas: ['A PELEJA', 'DO JONAS', 'COM O CAIO', '✦ cordel ✦'] },
+  a4_cracha_torneio: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'cracha', cor: 0x7cc5db },
+  a4_cuia: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'caneca', cor: 0x8a5a2a },
+  a7_diploma: { tipo: 'poster', fundo: '#f4ecd8', tinta: '#2a1a4a', linhas: ['DIPLOMA', 'Paranapiacaba', 'Bruxaria', 'Cibernética'] },
+  a7_cracha_crise: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'cracha', cor: 0xc0392b },
+  a7_barbante: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'doce', cor: 0xc0392b },
+  a7_runbook: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'papel', cor: 0xe8e0c8 },
+  a7_relogio_rui: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'doce', cor: 0xb8933e },
   a7_bilhete: { tipo: 'objeto', fundo: '', tinta: '', linhas: [], forma: 'papel', cor: 0xfff6d8 },
 };
 

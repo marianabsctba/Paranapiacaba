@@ -4,8 +4,8 @@ import { modeloDoLugar } from '../src/tres/areas';
 import type { PassoAula } from '../src/conteudo/tipos';
 
 // Mesma regra do palco: aula só em sala do castelo; fora da escola é ensinamento.
-const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra', 'persuasao', 'maquinas', 'comutacao', 'rastros', 'sinergia', 'reverso', 'tunel', 'crise', 'galpao', 'cabine', 'sandbox', 'viveiro', 'coletor', 'arquivo_dumps', 'arena', 'rotunda'];
-const FORA = ['casa', 'cidade', 'trem', 'colunas'];
+const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra', 'persuasao', 'maquinas', 'comutacao', 'rastros', 'sinergia', 'reverso', 'tunel', 'crise', 'galpao', 'cabine', 'sandbox', 'viveiro', 'coletor', 'arquivo_dumps', 'arena', 'rotunda', 'lojalab', 'arbitragem', 'arquivo_backup', 'gabinete'];
+const FORA = ['casa', 'cidade', 'trem', 'colunas', 'oficina', 'vila', 'frigorifico'];
 
 describe('onde as aulas acontecem', () => {
   it('toda aula cai numa sala do castelo ou vira ensinamento', () => {

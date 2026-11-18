@@ -148,8 +148,8 @@ export function notaEstrelas(acertos: number, total: number): number {
 // Aula só acontece em sala do castelo. Fora da escola (casa, galeria, trem, Secretaria) vira ensinamento,
 // sem sala nem lousa. Dentro da escola mas fora de uma sala (refeitório, pátio), vai para a sala da matéria.
 // salas do castelo onde a aula acontece no próprio lugar (as temáticas também contam)
-const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra', 'persuasao', 'maquinas', 'comutacao', 'rastros', 'sinergia', 'reverso', 'tunel', 'crise', 'galpao', 'cabine', 'sandbox', 'viveiro', 'coletor', 'arquivo_dumps', 'arena', 'rotunda'];
-const FORA_DA_ESCOLA = ['casa', 'cidade', 'trem', 'colunas'];
+const SALAS = ['aula', 'biblioteca', 'datacenter', 'torre', 'masmorra', 'persuasao', 'maquinas', 'comutacao', 'rastros', 'sinergia', 'reverso', 'tunel', 'crise', 'galpao', 'cabine', 'sandbox', 'viveiro', 'coletor', 'arquivo_dumps', 'arena', 'rotunda', 'lojalab', 'arbitragem', 'arquivo_backup', 'gabinete'];
+const FORA_DA_ESCOLA = ['casa', 'cidade', 'trem', 'colunas', 'oficina', 'vila', 'frigorifico'];
 export function ondeEnsina(p: PassoAula): { lugar: string; ensinamento: boolean } {
   const m = modeloDoLugar(LUGARES.get(p.lugar));
   if (FORA_DA_ESCOLA.includes(m)) return { lugar: p.lugar, ensinamento: true };
