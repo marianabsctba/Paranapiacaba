@@ -23,6 +23,10 @@ export const PALMA = { extra: 0, polegarEixo: 'z' as 'x' | 'y' | 'z', polegar: -
 const V1 = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3(), V4 = new THREE.Vector3();
 const V5 = new THREE.Vector3(), V6 = new THREE.Vector3(), V7 = new THREE.Vector3(), V8 = new THREE.Vector3();
 const VA = new THREE.Vector3(), VB = new THREE.Vector3(), VC = new THREE.Vector3();
+const G1 = new THREE.Vector3(), G2 = new THREE.Vector3(), G3 = new THREE.Vector3(), G4 = new THREE.Vector3();
+const G5 = new THREE.Vector3(), G6 = new THREE.Vector3();
+export type Gesto = 'acenar' | 'apontar' | 'sim' | 'nao' | 'ombros' | 'pensar' | 'cintura' | 'cruzar' | 'comemorar';
+const DUR_GESTO: Record<Gesto, number> = { acenar: 2.2, apontar: 2.4, sim: 1.4, nao: 1.5, ombros: 1.8, pensar: 4, cintura: 4, cruzar: 5, comemorar: 2.2 };
 const QD = new THREE.Quaternion(), QW = new THREE.Quaternion(), QP = new THREE.Quaternion(), QI = new THREE.Quaternion();
 const repintadas = new Map<string, THREE.Texture>();
 /** troca os pixels laranja (a gravata original) pela cor da casa, mantendo o claro e o escuro do tecido */
@@ -408,6 +412,148 @@ export class Humano {
     }
   }
 
+  // ------------------------------------------------------------ gestos
+  // a biblioteca de animação não tem aceno, apontar nem cabeça dizendo sim: os gestos são montados osso a osso por cima dela
+
+  private gestoAtual: { nome: Gesto; t: number; dur: number } | null = null;
+  private proximoTique = 8 + Math.random() * 14;
+  /** faz um gesto agora (some sozinho no fim); 'cruzar', 'cintura' e 'pensar' ficam alguns segundos */
+  gesto(nome: Gesto, dur?: number) {
+    if (this.sentado && !['sim', 'nao', 'acenar', 'apontar', 'pensar'].includes(nome)) return;
+    this.gestoAtual = { nome, t: 0, dur: dur ?? DUR_GESTO[nome] };
+  }
+  get gesticulando() {
+    return this.gestoAtual?.nome ?? null;
+  }
+
+  /** gira o osso no espaço do mundo em volta de um eixo */
+  private girar(osso: THREE.Object3D, eixo: THREE.Vector3, ang: number) {
+    QD.setFromAxisAngle(eixo, ang);
+    osso.getWorldQuaternion(QW);
+    QW.premultiply(QD);
+    osso.parent!.getWorldQuaternion(QP).invert();
+    osso.quaternion.copy(QP.multiply(QW));
+    osso.updateMatrixWorld(true);
+  }
+
+  /** põe um braço na pose: direção do braço e, para o antebraço, uma direção ou um ponto do mundo onde a mão deve chegar */
+  private poseBraco(lado: string, braco: THREE.Vector3, ante: THREE.Vector3, ehPonto: boolean, peso: number) {
+    const r = this.raiz;
+    const ombro = r.getObjectByName('upperarm_' + lado);
+    const cot = r.getObjectByName('lowerarm_' + lado);
+    const mao = r.getObjectByName('hand_' + lado);
+    const dedo = r.getObjectByName('middle_01_' + lado);
+    if (!ombro || !cot || !mao) return;
+    this.alinhar(ombro, cot, braco, peso);
+    const dir = ehPonto ? G6.copy(ante).sub(cot.getWorldPosition(G5)).normalize() : G6.copy(ante);
+    this.alinhar(cot, mao, dir, peso);
+    if (dedo) this.alinhar(mao, dedo, dir, peso * 0.8);
+  }
+
+  private aplicarGesto(dt: number) {
+    const g = this.gestoAtual;
+    if (!g) return;
+    g.t += dt;
+    if (g.t >= g.dur) {
+      this.gestoAtual = null;
+      return;
+    }
+    // entra e sai suave
+    const w = Math.min(1, g.t / 0.35, (g.dur - g.t) / 0.4);
+    const p = w * w * (3 - 2 * w);
+    const r = this.raiz;
+    r.updateMatrixWorld(true);
+    const U = G1.set(0, 1, 0);
+    const F = G2.set(Math.sin(r.rotation.y), 0, Math.cos(r.rotation.y));
+    const peito = r.getObjectByName('spine_03');
+    const quadril = r.getObjectByName('pelvis');
+    const cabeca = r.getObjectByName('head');
+    const pescoco = r.getObjectByName('neck_01');
+    const fora = (lado: string) => {
+      const o = r.getObjectByName('upperarm_' + lado);
+      const v = new THREE.Vector3();
+      if (!o) return v;
+      o.getWorldPosition(v).sub(peito ? peito.getWorldPosition(G3) : r.position);
+      v.y = 0;
+      return v.normalize();
+    };
+    const dir = (u: number, f: number, o: THREE.Vector3, k: number) => new THREE.Vector3().addScaledVector(U, u).addScaledVector(F, f).addScaledVector(o, k).normalize();
+    const lateral = G4.crossVectors(U, F).normalize();
+    const t = g.t;
+    switch (g.nome) {
+      case 'acenar': {
+        const o = fora('r');
+        this.poseBraco('r', dir(0.35, 0.2, o, 0.85), dir(1, 0.25, o, 0.15 + Math.sin(t * 10) * 0.45), false, p);
+        if (cabeca) this.girar(cabeca, F, Math.sin(t * 2) * 0.06 * p);
+        break;
+      }
+      case 'apontar': {
+        const o = fora('r');
+        this.poseBraco('r', dir(0.12, 0.85, o, 0.45), dir(0.15, 0.85, o, 0.5), false, p);
+        break;
+      }
+      case 'sim':
+        if (cabeca) this.girar(pescoco ?? cabeca, lateral, (0.1 + Math.sin(t * 9) * 0.14) * p);
+        break;
+      case 'nao':
+        if (cabeca) this.girar(pescoco ?? cabeca, U, Math.sin(t * 8) * 0.3 * p);
+        break;
+      case 'ombros':
+        for (const lado of ['l', 'r']) {
+          const o = fora(lado);
+          const clav = r.getObjectByName('clavicle_' + lado);
+          const ombro = r.getObjectByName('upperarm_' + lado);
+          if (clav && ombro) this.alinhar(clav, ombro, ombro.getWorldPosition(G5).sub(clav.getWorldPosition(G3)).normalize().addScaledVector(U, 0.35).normalize(), p);
+          this.poseBraco(lado, dir(-0.9, 0.12, o, 0.3), dir(0.15, 0.8, o, 0.5), false, p);
+        }
+        if (cabeca) this.girar(cabeca, F, 0.14 * p);
+        break;
+      case 'pensar': {
+        const o = fora('r');
+        const queixo = cabeca ? cabeca.getWorldPosition(new THREE.Vector3()).addScaledVector(F, 0.1).addScaledVector(U, -0.07) : r.position.clone();
+        this.poseBraco('r', dir(-0.85, 0.45, o, 0.12), queixo, true, p);
+        const ol = fora('l');
+        const cotovelo = r.getObjectByName('lowerarm_r')?.getWorldPosition(new THREE.Vector3()).addScaledVector(F, 0.05);
+        if (cotovelo) this.poseBraco('l', dir(-0.9, 0.3, ol, 0.1), cotovelo, true, p);
+        if (cabeca) this.girar(pescoco ?? cabeca, lateral, 0.12 * p);
+        break;
+      }
+      case 'cintura':
+        for (const lado of ['l', 'r']) {
+          const o = fora(lado);
+          const quadrilLado = (quadril ?? r).getWorldPosition(new THREE.Vector3()).addScaledVector(o, 0.17).addScaledVector(U, 0.06).addScaledVector(F, 0.02);
+          this.poseBraco(lado, dir(-0.7, -0.15, o, 0.7), quadrilLado, true, p);
+        }
+        break;
+      case 'cruzar':
+        for (const lado of ['l', 'r']) {
+          const o = fora(lado);
+          // o braço de baixo e o de cima não se atravessam: um fica um pouco mais alto e mais para fora
+          const alt = lado === 'l' ? 0.05 : 0;
+          const frente = lado === 'l' ? 0.2 : 0.16;
+          const alvo = (peito ?? r).getWorldPosition(new THREE.Vector3()).addScaledVector(F, frente).addScaledVector(o, -0.34).addScaledVector(U, -0.02 + alt);
+          this.poseBraco(lado, dir(-0.8, 0.42, o, 0.3), alvo, true, p);
+        }
+        break;
+      case 'comemorar':
+        for (const lado of ['l', 'r']) {
+          const o = fora(lado);
+          const pulo = Math.sin(t * 9 + (lado === 'l' ? 0 : 1)) * 0.15;
+          this.poseBraco(lado, dir(0.85 + pulo, 0.1, o, 0.45), dir(1, 0.1, o, 0.05), false, p);
+        }
+        break;
+    }
+  }
+
+  /** parada sem fazer nada, a pessoa de vez em quando cruza os braços, põe a mão na cintura ou pensa */
+  private tiquesParado(dt: number) {
+    if (this.estado !== 'parado' || this.sentado || this.gestoAtual || this.caminho.length) return;
+    this.proximoTique -= dt;
+    if (this.proximoTique > 0) return;
+    this.proximoTique = 10 + Math.random() * 18;
+    if (Math.random() < 0.55) this.gesto((['cruzar', 'cintura', 'pensar', 'cruzar'] as const)[Math.floor(Math.random() * 4)], 4 + Math.random() * 5);
+  }
+
   /** sentado: parado vira sentado, falando vira falar sentado */
   sentado = false;
 
@@ -523,6 +669,10 @@ export class Humano {
       const alvo = this.sentado ? 0 : est === 'parado' ? RELAX.parado : est === 'falando' ? RELAX.falando : 0;
       this.pesoRelax += (alvo - this.pesoRelax) * Math.min(1, dt * 4);
       if (this.pesoRelax > 0.01) this.bracosRelaxados(this.pesoRelax);
+      if (!andando) {
+        this.tiquesParado(dt);
+        this.aplicarGesto(dt);
+      } else this.gestoAtual = null;
       // dedos se mexem de leve, como mão relaxada respirando
       this.curvarDedos(1 + Math.sin(performance.now() / 900 + this.semente) * 0.18);
       this.juntarDedos();

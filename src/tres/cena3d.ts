@@ -5,7 +5,7 @@ import { LUGARES, PERSONAGENS } from '../conteudo/index';
 import { estado, salvar, temPartida } from '../motor/estado';
 import { CASA_INFO, personaliza } from '../motor/texto';
 import { aplicarAmbiente, construir, modeloDoLugar, type Area } from './areas';
-import { Humano, preCarregar } from './humanos';
+import { Humano, preCarregar, type Gesto } from './humanos';
 import * as Som from '../motor/som';
 import { montarEnfeites } from './enfeites';
 import { M } from './motor3d';
@@ -264,11 +264,38 @@ export function emocaoDaFala(id: string, texto: string): ['sorriso' | 'surpresa'
   return ['sorriso', /!/.test(t) ? 0.55 : 0.3];
 }
 
+/** gesto que combina com a fala (nem toda fala tem: gesticular sempre cansa) */
+export function gestoDaFala(id: string, texto: string): Gesto | null {
+  const t = texto.toLowerCase().trim().replace(/^[*"“\s]+/, '');
+  if (/^(oi|olá|ola|e aí|eai|bom dia|boa tarde|boa noite|bem-vind|tchau|até mais|até logo|até amanhã)/.test(t)) return 'acenar';
+  if (/(conseguimos|ganhamos|vencemos|isso aí|uhu|eba|aeee|viva)/.test(t) && /!/.test(t)) return 'comemorar';
+  if (/^(não|nada disso|negativo|nem pensar|jamais|nunca)([\s,.!]|$)/.test(t)) return 'nao';
+  if (/^(sim|isso|exato|claro|perfeito|certo|com certeza|muito bem|é isso|ótimo)([\s,.!]|$)/.test(t)) return 'sim';
+  if (/(^|\s)(olha|olhe|veja|repara|ali|aquele|aquela|lá no|lá na)([\s,.!]|$)/.test(t)) return 'apontar';
+  const [emo] = emocaoDaFala(id, texto);
+  if (emo === 'bravo') return hashTexto(texto) % 2 ? 'cintura' : 'cruzar';
+  if (/(não sei|sei lá|vai saber|quem sabe|será que)/.test(t)) return 'ombros';
+  if (/\?$/.test(t) && /(por que|como|qual|quem|o que)/.test(t)) return hashTexto(texto) % 3 === 0 ? 'pensar' : null;
+  return null;
+}
+
+function hashTexto(s: string) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
 export async function foco(id: string, texto = '') {
   const h = await falante(id);
-  if (h && texto) h.expressao(...emocaoDaFala(id, texto));
+  if (h && texto) {
+    h.expressao(...emocaoDaFala(id, texto));
+    const g = gestoDaFala(id, texto);
+    if (g) h.gesto(g);
+  }
   for (const n of C.npcs.values()) {
     if (n.raiz.userData.travado) continue;
+    // quem escuta às vezes concorda com a cabeça
+    if (n !== h && texto && Math.random() < 0.18) setTimeout(() => n.gesto('sim'), 600 + Math.random() * 1200);
     n.tocar(n === h ? 'falando' : 'parado');
     n.olharPara(h && n !== h ? h.raiz.position.x : J.pos.x, h && n !== h ? h.raiz.position.z : J.pos.z);
   }
