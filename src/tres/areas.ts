@@ -442,7 +442,8 @@ function salao(colunas = false): Area {
   return {
     modelo: colunas ? 'colunas' : 'salao', grupo: g, entrada: { x: 0, z: 13, yaw: 0 }, palco: [{ x: -1.2, z: 9.6 }, { x: 1.3, z: 9.4 }, { x: 0, z: 9 }, { x: -2.6, z: 10.4 }],
     limites: [-W / 2 + 0.4, W / 2 - 0.4, -D / 2 + 0.4, D / 2 - 0.4],
-    obstaculos: colunas ? [[-3, 3, -12.6, -11.4]] : [-4.2, -1.4, 1.4, 4.2].map((x) => [x - 1.1, x + 1.1, -13, 9] as [number, number, number, number]),
+    // mesa e os dois bancos ocupam 0,97 m de cada lado: sobra corredor de uns 85 cm entre as fileiras
+    obstaculos: colunas ? [[-3, 3, -12.6, -11.4]] : [-4.2, -1.4, 1.4, 4.2].map((x) => [x - 0.97, x + 0.97, -12.6, 8.6] as [number, number, number, number]),
     assentos: colunas ? undefined : [-4.2, -1.4, 1.4, 4.2].flatMap((x, casa) => [-11, -8, -5, -2, 1, 4, 7].flatMap((z) => [{ x: x - 0.78, z, ry: Math.PI / 2, casa }, { x: x + 0.78, z: z + 1.2, ry: -Math.PI / 2, casa }])),
     portas: [{ x: 0, z: 15.6, rotulo: 'Sair' }], ceu: 0x0e0b18, neblina: 0.012,
     atualizar: velas ? (dt, t) => velas!(dt, t, M.camera) : undefined,

@@ -6,7 +6,7 @@ import { aplicar, lugaresVisiveis, nivel, titulo, xpDoNivel } from '../motor/pro
 import { CASA_INFO, fmt, personaliza } from '../motor/texto';
 import { brasao } from '../arte/brasao';
 import * as C3 from '../tres/cena3d';
-import { J, soltarMouse, travado } from '../tres/jogador';
+import { J, OLHO, soltarMouse, travado } from '../tres/jogador';
 import { M } from '../tres/motor3d';
 import { imgFoto } from '../tres/foto';
 import { aviso, botao, h } from './dom';
@@ -168,9 +168,49 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
     desenha();
   };
 
+  // sentar nos bancos e cadeiras do lugar (refeitório, sala, arquibancada)
+  let sentado: { x: number; z: number; ry: number } | null = null;
+  const assentoPerto = () => {
+    const a = C3.C.area;
+    if (!a?.assentos) return null;
+    const ocupado = (p: { x: number; z: number }) => C3.C.figurantes.some((f) => Math.hypot(f.raiz.position.x - p.x, f.raiz.position.z - p.z) < 0.35);
+    let melhor: { x: number; z: number; ry: number } | null = null;
+    let d = 1.3;
+    for (const p of a.assentos) {
+      const dd = Math.hypot(p.x - J.pos.x, p.z - J.pos.z);
+      if (dd < d && !ocupado(p)) {
+        d = dd;
+        melhor = p;
+      }
+    }
+    return melhor;
+  };
+  const sentar = (p: { x: number; z: number; ry: number; y?: number }) => {
+    sentado = p;
+    J.pos.set(p.x, p.y ?? 0, p.z);
+    J.yaw = p.ry + Math.PI;
+    J.pitch = -0.1;
+    J.olho = 1.02;
+    J.voo = 0;
+  };
+  const levantar = () => {
+    if (!sentado) return;
+    // levanta para trás, longe da mesa, de volta ao corredor
+    J.pos.set(sentado.x - Math.sin(sentado.ry) * 0.6, 0, sentado.z - Math.cos(sentado.ry) * 0.6);
+    J.olho = OLHO;
+    J.voo = 1;
+    sentado = null;
+  };
+
   let alvo: C3.Alvo = null;
   const interagir = () => {
-    if (!alvo || !J.livre) return;
+    if (!J.livre) return;
+    if (!alvo) {
+      if (sentado) return levantar();
+      const banco = assentoPerto();
+      if (banco) sentar(banco);
+      return;
+    }
     if (alvo.tipo === 'porta') {
       const d = alvo.destino;
       if (!d) return mapa();
@@ -213,9 +253,22 @@ export async function abrirMundo(app: HTMLElement, acoes: Acoes) {
   addEventListener('keydown', teclaE);
   laco = window.setInterval(() => {
     if (!J.livre) return;
-    alvo = C3.alvoNaMira();
+    // trocou de lugar sentado: levanta sozinho
+    if (sentado && Math.hypot(J.pos.x - sentado.x, J.pos.z - sentado.z) > 0.5) {
+      sentado = null;
+      J.olho = OLHO;
+      J.voo = 1;
+    }
+    alvo = sentado ? null : C3.alvoNaMira();
+    // perto de um lugar livre, sentar ganha de puxar papo com quem já está sentado
+    if (alvo?.tipo === 'npc' && alvo.h.sentado && assentoPerto()) alvo = null;
     if (!alvo) {
-      prompt.hidden = true;
+      // sem ninguém na mira: oferece sentar no banco mais perto, ou levantar
+      const banco = sentado ? null : assentoPerto();
+      if (sentado || banco) {
+        prompt.hidden = false;
+        prompt.textContent = `${J.toque ? '👆' : 'E'} · ${sentado ? 'Levantar' : 'Sentar'}`;
+      } else prompt.hidden = true;
       mira.classList.remove('ativa');
       return;
     }
