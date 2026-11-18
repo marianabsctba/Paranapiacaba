@@ -64,7 +64,7 @@ export const cap02: Capitulo = {
         },
         {
           tipo: 'achar',
-          enunciado: 'Saída de `xxd foto_da_festa.jpg | head -n 5`. Toque nas linhas que provam que isso NÃO é uma foto.',
+          enunciado: 'Trechos da saída de `xxd foto_da_festa.jpg`. Toque nas linhas que provam que isso NÃO é uma foto.',
           linhas: [
             '00000000: 4d5a 9000 0300 0000 0400 0000 ffff 0000  MZ..............',
             '00000010: b800 0000 0000 0000 4000 0000 0000 0000  ........@.......',
@@ -118,7 +118,7 @@ export const cap02: Capitulo = {
       lugar: 'a6_lab_reverso',
       falas: [
         ['a6_marta', 'Hoje abrimos a gaiola 07. Uma das amostras do Nulo que a Secretaria apreendeu em 2015. O `file` diz que é um PE32. O hash não aparece em nenhuma base pública. Ou seja: ninguém nunca contou o que ela faz.'],
-        ['enzo', 'Ninguém em nove anos?'],
+        ['enzo', 'Ninguém em dez anos?'],
         ['a6_marta', 'A Secretaria guardou num armário com a etiqueta "não mexer, avaliar". Eu li o ofício. Tem até carimbo de "urgente". De 2016.'],
         ['caua', 'Igual ao meu pedido de segunda via do RG.'],
         ['a6_marta', 'Primeiro passo depois do hash e do tipo: perguntar ao binário o que ele tem a dizer. Em texto.'],

@@ -277,7 +277,7 @@ export const cap09: Capitulo = {
           efeito: { amizade: { enzo: -1, iolanda: 1 }, atributos: { defesa: 1 } },
           resposta: [
             ['enzo', 'Tá. Entendo. Sou filho de quem eu sou, ninguém confia em mim.'],
-            ['voce', 'Não é isso, Enzo. É que não é meu segredo. Mas obrigado por avisar da Dalva. Isso ajudou de verdade.'],
+            ['voce', 'Não é isso, Enzo. É que não é meu segredo. Mas valeu por avisar da Dalva. Isso ajudou de verdade.'],
             ['enzo', '...De nada.'],
           ],
         },

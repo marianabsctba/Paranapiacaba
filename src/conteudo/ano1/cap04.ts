@@ -288,7 +288,7 @@ export const cap04: Capitulo = {
       ],
       vitoria: [
         ['narrador', 'O placar pisca e mostra a vida do Enzo zerada. Ou quase: metade dos segmentos está queimada, então pode ser um 8.'],
-        ['enzo', 'Tá. Tá bom. Você é rápido. Mas eu não estava aquecido. E o meu teclado é de switch silencioso, que é mais elegante e mais lento.'],
+        ['enzo', 'Tá. Tá bom. Você digita rápido. Mas eu não estava aquecido. E o meu teclado é de switch silencioso, que é mais elegante e mais lento.'],
         ['bia', 'Desculpa de quem perdeu, nota técnica: switch silencioso não deixa ninguém mais lento.'],
         ['enzo', '...Bom duelo, {nome}. Não conta para o meu pai.'],
       ],

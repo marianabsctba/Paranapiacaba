@@ -30,7 +30,7 @@ export const cap09: Capitulo = {
           '10.0.4.20 TXT 4a6f6e61732062657a657272612e6373760a.k3x9.nuvem-backup.top',
           '10.0.4.22 A   atualizacao.microsoft.com',
           '10.0.4.20 TXT 7a756c656963615f696e646963652e786c73.k3x9.nuvem-backup.top',
-          '10.0.4.20 TXT 63617264617069615f6c69737461.k3x9.nuvem-backup.top',
+          '10.0.4.20 TXT 636172646170696f5f6c69737461.k3x9.nuvem-backup.top',
           '10.0.3.12 A   torre.paranapiacaba',
         ],
         corretas: [1, 3, 4],
@@ -147,7 +147,7 @@ export const cap09: Capitulo = {
       ],
       explicacao: [
         '**Vulnerabilidade** é uma fraqueza que pode ser explorada: software desatualizado, configuração errada, senha padrão. **Gestão de vulnerabilidade** é o processo contínuo de achar, priorizar e corrigir essas fraquezas. É um ciclo: **inventário de ativos**, **varredura**, **priorização**, **correção ou mitigação**, **verificação** e **relatório**. E de novo.',
-        'Sem **inventário** não há gestão: não se protege o que não se sabe que existe. Depois vem a varredura, com ferramentas como Greenbone/OpenVAS, Nessus ou Qualys. Varredura **autenticada** (com credencial, olhando os pacotes instalados por dentro) acha muito mais que a **não autenticada** (só de fora, pela rede). Para uma checagem rápida, `nmap -sV --script vulners` descobre versões e cruza com CVEs conhecidas. Sempre na sua rede ou com autorização escrita.',
+        'Sem **inventário** não há gestão: não se protege o que não se sabe que existe. Depois vem a varredura, com ferramentas como Greenbone/OpenVAS, Nessus ou Qualys. Varredura **autenticada** (com credencial, olhando os pacotes instalados por dentro) acha muito mais que a **não autenticada** (só de fora, pela rede). Para uma checagem rápida, `nmap -sV --script vulners`: o `-sV` descobre as versões dos serviços, e o script NSE **vulners** manda essas versões para a base externa do site vulners.com, que devolve as CVEs conhecidas com a nota CVSS de cada uma. O nmap sozinho não dá nota nenhuma. Sempre na sua rede ou com autorização escrita.',
         '**Priorizar** é a parte difícil, porque toda varredura devolve centenas de achados. A gravidade técnica (CVSS, próximo mês) é só um fator. Também pesam: o ativo está **exposto à internet**? A falha está sendo **explorada ativamente** (o catálogo **KEV** da agência americana CISA lista essas)? Qual a **probabilidade** de exploração (o **EPSS**, do FIRST)? O ativo é **crítico**?',
         '**Corrigir** normalmente é aplicar a atualização (patch), testada antes e com plano de volta. Quando não dá para corrigir logo, **mitiga-se**: desligar a função vulnerável, restringir o acesso por firewall, colocar atrás de um WAF. Toda exceção precisa de **aceite de risco** formal, assinado por quem responde pelo negócio, com prazo.',
         'Organizações maduras definem **prazos por gravidade** (por exemplo, crítica exposta à internet em poucos dias, média em semanas) e medem quantos achados estão vencidos. No Linux, `apt list --upgradable` mostra o que está esperando atualização. E a **verificação** fecha o ciclo: varrer de novo para provar que a correção funcionou.',
@@ -168,8 +168,8 @@ export const cap09: Capitulo = {
           ],
           exemplo: 'nmap -sV --script vulners 10.5.0.20',
           saida: 'Nmap scan report for portal-antigo.paranapiacaba (10.5.0.20)\nPORT    STATE SERVICE  VERSION\n22/tcp  open  ssh      OpenSSH 7.4 (protocol 2.0)\n| vulners:\n|   cpe:/a:openbsd:openssh:7.4:\n|       CVE-2023-38408  9.8  https://vulners.com/cve/CVE-2023-38408\n443/tcp open  ssl/http Apache httpd 2.4.49\n| vulners:\n|   cpe:/a:apache:http_server:2.4.49:\n|       CVE-2021-42013  9.8  https://vulners.com/cve/CVE-2021-42013\n|       CVE-2021-41773  7.5  https://vulners.com/cve/CVE-2021-41773',
-          dica: '`-sV` descobre versões e `--script vulners` cruza com a base de CVEs.',
-          explicacao: 'Apache 2.4.49 é uma versão com falhas graves exploradas em massa em 2021. Esse era o servidor da mensagem da Marlene: exposto, crítico e esquecido.',
+          dica: '`-sV` descobre versões e `--script vulners` consulta a base externa do vulners.com.',
+          explicacao: 'As CVEs e as notas ao lado vêm da base do vulners.com, consultada pelo script; o nmap só descobriu as versões. Apache 2.4.49 é uma versão com falhas graves exploradas em massa em 2021. Esse era o servidor da mensagem da Marlene: exposto, crítico e esquecido.',
         },
         {
           tipo: 'ordenar',

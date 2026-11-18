@@ -36,7 +36,7 @@ export const cap08: Capitulo = {
         ['ruth', 'Aí ele sabe que foi descoberto, muda de lugar e a gente perde os logs que ainda estão chegando, Cauã. Corte de cabo é a última ferramenta, não a primeira. (tira o alicate do bolso) Mas eu sempre ando com ela.'],
       ],
       explicacao: [
-        'Na resposta a incidente (o NIST SP 800-61, que vocês viram no 5º ano), **contenção** é a fase que impede o estrago de crescer enquanto a erradicação é preparada. Existem duas pressas ruins: conter cedo demais, aos pedaços, e avisar o invasor; e conter tarde demais, deixando ele destruir o que quiser. A contenção boa é **planejada, coordenada e simultânea**.',
+        'Na resposta a incidente (no ciclo do NIST SP 800-61 rev. 2, que vocês viram no 5º ano), **contenção** é a fase que impede o estrago de crescer enquanto a erradicação é preparada. Existem duas pressas ruins: conter cedo demais, aos pedaços, e avisar o invasor; e conter tarde demais, deixando ele destruir o que quiser. A contenção boa é **planejada, coordenada e simultânea**.',
         'Antes de tudo, a **comunicação fora da banda**. Se o invasor domina o domínio, ele pode ler o e-mail da escola, o chat e as atas de reunião. O plano não pode trafegar por ali. Use telefones e rádios que não dependem da rede, um grupo pequeno de pessoas que precisam saber, e codinomes. No castelo: o walkie-talkie do Cauã, a linha fixa da Ruth e a Pomba Edite.',
         'O **escopo** vem da caça e da linha do tempo: lista de contas comprometidas ou suspeitas, máquinas com persistência, servidores tocados, endereços e domínios de comando e controle. Contenção sem escopo é chute. E o escopo precisa ser **completo**: deixar uma persistência para trás é deixar a porta aberta para ele voltar na semana seguinte.',
         'As ações de contenção mais comuns, do menor para o maior impacto: **bloquear** na saída os endereços e domínios de comando e controle (no firewall, no proxy e no DNS); **isolar** máquinas comprometidas pelo EDR, que corta a rede mas mantém a máquina ligada e a memória intacta para a perícia; **desativar** contas comprometidas, sem apagar; **redefinir senhas** na ordem certa, começando pelo Tier 0; e, se preciso, **segmentar** a rede, cortando a conversa entre sub-redes ou entre instituições.',
@@ -140,7 +140,7 @@ export const cap08: Capitulo = {
           prompt: 'PS C:\\Users\\admin0.lena>',
           aceitos: ['repadmin /replsummary', 'repadmin /replsum'],
           exemplo: 'repadmin /replsummary',
-          saida: 'Início da replicação: 2026-04-24 16:00:12\nDSA de origem      maior delta  falhas/total %  erro\n DC-TORRE-01            04m:51s     0 /   5    0\n DC-CRIPTA-02           05m:02s     0 /   5    0\nDSA de destino     maior delta  falhas/total %  erro\n DC-CRIPTA-02           04m:51s     0 /   5    0\n DC-TORRE-01            05m:02s     0 /   5    0',
+          saida: 'Início da replicação: 2027-04-24 16:00:12\nDSA de origem      maior delta  falhas/total %  erro\n DC-TORRE-01            04m:51s     0 /   5    0\n DC-CRIPTA-02           05m:02s     0 /   5    0\nDSA de destino     maior delta  falhas/total %  erro\n DC-CRIPTA-02           04m:51s     0 /   5    0\n DC-TORRE-01            05m:02s     0 /   5    0',
           dica: 'Replicatio Summa: `repadmin /replsummary`.',
           explicacao: 'Zero falhas, atrasos de cerca de cinco minutos. A primeira troca chegou a todos os DCs. Pode seguir para a segunda, depois do intervalo dos tíquetes.',
         },

@@ -194,7 +194,7 @@ export const cap05: Capitulo = {
       ],
       explicacao: [
         'Antes de trocar qualquer dado, o TCP faz o **aperto de mão em três vias** (three-way handshake). É uma conversa de três mensagens para os dois lados confirmarem que estão ouvindo e combinarem por onde começar a contar os pacotes.',
-        'Passo 1: o cliente manda um **SYN** (de synchronize): "quero conversar, e eu começo a contar do número 1000". Passo 2: o servidor responde **SYN-ACK**: "recebi o seu 1000 (ACK), e eu começo do 5000 (SYN)". Passo 3: o cliente manda **ACK**: "recebi o seu 5000". Pronto, a conexão está **estabelecida** e os dados podem fluir.',
+        'Passo 1: o cliente manda um **SYN** (de synchronize): "quero conversar, e eu começo a contar do número 1000". Passo 2: o servidor responde **SYN-ACK**: "recebi o seu 1000, pode mandar o 1001 (ACK), e eu começo do 5000 (SYN)". Passo 3: o cliente manda **ACK**: "recebi o seu 5000, pode mandar o 5001". Pronto, a conexão está **estabelecida** e os dados podem fluir.',
         'Esses números iniciais, os **números de sequência**, são escolhidos aleatoriamente e servem para numerar cada byte. É assim que o TCP sabe o que chegou, o que falta e em que ordem montar. Se fossem previsíveis, um atacante poderia se meter na conversa fingindo ser um dos lados.',
         'Para encerrar, a conversa é com **FIN**: cada lado avisa que terminou e o outro confirma com ACK. Já o **RST** (reset) é o "desliga na cara": encerra na hora. Quando você bate numa porta fechada, a resposta ao seu SYN é justamente um RST. É por isso que o `nc` diz "Connection refused".',
         'Durante a vida da conexão, ela passa por **estados** que você vai ver nos comandos do próximo mês: `LISTEN` (servidor esperando), `SYN_SENT` (cliente mandou o SYN), `SYN_RECV` (servidor respondeu e espera o ACK), `ESTABLISHED` (conversando) e `TIME_WAIT` (acabou, mas espera um pouquinho antes de liberar tudo).',
@@ -233,7 +233,7 @@ export const cap05: Capitulo = {
         },
         {
           tipo: 'achar',
-          enunciado: 'Capture de pacotes do servidor de notas. Toque nas linhas que sugerem SYN flood.',
+          enunciado: 'Captura de pacotes do servidor de notas. Toque nas linhas que sugerem SYN flood.',
           linhas: [
             '10.0.10.44:51200 > 10.0.1.80:443  [SYN]',
             '10.0.1.80:443 > 10.0.10.44:51200  [SYN, ACK]',

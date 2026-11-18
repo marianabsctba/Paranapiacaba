@@ -17,7 +17,7 @@ export const cap06: Capitulo = {
         ['a4_davi', 'Na prefeitura, o time vermelho era a população. Eles achavam falha sem querer, toda segunda-feira, às 8h.'],
         ['enzo', 'A gente ainda tem aquele CSRF do formulário de e-mail aberto. Eu achei. Eu quero corrigir.'],
         ['a4_lia', 'Bah, olha o Enzo querendo corrigir. Anota a data, Tati.'],
-        ['tati', 'Já anotei. Aba 16.'],
+        ['tati', 'Já anotei. Planilha 16.'],
       ],
     },
     {
@@ -254,7 +254,7 @@ export const cap06: Capitulo = {
           texto: 'Avisar a Profa. Nanda pelo canal da organização, só com o fato observado',
           efeito: { atributos: { defesa: 1 }, amizade: { nanda: 2 }, xp: 15, flag: 'a4_avisou_nanda' },
           resposta: [
-            ['nanda', '"Técnico entrou sozinho na sala do servidor do placar às 14h05." Fato, hora e lugar. Perfeito. Eu anoto no livro de ocorrências.'],
+            ['nanda', '"Técnico entrou sozinho na sala do servidor do placar às 14:05Z." Fato, hora e lugar. Perfeito. Eu anoto no livro de ocorrências.'],
             ['nanda', 'Não comenta com ninguém. Desconfiança espalhada vira fofoca, e fofoca avisa quem está sendo observado.'],
           ],
         },
@@ -272,7 +272,7 @@ export const cap06: Capitulo = {
           efeito: { atributos: { web: 1 }, xp: 10 },
           resposta: [
             ['narrador', 'Você volta para o log da loja. O time pontua mais duas defesas. Mas a cena do técnico entrando sozinho fica na sua cabeça o resto da tarde.'],
-            ['tati', '(à noite) Eu anotei mesmo assim. 14h05. Planilha 17.'],
+            ['tati', '(à noite) Eu anotei mesmo assim. 14:05Z. Planilha 17.'],
           ],
         },
       ],

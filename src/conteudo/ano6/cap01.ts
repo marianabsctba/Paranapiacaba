@@ -301,7 +301,7 @@ export const cap01: Capitulo = {
       falas: [
         ['narrador', 'Noite no dormitório da {casa}. A tomada para vinte pessoas está com trinta carregadores. O Bitu dorme em cima do único notebook que está esquentando.'],
         ['jonas', 'Me diz uma coisa, {nome}. Se o malware do Nulo foi apreendido em 2015, por que só agora mandaram pra cá?'],
-        ['voce', 'Porque a Secretaria levou nove anos para abrir o processo de "avaliação de custódia".'],
+        ['voce', 'Porque a Secretaria levou dez anos para abrir o processo de "avaliação de custódia".'],
         ['jonas', 'Ó Secretaria vagarosa, / que avalia sem parar. / Quando termina o parecer, / o malware já foi votar.'],
         ['bitu', 'Mrrr. (pisa no teclado: `sudo rm -rf` e para no meio, olhando para você)'],
         ['voce', 'Bitu, não. Não hoje.'],

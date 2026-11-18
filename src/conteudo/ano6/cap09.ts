@@ -12,7 +12,7 @@ export const cap09: Capitulo = {
         ['narrador', 'Brasília, atrás do orelhão desativado. O Secretário Válter Prado lê uma nota oficial para três câmeras e um pombo.'],
         ['deputado', 'A Secretaria de Bruxaria Digital acompanha com atenção o ocorrido em Paranapiacaba. Informamos que um grupo de trabalho será criado para avaliar a criação de uma comissão que estudará o assunto.'],
         ['deputado', 'Além disso, determinamos que as amostras do Viveiro sejam devolvidas à Secretaria, onde ficarão em segurança no armário "não mexer, avaliar".'],
-        ['nanda', '(por videochamada, com o balde no quadro) Secretário, foi justamente nesse armário que elas ficaram nove anos sem análise. Com todo o respeito: não.'],
+        ['nanda', '(por videochamada, com o balde no quadro) Secretário, foi justamente nesse armário que elas ficaram dez anos sem análise. Com todo o respeito: não.'],
         ['deputado', 'Vou considerar sua manifestação no âmbito do processo. Que ainda não foi aberto.'],
       ],
     },
@@ -22,7 +22,7 @@ export const cap09: Capitulo = {
       falas: [
         ['nanda', 'Turma, notícia ruim. O Colégio Pampa Digital, de Pelotas, foi atingido ontem à noite. Os servidores foram apagados. Pediram resgate, mas não existe chave. É um wiper fantasiado de ransomware.'],
         ['bia', 'A família do Nulo?'],
-        ['nanda', 'A ponta de um fio, pelo menos. A Academia do Sertão, de Juazeiro, pode ser a próxima. A gente tem uma vantagem: seis meses de análise das amostras. Vamos transformar isso em proteção para os outros.'],
+        ['nanda', 'A ponta de um fio, pelo menos. A Academia do Sertão, de Juazeiro, pode ser a próxima. A gente tem uma vantagem: oito meses de análise das amostras. Vamos transformar isso em proteção para os outros.'],
         ['enzo', 'Meu pai venderia isso como "relatório premium de ameaças" por quarenta mil.'],
         ['nanda', 'E nós vamos dar de graça, Enzo, para quem precisa. Mas do jeito certo.'],
       ],
@@ -198,14 +198,14 @@ export const cap09: Capitulo = {
       antes: [
         ['narrador', 'A Academia do Sertão pede ajuda pelo pombo de emergência. Eles acham que estão na mira. A turma tem a lista de IOCs, as regras YARA e os TTPs. Falta decidir como mandar.'],
         ['tati', 'A lista tem detalhes da invasão aqui no castelo, inclusive coisas que a gente ainda não contou nem para a Secretaria.'],
-        ['bia', 'Mas a Academia precisa disso hoje, e eles têm que repassar para o time de TI deles e para a empresa que cuida dos servidores.'],
+        ['bia', 'Mas a Academia precisa disso hoje, e eles têm que repassar para o time de TI e para a direção deles.'],
       ],
       exercicio: {
         tipo: 'multipla',
-        pergunta: 'Que rótulo TLP usar para mandar os IOCs e regras à Academia, permitindo que eles repassem à própria equipe e ao prestador, mas não ao mundo?',
+        pergunta: 'Que rótulo TLP usar para mandar os IOCs e regras à Academia, permitindo que eles repassem dentro da própria organização, mas não ao mundo?',
         opcoes: ['TLP:CLEAR', 'TLP:RED', 'TLP:AMBER', 'Sem rótulo, é mais rápido'],
         correta: 2,
-        explicacao: 'TLP:AMBER permite compartilhar dentro da organização e com clientes ou prestadores que precisam agir para se proteger. RED travaria a Academia; CLEAR exporia detalhes da invasão do castelo.',
+        explicacao: 'TLP:AMBER permite compartilhar dentro da organização que recebeu (e com os clientes dela), com quem precisa saber para se proteger. RED travaria a Academia; CLEAR exporia detalhes da invasão do castelo.',
       },
       depois: [
         ['narrador', 'Três horas depois, chega a resposta: a regra YARA da turma bateu num anexo recebido pela secretaria da Academia, ainda não aberto. O wiper nunca rodou em Juazeiro.'],
@@ -217,7 +217,7 @@ export const cap09: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'Bestiário: a Traça Apagadora foi catalogada a partir das amostras do Pampa Digital, que mandou também duas figurinhas de agradecimento.',
+      texto: 'Bestiário: a Traça Apagadora foi catalogada a partir das amostras do Pampa Digital, que mandou também uma figurinha de agradecimento.',
       efeito: { criatura: 'a6_traca_apagadora', figurinha: 'a6_fig_iloveyou', pontosCasa: 30, xp: 40 },
     },
     {

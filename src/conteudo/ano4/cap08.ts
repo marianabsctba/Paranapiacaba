@@ -247,7 +247,7 @@ export const cap08: Capitulo = {
           texto: 'Escrever com a Tati a linha do tempo dos fatos até agora',
           efeito: { atributos: { forense: 1 }, amizade: { tati: 2 }, xp: 15 },
           resposta: [
-            ['tati', 'Planilha 20: "linha do tempo", em UTC. 06:13Z, 300 pontos. 06:14Z, tentativa de apagar log. 04:02 de Brasília, upload falso. Tudo com fonte.'],
+            ['tati', 'Planilha 20: "linha do tempo", em UTC. 06:13Z, 300 pontos. 06:14Z, tentativa de apagar log. 07:02Z, upload falso. Tudo com fonte.'],
             ['voce', 'Fato de um lado, suspeita do outro.'],
             ['tati', 'Coluna A: fato. Coluna B: fonte. Coluna C: "o que a gente acha". A coluna C está trancada com senha.'],
           ],

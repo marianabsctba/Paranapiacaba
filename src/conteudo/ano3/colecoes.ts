@@ -98,7 +98,7 @@ export const lugares3: Lugar[] = [
     cena: 'sala',
     segredos: [
       { feitico: 'a3_f_registrum', texto: 'Uma gaveta da mesa de luz tem a etiqueta /var/log/telegrafo. Dentro, fitas de 1889 com o primeiro "log" do castelo: "Neblina. Trem atrasado. Culpa da neblina."', efeito: { xp: 20, atributos: { forense: 1 } } },
-      { feitico: 'a3_f_tempus', texto: 'O relógio da parede estava três horas adiantado havia trinta anos. Você acerta para UTC e ele, pela primeira vez, faz tique-taque satisfeito.', efeito: { xp: 15, pontosCasa: 5 } },
+      { feitico: 'a3_f_tempus', texto: 'O relógio da parede estava vinte minutos atrasado havia trinta anos. Você acerta para UTC e ele, pela primeira vez, faz tique-taque satisfeito.', efeito: { xp: 15, pontosCasa: 5 } },
       { feitico: 'a3_f_digestum', texto: 'Uma caixa lacrada traz um hash escrito à mão. Você calcula e confere: bate. É a fita de formatura da Profa. Dulce, intacta desde 1994.', efeito: { xp: 20, amizade: { a3_dulce: 2 } } },
     ],
   },

@@ -144,7 +144,7 @@ export const cap02: Capitulo = {
       explicacao: [
         '**HTTPS** é o mesmo HTTP de sempre, só que viajando dentro de um túnel protegido pelo **TLS** (Transport Layer Security). O TLS entrega três coisas. **Confidencialidade**: quem está no meio do caminho, como o padeiro do Wi-Fi, não lê o conteúdo. **Integridade**: se alguém mexer no conteúdo no caminho, a conexão percebe. **Autenticação do servidor**: você tem prova de que está falando com o dono daquele nome, e não com um impostor.',
         'Essa prova é o **certificado digital**. Ele diz "a chave pública X pertence ao domínio loja.torneio.lab", tem data de início e fim de validade e é assinado por uma **autoridade certificadora** (AC). O navegador já vem com uma lista de ACs raiz em que confia; a AC raiz assina uma intermediária, que assina o certificado do site. Isso é a **cadeia de confiança**. Certificado vencido, de outro nome ou assinado por alguém fora da lista gera aquele aviso vermelho que ninguém deveria ignorar.',
-        'O começo da conexão é o **aperto de mão** (handshake). No TLS 1.3, de forma simplificada: o navegador manda um **ClientHello** com as versões e cifras que aceita e um pedaço da troca de chaves; o servidor responde com um **ServerHello**, o certificado e a parte dele da troca; os dois calculam a mesma **chave de sessão** sem nunca mandá-la pela rede (troca Diffie-Hellman efêmera, a cripto do ano passado no trabalho); a partir daí, tudo é cifrado com criptografia simétrica, que é rápida.',
+        'O começo da conexão é o **aperto de mão** (handshake). No TLS 1.3, de forma simplificada: o navegador manda um **ClientHello** com as versões e cifras que aceita e um pedaço da troca de chaves; o servidor responde com um **ServerHello** e a parte dele da troca; os dois calculam a mesma **chave de sessão** sem nunca mandá-la pela rede (troca de chaves Diffie-Hellman efêmera); o certificado do servidor já chega cifrado, e o navegador confere a cadeia e o nome; a partir daí, tudo segue com criptografia simétrica, que é rápida.',
         'Versões importam. **SSL 2.0, SSL 3.0, TLS 1.0 e TLS 1.1 estão aposentados** e devem estar desligados. O certo hoje é **TLS 1.2 e TLS 1.3**. Outra proteção é o cabeçalho `Strict-Transport-Security` (HSTS), que manda o navegador usar só HTTPS com aquele site por um tempo, mesmo que alguém tente rebaixar a conexão para HTTP.',
         'Agora o que o cadeado **não** garante: que o dono do site é honesto. Um golpista registra `torneio-bandeiras-premio.example`, pega um certificado gratuito em minutos e tem cadeado verde. O cadeado prova que você fala com o dono daquele nome, só isso. Quem decide se o nome é o certo é você, lendo a URL como na aula da Profa. Iara.',
         'Para inspecionar na mão: `openssl s_client -connect loja.torneio.lab:443 -servername loja.torneio.lab`. O `-servername` manda o nome do site no aperto de mão (o SNI), que é como um servidor com vários sites sabe qual certificado mostrar. A saída mostra a cadeia, o assunto (subject), o emissor (issuer), a versão do TLS e a cifra negociada.',
@@ -164,13 +164,13 @@ export const cap02: Capitulo = {
           tipo: 'ordenar',
           enunciado: 'Ordene, de forma simplificada, o começo de uma conexão TLS 1.3.',
           itens: [
-            'O navegador manda o ClientHello com versões e cifras aceitas',
-            'O servidor responde com o ServerHello e o certificado',
-            'O navegador confere a cadeia do certificado e o nome do site',
-            'Os dois calculam a mesma chave de sessão pela troca de chaves',
+            'O navegador manda o ClientHello com versões, cifras aceitas e a parte dele da troca de chaves',
+            'O servidor responde com o ServerHello e a parte dele da troca de chaves',
+            'Os dois calculam a mesma chave de sessão',
+            'O servidor manda o certificado, já cifrado, e o navegador confere a cadeia e o nome do site',
             'O HTTP passa a viajar cifrado',
           ],
-          explicacao: 'Olá, olá, me mostra o documento, combinamos um segredo, agora conversamos baixinho. O aperto de mão inteiro leva milissegundos.',
+          explicacao: 'Olá, olá, combinamos um segredo, me mostra o documento, agora conversamos baixinho. No TLS 1.3 o certificado já viaja cifrado. O aperto de mão inteiro leva milissegundos.',
         },
         {
           tipo: 'terminal',

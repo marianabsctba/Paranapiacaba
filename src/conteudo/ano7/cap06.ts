@@ -237,7 +237,7 @@ export const cap06: Capitulo = {
         ['ruth', 'E o endereço de onde a Marlene ligou em dezembro fica na Baixada Santista. Dá para cruzar os dois.'],
         ['tati', 'Cruzei. Existe um frigorífico desativado perto de Cubatão, o Serra Fria, com consumo de energia de data center desde 2016. A conta de luz dele é paga por uma empresa de fachada com o nome "Manutenção Preventiva Ltda."'],
         ['bia', 'A Marlene botou o próprio bordão no CNPJ. Isso é falta de OPSEC ou é arrogância?'],
-        ['heitor', 'Nessa gente, Bia, sempre é as duas coisas.'],
+        ['heitor', 'Nessa gente, Bia, sempre são as duas coisas.'],
         ['a7_sonia', '(por vídeo) Com isso eu peço o mandado hoje. Mas escutem bem: quem entra lá é a polícia. Vocês ficam no castelo. Ninguém aqui é herói de filme.'],
       ],
       atributo: 'forense',
@@ -275,7 +275,7 @@ export const cap06: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'A Delegada Sônia mandou para o castelo uma figurinha com um bilhete: "para lembrar que uma conta antiga sem MFA já parou um país; desativem as de vocês".',
+      texto: 'A Delegada Sônia mandou para o castelo uma figurinha com um bilhete: "para lembrar que uma conta antiga de VPN sem MFA já parou o oleoduto que abastecia meio país; desativem as de vocês".',
       efeito: { figurinha: 'a7_fig_colonial', xp: 30, pontosCasa: 20, amizade: { a7_sonia: 2 } },
     },
   ],

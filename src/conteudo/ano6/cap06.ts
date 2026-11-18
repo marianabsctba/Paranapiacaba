@@ -36,7 +36,7 @@ export const cap06: Capitulo = {
         'Ferramentas no Windows: **Process Monitor** (registra acesso a arquivos, registro e processos em tempo real), **Process Explorer** (árvore de processos), **Regshot** (fotografa o registro antes e depois e mostra a diferença) e **Wireshark** (captura a rede). Existem sandboxes automatizadas, como CAPE, ANY.RUN e Joe Sandbox, que executam e geram relatório. No Linux, o clássico é o **strace**, que mostra cada **chamada de sistema** (syscall) feita pelo programa.',
         'Exemplo: `strace -f -o rastro.txt ./amostra` executa a amostra, segue os processos filhos (`-f`) e grava tudo em `rastro.txt` (`-o`). Você verá linhas como `openat(AT_FDCWD, "/home/aluno/.ssh/id_rsa", O_RDONLY) = 3` (abriu a chave SSH do usuário: comportamento de ladrão) ou `execve("/bin/sh", ["sh", "-c", "crontab -l"], ...)` (chamou o shell para mexer em tarefas agendadas: persistência). Ferramentas como `ltrace` fazem o mesmo para chamadas de biblioteca.',
         'O que anotar: **árvore de processos** (quem criou quem), **arquivos criados** (com hash de cada um), **chaves de registro** novas (principalmente as de inicialização automática), **mutex** criado (muitas famílias criam um para não infectar a mesma máquina duas vezes), **conexões** e **consultas DNS** tentadas. Depois, **volta-se ao snapshot**. A máquina de análise nunca é "limpa" depois de rodar amostra, por mais inocente que pareça.',
-        'Limites: a amostra pode perceber que está numa VM e se comportar bem (próxima aula da Profa. Ruth e, depois, antianálise), pode esperar horas antes de agir, ou pode precisar de um comando do C2 que nunca chega. Por isso estática e dinâmica se completam: uma explica a outra.',
+        'Limites: a amostra pode perceber que está numa VM e se comportar bem (assunto da aula de antianálise, no mês que vem), pode esperar horas antes de agir, ou pode precisar de um comando do C2 que nunca chega. Por isso estática e dinâmica se completam: uma explica a outra.',
       ],
       exercicios: [
         {
@@ -222,7 +222,7 @@ export const cap06: Capitulo = {
       tipo: 'cena',
       lugar: 'a6_lab_reverso',
       falas: [
-        ['narrador', 'Terça-feira de Carnaval, 23h. Você volta ao Laboratório de Engenharia Reversa para buscar o casaco. A luz da bancada 3 está acesa. Alguém copia a amostra 07 para um pendrive com lacre de evidência.'],
+        ['narrador', 'Terça-feira de Carnaval, 23h. Você volta ao Laboratório de Engenharia Reversa para buscar o casaco. A luz da bancada 3 está acesa. Alguém mexe na amostra 07, com um pendrive de lacre de evidência espetado na máquina.'],
         ['voce', 'Prof. Heitor?'],
         ['heitor', '(sem se virar) Antes que você chame a Nanda: o pendrive é meu, o lacre é de 2015 e o hash que eu estou comparando está escrito à mão aqui. Pode conferir.'],
         ['voce', 'O senhor está tirando a amostra do laboratório.'],
@@ -282,7 +282,7 @@ export const cap06: Capitulo = {
         },
       ],
       vitoria: [
-        ['heitor', '(guardando o pendrive) Cinco de cinco. Igualzinh{o/a/e} a ela. Odiosamente igual. Senta, {nome}. Eu te devo nove anos de explicação.'],
+        ['heitor', '(guardando o pendrive) Cinco de cinco. Igualzinh{o/a/e} a ela. Odiosamente igual. Senta, {nome}. Eu te devo dez anos de explicação.'],
       ],
       derrota: [
         ['heitor', 'Errou algumas. Não importa. Eu ia contar de qualquer jeito. Só queria ver se você estava pront{o/a/e} para ouvir. Está. Senta.'],

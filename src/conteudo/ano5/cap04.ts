@@ -178,7 +178,7 @@ export const cap04: Capitulo = {
           tipo: 'multipla',
           pergunta: 'O EDR confirmou atividade maliciosa no notebook da Zuleica. Qual é a melhor primeira ação?',
           opcoes: [
-            'Isolar a máquina pela console do EDR e preservar evidência',
+            'Isolar a máquina pelo console do EDR e preservar evidência',
             'Arrancar da tomada',
             'Formatar na hora',
             'Mandar a Zuleica desligar e ir almoçar',

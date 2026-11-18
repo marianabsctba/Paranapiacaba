@@ -64,7 +64,7 @@ export const cap03: Capitulo = {
       ],
       explicacao: [
         'Uma **regra de detecção** descreve um comportamento suspeito em termos de log: "se aparecer um processo `powershell.exe` com o argumento `-enc`, alerte". O problema é que cada SIEM tem sua própria linguagem (SPL, KQL, a do Elastic, a do QRadar). Uma regra escrita para um não roda no outro.',
-        '**Sigma** é um formato aberto, em YAML, para escrever regras de forma genérica, criado em 2017 por Florian Roth e Thomas Patzke. Você escreve uma vez e converte para o SIEM que usar, com a ferramenta `sigma` (pySigma). Existe um repositório público com milhares de regras prontas, mantido pela comunidade.',
+        '**Sigma** é um formato aberto, em YAML, para escrever regras de forma genérica, criado em 2017 por Florian Roth e Thomas Patzke. Você escreve uma vez e converte para o SIEM que usar, com a ferramenta de linha de comando `sigma` (o sigma-cli, baseado na biblioteca pySigma). Existe um repositório público com milhares de regras prontas, mantido pela comunidade.',
         'A estrutura básica de uma regra Sigma: `title` (nome), `id` (um UUID), `status`, `description`, `logsource` (de que tipo de log a regra fala), `detection` (o que procurar), `falsepositives` (o que já se sabe que dispara à toa), `level` (informational, low, medium, high, critical) e `tags`, onde entram as técnicas do ATT&CK, como `attack.t1059.001`.',
         'O coração é o bloco `detection`. Você cria uma **seleção** com campos e valores, e uma `condition` que diz como combinar. Exemplo: `Image|endswith: \'\\powershell.exe\'` e `CommandLine|contains: \' -enc\'`, e `condition: selection`. Os modificadores depois da barra vertical (`|contains`, `|endswith`, `|startswith`) dizem como comparar.',
         'Regra de ouro do YAML Sigma: **campos diferentes dentro da mesma seleção são E** (todos precisam bater), e **uma lista de valores no mesmo campo é OU** (basta um). Para excluir ruído conhecido, cria-se um filtro e a condição vira `selection and not filter`.',
@@ -321,13 +321,13 @@ export const cap03: Capitulo = {
       ],
       vitoria: [
         ['enzo', 'Tá. Você ganhou. Eu... não vou contar nada.'],
-        ['enzo', '(mais baixo) E aquela pergunta do zero alertas. O painel do meu pai mostra zero há dois meses. Isso é estranho, né?'],
+        ['enzo', '(mais baixo) E aquela pergunta do zero alertas. O painel do meu pai mostra zero desde que ele chegou aqui. Isso é estranho, né?'],
         ['voce', 'É muito estranho, Enzo.'],
         ['narrador', 'Ele vai embora sem a cara de quem perdeu. Com a cara de quem começou a pensar.'],
       ],
       derrota: [
         ['enzo', 'Ganhei. Mas... olha, eu não vou contar. Ninguém merece meu pai sabendo de alguma coisa.'],
-        ['enzo', 'Só uma pergunta. Zero alertas por dois meses. Isso é normal?'],
+        ['enzo', 'Só uma pergunta. Zero alertas desde outubro. Isso é normal?'],
         ['voce', 'Não é, Enzo.'],
         ['narrador', 'Ele perdeu a vontade de comemorar. Talvez tenha ganhado outra coisa.'],
       ],

@@ -230,7 +230,7 @@ export const feiticosAno5: Feitico[] = [
     id: 'a5_vulnerabilis',
     nome: 'Vulnerabilis Scrutinium',
     comando: 'nmap -sV --script vulners 10.5.0.20',
-    descricao: 'Descobre versões dos serviços e cruza com CVEs conhecidas. Só em rede sua ou com autorização por escrito, que nmap sem contrato é visita sem convite.',
+    descricao: 'Descobre versões dos serviços, e o script vulners pergunta a uma base externa (vulners.com) quais CVEs e notas CVSS elas têm. Só em rede sua ou com autorização por escrito, que nmap sem contrato é visita sem convite.',
   },
   {
     id: 'a5_oraculum',
@@ -314,7 +314,7 @@ export const figurinhasAno5: Figurinha[] = [
     id: 'a5_fig_cert_br',
     nome: 'CERT.br, o plantão do Brasil',
     ano: '1997',
-    texto: 'O grupo de resposta a incidentes da internet brasileira surgiu em 1997 como NBSO, ligado ao Comitê Gestor da Internet, e depois virou CERT.br, mantido pelo NIC.br. Recebe notificações de incidentes de redes brasileiras e publica cartilhas de segurança gratuitas.',
+    texto: 'O grupo de resposta a incidentes da internet brasileira foi criado em junho de 1997 pelo Comitê Gestor da Internet no Brasil (CGI.br), com o nome NBSO (NIC BR Security Office). Em 2005 passou a se chamar CERT.br. É mantido pelo NIC.br, braço executivo do CGI.br, e financiado pelo registro de domínios .br. Recebe notificações de incidentes de redes brasileiras e publica cartilhas de segurança gratuitas.',
   },
   {
     id: 'a5_fig_snort',

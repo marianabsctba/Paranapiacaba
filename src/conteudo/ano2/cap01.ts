@@ -10,7 +10,7 @@ export const cap01: Capitulo = {
       lugar: 'casa_vo',
       falas: [
         ['narrador', 'Férias em Nova Iguaçu. O ventilador gira, o vizinho testa a caixa de som desde as sete da manhã e o roteador da Vó continua de cabeça para baixo em cima da geladeira.'],
-        ['vo_cida', '{nome}, vem cá. O moço da operadora falou para desligar e ligar de novo. Eu desliguei em março. Liguei hoje. Não voltou.'],
+        ['vo_cida', '{nome}, vem cá. O moço da operadora falou para desligar e ligar de novo. Eu desliguei em abril. Liguei hoje. Não voltou.'],
         ['voce', 'Vó, a senhora deixou o roteador desligado quatro meses?'],
         ['vo_cida', 'Deixei. Li no grupo da igreja que o 5G entra pelo roteador de madrugada e embaralha o pensamento. Imprimi a mensagem, está ali na gaveta, com grampo.'],
         ['vo_cida', 'E esse cachecol da {casa}, vai levar de novo? Lavei com amaciante. Agora ele tem cheiro de quem tem família.'],

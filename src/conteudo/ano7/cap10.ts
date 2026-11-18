@@ -9,9 +9,9 @@ export const cap10: Capitulo = {
       tipo: 'cena',
       lugar: 'secretaria',
       falas: [
-        ['narrador', 'Brasília, 13 de maio, 9h. O Nulo foi preso há sete horas. A Secretaria prepara a nota oficial. O Secretário lê o rascunho em voz alta, orgulhoso.'],
+        ['narrador', 'Brasília, 13 de maio, 9h. O Nulo foi preso há dez horas. A Secretaria prepara a nota oficial. O Secretário lê o rascunho em voz alta, orgulhoso.'],
         ['deputado', '"A Secretaria informa que ocorreu um evento cibernético pontual, sem qualquer impacto, prontamente resolvido pela atuação proativa desta pasta."'],
-        ['a7_sonia', 'Secretário, quatro instituições ficaram cinco meses sem logon, e dados de alunos foram acessados.'],
+        ['a7_sonia', 'Secretário, três instituições ficaram quase cinco meses sem logon, e dados de alunos foram acessados.'],
         ['deputado', '"Sem impacto relevante", então. Com "relevante" fica mais técnico.'],
         ['iolanda', '(por vídeo) Válter, solta a caneta. Eu vou dar uma aula. Você vai assistir. Do começo ao fim. Sem celular.'],
         ['deputado', 'Diretora, eu sou o Secretário.'],
@@ -45,7 +45,7 @@ export const cap10: Capitulo = {
           enunciado: 'Rascunho da nota da Secretaria. Toque nas frases que a Diretora cortaria.',
           linhas: [
             '"Ocorreu um evento cibernético pontual, sem qualquer impacto."',
-            '"Entre dezembro e maio, um invasor teve acesso aos sistemas de identidade de quatro instituições."',
+            '"De julho do ano passado até maio, um invasor teve acesso aos sistemas de identidade de quatro instituições."',
             '"O incidente foi causado por um estagiário."',
             '"Recomendamos que todos troquem suas senhas pelo link enviado por e-mail."',
             '"A próxima atualização será publicada na sexta-feira, às 10h, neste mesmo canal."',
@@ -190,7 +190,7 @@ export const cap10: Capitulo = {
           pergunta: 'Qual destas mensagens aos titulares está mais de acordo com a LGPD?',
           opcoes: [
             '"Ocorreu um evento sem impacto. Nada a declarar."',
-            '"Entre dezembro e maio, um invasor acessou o sistema de contas da escola. Sua matrícula e seu e-mail podem ter sido vistos. Já trocamos todas as senhas; desconfie de mensagens pedindo dados e fale com o encarregado pelo canal oficial."',
+            '"De julho do ano passado até maio, um invasor acessou o sistema de contas da escola. Sua matrícula e seu e-mail podem ter sido vistos. Já trocamos todas as senhas; desconfie de mensagens pedindo dados e fale com o encarregado pelo canal oficial."',
             '"Leia o anexo de 80 páginas em linguagem técnica."',
             '"Clique aqui para verificar se você foi afetado e digite sua senha."',
           ],
@@ -218,7 +218,7 @@ export const cap10: Capitulo = {
       depois: [
         ['narrador', 'Na segunda-feira, 17 de maio, a comunicação vai para a ANPD pelo canal oficial, revisada pelo encarregado. As famílias recebem uma carta em linguagem simples. A Vó Cida imprime a dela e acha clara.'],
         ['vo_cida', 'Pela primeira vez na vida eu entendi uma carta do governo sem ligar para ninguém. Vou emoldurar.'],
-        ['deputado', '(nota oficial, lida em voz alta, sem adjetivos) "Entre dezembro e maio, um invasor acessou sistemas de quatro instituições. Comunicamos a ANPD e os titulares. Próxima atualização: sexta, às 10h." (pausa) Foi estranho. Foi bom. Foi estranho.'],
+        ['deputado', '(nota oficial, lida em voz alta, sem adjetivos) "De julho do ano passado até maio, um invasor acessou sistemas de quatro instituições. Comunicamos a ANPD e os titulares. Próxima atualização: sexta, às 10h." (pausa) Foi estranho. Foi bom. Foi estranho.'],
         ['a7_sonia', 'Secretário, isso foi a melhor nota oficial da história da Secretaria.'],
         ['deputado', 'Vou fazer uma nota oficial sobre isso.'],
       ],
@@ -226,7 +226,7 @@ export const cap10: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'A ANPD acusou o recebimento da comunicação, dentro do prazo. A Delegada Sônia deixou no seu malão duas figurinhas: "a lei e a autoridade que fizeram o Secretário escrever sem adjetivo".',
+      texto: 'A ANPD acusou o recebimento da comunicação, dentro do prazo. A Delegada Sônia deixou no seu malão uma figurinha: "a lei que fez o Secretário escrever sem adjetivo".',
       efeito: { figurinha: 'a7_fig_lgpd', xp: 60, pontosCasa: 30, atributos: { social: 2 }, amizade: { a7_sonia: 2 } },
     },
     {
@@ -297,7 +297,7 @@ export const cap10: Capitulo = {
         ['narrador', 'Noite da formatura. Na Cripta de Criptografia, entre os cofres antigos, o notebook da sua mãe está aberto numa bancada. Só falta uma camada da pasta NAO_ABRA: a sétima.'],
         ['heitor', 'A Camada 7 é cifrada com uma chave dividida em duas partes. Nenhuma das duas, sozinha, revela nada. Juntas, reconstroem a chave. Foi a última coisa que vocês fizeram em 2015, antes do Apagão.'],
         ['a7_lena', 'Eu fiquei com uma metade. O Rui ficou com a outra. A ideia era simples: se só um de nós voltasse, a pasta continuaria fechada. Ela só abriria com a família inteira.'],
-        ['a7_rui', '(tirando um papel dobrado de dentro do relógio de pulso) Onze anos aqui dentro. O Nulo revistou tudo, menos o relógio parado. Ninguém revista relógio parado.'],
+        ['a7_rui', '(abrindo a tampa de trás do relógio de pulso que você guardou e tirando um papel dobrado) Onze anos aqui dentro. O Nulo revistou tudo, menos o relógio parado. Ninguém revista relógio parado.'],
         ['vo_cida', 'Eu sabia que esse relógio era importante. Eu falei. Ninguém me ouve.'],
         ['narrador', 'Sua mãe digita a metade dela. Seu pai digita a dele. A tela pede uma confirmação final, com um campo só: "quem abre?".'],
         ['a7_lena', '(empurrando o notebook para você) Você.'],

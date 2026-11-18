@@ -14,7 +14,7 @@ export const cap05: Capitulo = {
         ['enzo', 'Segundo. A gente estaria em primeiro se tivesse ido mais fundo na busca.'],
         ['a4_lia', 'A gente estaria desclassificado se tivesse ido mais fundo na busca, Enzo.'],
         ['enzo', 'O Time Mandacaru foi mais fundo.'],
-        ['a4_caio', 'Não foi não. O Davi fez a gente entregar a correção de cada achado com código pronto. Vale mais. Está no regulamento, página 4.'],
+        ['a4_caio', 'Não foi não. O Davi fez o time dele entregar a correção de cada achado com código pronto. Vale mais. Está no regulamento, página 4.'],
         ['enzo', 'Ninguém lê a página 4.'],
         ['voce', 'Por isso ela vale ponto.'],
         ['enzo', '(fechando o casaco) Tá. Vocês gostam de regra. Eu gosto de resultado. Um dia vocês vão ver que dá para ter os dois sem ser tão... chato.'],

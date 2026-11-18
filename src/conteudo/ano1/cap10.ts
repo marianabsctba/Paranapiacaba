@@ -139,7 +139,7 @@ export const cap10: Capitulo = {
       titulo: 'Trancando o Cofre',
       atributo: 'defesa',
       antes: [
-        ['nanda', 'Ordem importa. Se cadastrarmos a chave antes de trocar a senha, um atacante com a senha velha pode tentar se adiantar. Se esquecermos a reserva, a Diretora pode ficar trancada para fora.'],
+        ['nanda', 'Ordem importa. Primeiro, máquina limpa: se a Sanguessuga estiver no teclado, a senha nova vaza igual à velha. E se esquecermos a chave reserva, a Diretora pode ficar trancada para fora.'],
       ],
       exercicio: {
         tipo: 'ordenar',

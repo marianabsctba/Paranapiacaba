@@ -178,7 +178,7 @@ export const cap08: Capitulo = {
           'sw-tunel-1890  15:41:07  porta 7  mac=02:4f:aa:10:00:07',
           'wifi-vestiario 15:41:10  mac=a4:83:e7:5b:21:9c  hostname=ENZO-NOTEBOOK  ip=10.0.10.61',
           'radio-castelo  15:42:00  "Enzo Valentim pega a Flag Dourada!"',
-          'sw-tunel-1890  15:42:30  porta 7  início de tráfego SYN para 10.0.1.90:443',
+          'sw-tunel-1890  15:41:20  porta 7  início de tráfego SYN para 10.0.1.90:443',
         ],
         corretas: [1, 2, 3],
         explicacao: 'O MAC dos túneis começa com 02, administrado localmente: inventado ou trocado. Três segundos depois, o notebook verdadeiro do Enzo, com MAC de fábrica, estava no Wi-Fi do vestiário, do outro lado do castelo. E o próprio Enzo estava no ar, ao vivo. O hostname igual é só um texto copiado, e o tráfego SYN mostra o ataque, não quem estava lá.',

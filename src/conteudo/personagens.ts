@@ -11,7 +11,7 @@ export const PERSONAGENS_BASE: Personagem[] = [
   // amigos
   { id: 'tati', nome: 'Tati Okamoto', papel: 'amiga da Liberdade (SP), faz planilha até do próprio aniversário', cor: '#9b8cff', pele: '#f1d6c0', cabelo: '#111', estilo: 'longo', oculos: true, roupa: '#4b3f8f' },
   { id: 'caua', nome: 'Cauã Ferreira', papel: 'amigo de Belém, conserta tudo com fita isolante e fé', cor: '#ff7b54', pele: '#8d5524', cabelo: '#111', estilo: 'cacheado', roupa: '#7a3b2e' },
-  { id: 'bia', nome: 'Bia Kruger', papel: 'gaúcha de Blumenau, goleira de Capturebol, sincera demais', cor: '#ffb347', pele: '#f6e0d0', cabelo: '#e3c16f', estilo: 'coque', roupa: '#a0522d' },
+  { id: 'bia', nome: 'Bia Kruger', papel: 'catarinense de Blumenau, goleira de Capturebol, sincera demais', cor: '#ffb347', pele: '#f6e0d0', cabelo: '#e3c16f', estilo: 'coque', roupa: '#a0522d' },
   { id: 'jonas', nome: 'Jonas Bezerra', papel: 'colega de Caruaru, poeta de cordel e de commit message', cor: '#8ecae6', pele: '#c68642', cabelo: '#2b1a10', estilo: 'curto', roupa: '#33658a' },
 
   // rival

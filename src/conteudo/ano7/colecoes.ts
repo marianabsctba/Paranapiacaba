@@ -26,7 +26,7 @@ export const personagensAno7: Personagem[] = [
   {
     id: 'a7_sonia',
     nome: 'Delegada Sônia Albuquerque',
-    papel: 'delegada de crimes cibernéticos da Secretaria, perita de formação, a única pessoa de Brasília que lê o anexo',
+    papel: 'delegada da Delegacia de Crimes Cibernéticos, perita de formação, a única pessoa de Brasília que lê o anexo',
     cor: '#f4a261',
     pele: '#6f4e37',
     cabelo: '#1b1b1b',

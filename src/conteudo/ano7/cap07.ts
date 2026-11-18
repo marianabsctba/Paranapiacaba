@@ -215,7 +215,7 @@ export const cap07: Capitulo = {
           tipo: 'achar',
           enunciado: 'Rascunho da linha do tempo para o laudo. Toque nas linhas que a Zuleica devolveria para corrigir.',
           linhas: [
-            '2026-10-04T23:09:51Z | log de segurança DC-TORRE-01, evento 5137 | GPO criada pela svc_migracao_sbd | confiança alta',
+            '2026-10-05T02:09:51Z | log de segurança DC-TORRE-01, evento 5137 | GPO criada pela svc_migracao_sbd | confiança alta',
             'Algum dia de novembro | ouvi dizer | o Secretário instalou um programa | confiança alta',
             '2026-12-18T23:41:00Z | SIEM, evento 4662 | replicação pedida por EST-ALUNO-214 | confiança alta',
             '18/12 às 9 e pouco da noite | sem fonte | o Nulo apertou o botão vermelho | confiança absoluta',
@@ -268,7 +268,7 @@ export const cap07: Capitulo = {
         explicacao: 'Uma tarefa criada pela conta da migração, a retenção encurtada para apagar cópias antigas e um logon privilegiado vindo de estação de aluno: o Nulo mexeu no backup online. O disco offline de julho, guardado no cofre, ficou fora do alcance dele.',
       },
       depois: [
-        ['tati', 'Ele encurtou a retenção para sete dias. Os backups online só têm cópias de dezembro em diante, todas depois da entrada dele.'],
+        ['tati', 'Ele encurtou a retenção para sete dias. Os backups online só guardam a última semana, e tudo isso é depois da entrada dele.'],
         ['iolanda', 'Como dizia minha avó: o que está na rede, a rede leva. O que está no cofre, o cofre guarda.'],
         ['seu_ze', 'O disco de 18 de julho está no cofre de baixo. Desligado. Com duas chaves. Uma comigo e uma com a senhora, Diretora.'],
         ['a7_rui', 'Julho. Antes da migração criar a conta. (sorrindo pela primeira vez sem chorar) Vocês têm um backup limpo. Ele não sabia do cofre.'],

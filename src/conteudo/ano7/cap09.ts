@@ -145,12 +145,12 @@ export const cap09: Capitulo = {
         },
         {
           tipo: 'multipla',
-          pergunta: 'Por que não restaurar o backup online de janeiro, que é mais recente?',
+          pergunta: 'Por que não restaurar o backup online de maio, que é mais recente?',
           opcoes: [
-            'Porque backup de janeiro é ilegal',
+            'Porque backup de maio é ilegal',
             'Porque é posterior à entrada do invasor e pode trazer contas e persistências dele',
-            'Porque o wbadmin não lê janeiro',
-            'Porque o Seu Zé não gosta de janeiro',
+            'Porque o wbadmin não lê maio',
+            'Porque o Seu Zé não gosta de maio',
           ],
           correta: 1,
           explicacao: 'O mais recente nem sempre é o mais confiável. Restaurar sujeira é exatamente o plano B do Nulo.',
@@ -300,12 +300,12 @@ export const cap09: Capitulo = {
           pergunta: 'Nulo: "Eu ainda tenho a chave anterior da krbtgt até as 2h." O que impede o plano dele?',
           opcoes: [
             'Nada, ele ganhou',
-            'Os DCs que aceitavam tíquetes dele foram isolados e substituídos pelo DC restaurado, e qualquer tíquete com a chave velha que aparecer agora é alarme',
+            'Sem conta, persistência nem caminho até a rede, ele não tem onde usar a chave velha, e qualquer tíquete feito com ela que aparecer até as 2h é alarme',
             'Desligar a internet do Brasil',
             'Pedir para ele esperar',
           ],
           correta: 1,
-          explicacao: 'A chave anterior só vale nos DCs que ainda a conhecem e alcançam a rede. Com o domínio restaurado e vigiado, cada tentativa vira evidência.',
+          explicacao: 'A chave anterior ainda vale até a segunda troca, mas ingresso falso só serve para quem chega à porta. Com os acessos dele cortados e o domínio vigiado, cada tentativa vira evidência.',
         },
         {
           tipo: 'lacuna',
@@ -330,7 +330,7 @@ export const cap09: Capitulo = {
           pergunta: 'Nulo, um pouco menos calmo: "Restaurem o backup que quiserem. Eu plantei em todos." Sua resposta?',
           opcoes: [
             'O disco offline de julho é anterior à sua entrada, e a cópia restaurada foi caçada antes de ligar na rede',
-            'Então vamos restaurar o de janeiro',
+            'Então vamos restaurar o de maio',
             'Vamos desistir',
             'Vamos formatar o castelo',
           ],
@@ -416,7 +416,7 @@ export const cap09: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'O Nulo foi preso por evidência, sem violência. Seu pai deu corda no relógio parado, ali mesmo, às 2h41: "o julgamento vai demorar, mas o tempo já pode andar". A Delegada Sônia mandou uma figurinha "para quem guardou o registro certo pelo tempo certo".',
+      texto: 'O Nulo foi preso por evidência, sem violência. Você e seu pai deram corda juntos no relógio parado, ali mesmo, às 2h41: "o julgamento vai demorar, mas o tempo já pode andar". A Delegada Sônia mandou uma figurinha "para quem guardou o registro certo pelo tempo certo".',
       efeito: { figurinha: 'a7_fig_marco_civil', xp: 150, pontosCasa: 80, atributos: { forense: 2, defesa: 2 }, amizade: { a7_rui: 3, a7_lena: 3, a7_sonia: 3 }, flag: 'a7_nulo_preso' },
     },
   ],

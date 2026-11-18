@@ -10,7 +10,7 @@ export const cap08: Capitulo = {
       lugar: 'a5_rotunda',
       falas: [
         ['narrador', 'O Seu Zé leva a turma até a Rotunda das Locomotivas, um galpão redondo com uma plataforma giratória no meio.'],
-        ['seu_ze', 'Depois do incidente, a Diretora mandou endurecer tudo. Eu tenho doze servidores aqui que ninguém mexe desde 2019. Um deles eu acho que é uma torradeira.'],
+        ['seu_ze', 'Depois do incidente, a Diretora mandou endurecer tudo. Eu tenho doze servidores aqui em que ninguém mexe desde 2019. Um deles eu acho que é uma torradeira.'],
         ['caua', 'Seu Zé, se for torradeira, eu fico com ela.'],
         ['otavio', 'Ninguém fica com nada antes da auditoria. Sentem nos trilhos. A aula de hoje é sobre tirar coisa, não pôr.'],
       ],
@@ -261,7 +261,7 @@ export const cap08: Capitulo = {
         explicacao: 'passwd, sudo, su, mount e chsh são SUID por padrão na maioria das distribuições e têm motivo para isso. Um programa caseiro em /opt rodando como root é exatamente o tipo de coisa que dá escalada de privilégio. Remova com `chmod u-s`.',
       },
       depois: [
-        ['seu_ze', 'O apito era um script que eu fiz em 2015 para tocar o sino do almoço pelo servidor. Botei SUID porque não queria digitar senha.'],
+        ['seu_ze', 'O apito era um programinha que eu compilei em 2015 para tocar o sino do almoço pelo servidor. Botei SUID porque não queria digitar senha.'],
         ['heitor', 'Seu Zé, o senhor construiu uma porta dos fundos para tocar o sino do almoço.'],
         ['seu_ze', 'O almoço é importante, professor.'],
         ['narrador', 'O bit é removido. O sino agora toca com sudo, e o almoço continua no horário.'],

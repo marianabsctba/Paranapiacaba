@@ -42,7 +42,7 @@ export const cap04: Capitulo = {
         'No Linux, o feitiço **Ecoarium** é `ping -c 4 10.0.10.1`. O `-c 4` manda quatro e para; sem ele, o Linux pinga para sempre até você apertar Ctrl+C. No Windows, `ping 10.0.10.1` já manda quatro por padrão. Cada linha de resposta parece assim: `64 bytes from 10.0.10.1: icmp_seq=1 ttl=64 time=0.42 ms`.',
         'Lendo a linha: `icmp_seq` é o número do pacote (se pular um, perdeu-se no caminho). `time` é o tempo de ida e volta, a **latência**. Na mesma sala, menos de 1 ms. Para um servidor em São Paulo, uns 10 a 20 ms. Para o Japão, mais de 200 ms. No fim, o resumo mostra `0% packet loss`, a porcentagem de pacotes perdidos.',
         'O `ttl` dá uma pista curiosa: sistemas diferentes começam com valores diferentes. Linux costuma sair com **64**, Windows com **128**. Se a resposta chega com `ttl=127`, provavelmente é um Windows a um roteador de distância. Não é prova, mas é um bom palpite de analista.',
-        'Cuidado com a conclusão: **ping sem resposta não significa máquina desligada**. Muitos firewalls bloqueiam ICMP de propósito, e o Windows, por padrão, não responde ping vindo de outras redes. A mensagem `Destination Host Unreachable` diz que nem o caminho existe; `Request timed out` diz só que ninguém respondeu a tempo.',
+        'Cuidado com a conclusão: **ping sem resposta não significa máquina desligada**. Muitos firewalls bloqueiam ICMP de propósito, e o firewall do Windows costuma vir bloqueando ping de entrada. A mensagem `Destination Host Unreachable` diz que o pacote nem conseguiu ser entregue (não achou caminho ou máquina); `Request timed out` diz só que ninguém respondeu a tempo.',
         'Para quem defende: o atacante também usa ping, para varrer uma faixa inteira e ver quem está vivo (a **varredura de ping**). Muitas empresas limitam ICMP vindo de fora, mas **não bloqueie tudo**: parte do ICMP é necessária para a rede funcionar direito. Bloquear tudo é como arrancar a campainha para não receber visita chata.',
       ],
       exercicios: [
@@ -54,7 +54,7 @@ export const cap04: Capitulo = {
           exemplo: 'ping -c 4 10.18.90.1',
           saida: 'PING 10.18.90.1 (10.18.90.1) 56(84) bytes of data.\n64 bytes from 10.18.90.1: icmp_seq=1 ttl=64 time=0.81 ms\n64 bytes from 10.18.90.1: icmp_seq=2 ttl=64 time=0.77 ms\n64 bytes from 10.18.90.1: icmp_seq=3 ttl=64 time=0.79 ms\n64 bytes from 10.18.90.1: icmp_seq=4 ttl=64 time=0.75 ms\n\n--- 10.18.90.1 ping statistics ---\n4 packets transmitted, 4 received, 0% packet loss, time 3004ms\nrtt min/avg/max/mdev = 0.750/0.780/0.810/0.022 ms',
           dica: '`ping`, a opção `-c` com a quantidade, e o IP.',
-          explicacao: 'Respondeu com TTL 64 e menos de 1 ms: tem uma máquina ligada bem perto, provavelmente um Linux. Um "roteador de 1890" não roda Linux. Alguém trocou o equipamento.',
+          explicacao: 'Respondeu com TTL 64 e menos de 1 ms: tem equipamento ligado bem perto, e o TTL sugere um sistema tipo Linux. Para uma rede que devia estar desligada desde antes de vocês nascerem, é disposição demais.',
         },
         {
           tipo: 'lacuna',
@@ -171,7 +171,7 @@ export const cap04: Capitulo = {
             ' 5  189.40.0.33   289 ms   292 ms   299 ms',
           ],
           corretas: [3],
-          explicacao: 'Até o salto 3 os tempos são baixos. No salto 4 saltam para quase 300 ms e continuam altos depois. O problema começa ali. O salto 5 só herda a lentidão.',
+          explicacao: 'Até o salto 3 os tempos são baixos. No salto 4 pulam para quase 300 ms e continuam altos depois. O problema começa ali. O salto 5 só herda a lentidão.',
         },
         {
           tipo: 'terminal',

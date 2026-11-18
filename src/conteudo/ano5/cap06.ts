@@ -119,7 +119,7 @@ export const cap06: Capitulo = {
           efeito: { amizade: { enzo: 4 }, flag: 'a5_enzo_no_soc', pontosCasa: 5 },
           resposta: [
             ['enzo', 'Hoje? Eu achei que tinha onboarding.'],
-            ['a5_dora', 'O onboarding é a Dona Dora te dando o caderno e dizendo "não dorme". Pronto, terminou.'],
+            ['a5_dora', 'O onboarding sou eu te dando o caderno e dizendo "não dorme". Pronto, terminou.'],
           ],
         },
         {

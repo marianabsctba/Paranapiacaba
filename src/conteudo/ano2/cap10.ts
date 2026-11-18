@@ -183,7 +183,7 @@ export const cap10: Capitulo = {
         ['nanda', 'É agora. Plano de contenção. Seu Zé, VLANs no switch do castelo. {nome}, firewall entre a Rede Antiga e o resto. Tati, documenta tudo, com hora.'],
         ['tati', 'Já estou documentando. Comecei às 23h50. Por ansiedade. Desta vez a ansiedade foi útil.'],
         ['bia', 'Eu fico na porta do data center. Ninguém entra sem eu deixar. Sou goleira, é o meu trabalho.'],
-        ['caua', 'E eu vou com o Baltazar e o Enzo atrás das Lacraias que já saíram. Com gaiola. E com fita isolante, que agora é de verdade necessária.'],
+        ['caua', 'E eu vou com o Baltazar e o Enzo atrás das Lacraias que já saíram. Com gaiola. E com fita isolante, que agora é necessária de verdade.'],
       ],
     },
     {

@@ -183,7 +183,7 @@ export const cap05: Capitulo = {
         {
           tipo: 'terminal',
           enunciado: 'Busque no auditd os eventos marcados com a chave `identidade`, com nomes legíveis.',
-          prompt: 'soc@biblioteca:~$',
+          prompt: 'soc@web01:~$',
           aceitos: ['(sudo )?ausearch (-k identidade -i|-i -k identidade|--key identidade -i|-i --key identidade|--key identidade --interpret|-k identidade --interpret)'],
           exemplo: 'ausearch -k identidade -i',
           saida: '----\ntype=PROCTITLE msg=audit(15/01/2027 02:41:10.512:881) : proctitle=useradd -m suporte3\ntype=SYSCALL msg=audit(15/01/2027 02:41:10.512:881) : arch=x86_64 syscall=openat success=yes exit=5 auid=svc_relatorio uid=root comm=useradd exe=/usr/sbin/useradd key=identidade',

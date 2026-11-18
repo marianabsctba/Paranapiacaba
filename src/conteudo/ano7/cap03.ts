@@ -75,7 +75,7 @@ export const cap03: Capitulo = {
         'Para quem defende, a pergunta útil é: **onde os hashes ficam expostos?** Na memória de toda máquina em que uma conta privilegiada entrou. Se um administrador do domínio faz logon numa estação de aluno "só para ver a impressora", a credencial mais valiosa do castelo passa a morar naquela estação. É assim que um único computador comprometido vira o domínio inteiro: não por mágica, mas por hábito ruim de administração.',
         'A defesa tem camadas. **Não espalhar credencial**: contas administrativas separadas, e administrador de servidor nunca entra em estação (o assunto das camadas administrativas, em janeiro). **Senhas locais únicas** em cada máquina com o **LAPS**, para que o administrador local de uma não abra a outra. O grupo **Protected Users**, que impede o uso de NTLM e o armazenamento de certas credenciais para seus membros. O **Credential Guard**, que isola segredos da memória. E, quando possível, **reduzir e auditar o NTLM** até desligar.',
         'Para detectar, olhe o evento **4624** (logon bem-sucedido) com **tipo de logon 3** (rede) e pacote de autenticação **NTLM**, vindo de uma origem que normalmente não faz aquilo: uma estação de aluno se autenticando como administrador num servidor, por exemplo. No DC, o evento **4776** registra a validação de credenciais NTLM. Uma mesma conta privilegiada aparecendo por NTLM em várias máquinas em poucos minutos é o desenho clássico de movimento lateral.',
-        'Resumo de sua mãe, que ela escreveu nesta parede em 2014: "senha é segredo, hash é segredo, e segredo só vai onde precisa". O NTLM não é um vilão. É um protocolo velho que ficou numa casa nova. A gente não o expulsa de uma vez, a gente mede, reduz e vigia.',
+        'Resumo da sua mãe, escrito nesta parede no primeiro inverno aqui: "senha é segredo, hash é segredo, e segredo só vai onde precisa". O NTLM não é um vilão. É um protocolo velho que ficou numa casa nova. A gente não o expulsa de uma vez, a gente mede, reduz e vigia.',
       ],
       exercicios: [
         {
@@ -333,7 +333,7 @@ export const cap03: Capitulo = {
       tipo: 'cena',
       lugar: 'mata',
       falas: [
-        ['narrador', 'Domingo de manhã. A turma volta pela trilha. Sua mãe fica na varanda, porque aparecer em público ainda é perigoso.'],
+        ['narrador', 'Segunda-feira de manhã. A turma volta pela trilha. Sua mãe fica na varanda, porque aparecer em público ainda é perigoso.'],
         ['a7_lena', 'Quando ele atacar, eu desço a serra. Não antes. E {nome}...'],
         ['voce', 'Oi.'],
         ['a7_lena', 'Manda áudio para a Vó contando que me viu. Longo. Ela vai ouvir trinta vezes.'],

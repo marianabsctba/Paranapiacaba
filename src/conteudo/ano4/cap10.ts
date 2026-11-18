@@ -10,7 +10,7 @@ export const cap10: Capitulo = {
       lugar: 'sala_diretora',
       falas: [
         ['narrador', 'Sala da Diretora, dois dias depois. A equipe da Secretaria levou o notebook do Rubens com termo de apreensão e hash registrado na frente da Profa. Nanda. A cafeteira falante ficou quieta por respeito.'],
-        ['iolanda', 'O que eu posso contar: a conta suporte_torneio foi criada para a montagem do servidor, com prazo de uma semana. Ninguém desativou. Ficou viva cinco meses.'],
+        ['iolanda', 'O que eu posso contar: a conta suporte_torneio foi criada para a montagem do servidor, com prazo de uma semana. Ninguém desativou. Ficou viva o torneio inteiro.'],
         ['nanda', 'Conta temporária sem data de morte é a porta dos fundos mais comum que existe. Vai para as lições aprendidas, item um.'],
         ['iolanda', 'E o objetivo não eram os pontos. Os pontos eram para as escolas brigarem entre si e ninguém olhar para o login. Ele queria as senhas das três escolas.'],
         ['tati', 'Para quê?'],
@@ -112,13 +112,13 @@ export const cap10: Capitulo = {
         linhas: [
           'Neblina +60 injeção na busca (prova 1, arbitragem_iara, no caderno)',
           'Mandacaru +60 injeção na busca com correção pronta (prova 1, no caderno)',
-          'Neblina +200 (10:15Z, conta suporte_torneio, fora do caderno)',
-          'Mandacaru -200 (10:15Z, conta suporte_torneio, fora do caderno)',
+          'Neblina +200 (13:15Z, conta suporte_torneio, fora do caderno)',
+          'Mandacaru -200 (13:15Z, conta suporte_torneio, fora do caderno)',
           'Neblina +40 CSRF barrado (prova 2, no caderno)',
           'Mandacaru +40 upload corrigido (prova 2, no caderno)',
         ],
         corretas: [2, 3],
-        explicacao: 'As duas alterações das 10:15Z foram feitas pela conta suporte_torneio e não estão no caderno. Tirando as duas, os times voltam ao que de fato conquistaram.',
+        explicacao: 'As duas alterações das 13:15Z (10h15 em Brasília) foram feitas pela conta suporte_torneio e não estão no caderno. Tirando as duas, os times voltam ao que de fato conquistaram.',
       },
       depois: [
         ['tati', 'Placar recontado, com o caderno e o coletor. Time Neblina: 940. Time Mandacaru: 940.'],

@@ -34,7 +34,7 @@ export const cap10: Capitulo = {
         'Os **SDOs** (STIX Domain Objects) descrevem os conceitos de inteligência: `indicator` (padrão para detectar), `malware` (a família), `threat-actor` (quem), `intrusion-set` (o grupo e suas campanhas), `campaign`, `attack-pattern` (técnica, que pode apontar para o ATT&CK), `tool`, `infrastructure` (C2, servidores), `vulnerability`, `identity` (organizações e pessoas), `location`, `course-of-action` (o que fazer), `report`, entre outros. Os **SCOs** descrevem coisas observáveis: `file`, `ipv4-addr`, `domain-name`, `url`, `mutex`.',
         'O que dá poder ao STIX são os **SROs** (relacionamentos): `relationship` liga dois objetos com um verbo (`indicates`, `uses`, `targets`, `attributed-to`, `mitigates`), usando `source_ref` e `target_ref`. Um `sighting` registra que algo foi **visto** em algum lugar. Assim, "o indicador X **indica** o malware Y, que **é usado** pelo grupo Z, que **mira** escolas" vira um grafo que qualquer plataforma lê.',
         'Um `indicator` tem um `pattern`, numa linguagem própria do STIX, por exemplo `[domain-name:value = \'cdn-ferrovia.example\']` ou `[file:hashes.\'SHA-256\' = \'4c1b...\']`, com `pattern_type` igual a `stix` e `valid_from`. Também é possível usar `pattern_type` `yara` ou `sigma` para carregar regras dessas linguagens. Marcações TLP entram como `marking-definition` referenciadas pelo objeto.',
-        'Para **transportar** STIX usa-se o **TAXII**, um protocolo sobre HTTPS com coleções que as organizações publicam e assinam. Plataformas como **MISP** e **OpenCTI** guardam, relacionam e distribuem tudo isso. E para ler um bundle no terminal, o melhor amigo é o `jq`: `jq \'.objects[].type\' pacote.json` lista os tipos; `jq \'.objects[] | select(.type=="indicator") | .pattern\' pacote.json` mostra só os padrões dos indicadores.',
+        'Para **transportar** STIX usa-se o **TAXII**, um protocolo sobre HTTPS com coleções que as organizações publicam e consultam. Plataformas como **MISP** e **OpenCTI** guardam, relacionam e distribuem tudo isso. E para ler um bundle no terminal, o melhor amigo é o `jq`: `jq \'.objects[].type\' pacote.json` lista os tipos; `jq \'.objects[] | select(.type=="indicator") | .pattern\' pacote.json` mostra só os padrões dos indicadores.',
       ],
       exercicios: [
         {
@@ -81,7 +81,7 @@ export const cap10: Capitulo = {
         },
         {
           tipo: 'lacuna',
-          enunciado: 'O protocolo sobre HTTPS usado para transportar e assinar coleções de STIX se chama ___.',
+          enunciado: 'O protocolo sobre HTTPS usado para transportar coleções de STIX entre organizações se chama ___.',
           aceitos: ['TAXII', 'taxii 2.1'],
           explicacao: 'TAXII (Trusted Automated Exchange of Intelligence Information). STIX é o idioma; TAXII é o correio.',
         },
@@ -150,7 +150,7 @@ export const cap10: Capitulo = {
           tipo: 'achar',
           enunciado: 'Frases do rascunho do relatório. Toque nas que estão ERRADAS para um relatório profissional.',
           linhas: [
-            'A amostra conecta a hxxps://cdn-ferrovia[.]example a cada 60 segundos (fato observado na sandbox).',
+            'A amostra conecta a hxxp://cdn-ferrovia[.]example a cada 60 segundos (fato observado na sandbox).',
             'Clique aqui para baixar a amostra: http://castelo.example/nulo_07.exe',
             'Avaliação: provável ligação com o grupo do Nulo, confiança média, baseada em código e infraestrutura compartilhados.',
             'O malware é obviamente russo porque tem uma string em russo.',
@@ -247,7 +247,7 @@ export const cap10: Capitulo = {
         ['narrador', 'Na tela, o jq mostra os campos do objeto `location`: um nome, uma região, latitude e longitude. E um campo `description` com uma frase só.'],
         ['tati', '"name": "Oficina do Bem-te-vi". "region": Vale do Ribeira, São Paulo. Latitude -24,7. Longitude -48,1. É mata atlântica fechada. Perto de caverna.'],
         ['voce', '(lendo a descrição) "Bem-te-vi, se você chegou aqui, aprendeu tudo o que eu sei sobre o que ele faz. Ainda não venha sozinh{o/a/e}. Quando ele atacar de novo, vou precisar de você e de quem estiver com você."'],
-        ['heitor', '(depois de um silêncio enorme) Nove anos. Ela estava a quatro horas de carro daqui.'],
+        ['heitor', '(depois de um silêncio enorme) Dez anos. Ela estava a quatro horas de carro daqui.'],
         ['nanda', 'E o Nulo quer esse arquivo. Então ninguém aqui conta, ninguém posta, ninguém manda áudio. Nem de seis minutos.'],
         ['bia', 'Nem para a Vó Cida?'],
         ['voce', 'Para a Vó eu conto pessoalmente. Em papel. Ela vai imprimir mesmo.'],
@@ -296,7 +296,7 @@ export const cap10: Capitulo = {
     },
     {
       tipo: 'recompensa',
-      texto: 'Camada 6 da pasta NAO_ABRA decifrada. As coordenadas da Oficina do Bem-te-vi agora estão guardadas no seu malão, numa folha impressa pela Tati e dobrada em quatro.',
+      texto: 'Camada 6 da pasta NAO_ABRA decifrada. As coordenadas da Oficina do Bem-te-vi agora estão a salvo, do jeito que você escolheu.',
       efeito: { item: 'a6_camada6', xp: 100, pontosCasa: 50, atributos: { forense: 2, cripto: 1 }, flag: 'a6_camada6_aberta' },
     },
     { tipo: 'fimDeAno' },

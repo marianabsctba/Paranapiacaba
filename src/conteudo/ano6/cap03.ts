@@ -27,7 +27,7 @@ export const cap03: Capitulo = {
       atributo: 'sistemas',
       lugar: 'lab_terminal',
       abertura: [
-        ['otavio', 'Ontem vimos que o executável começa com MZ. Hoje vamos ver o que vem depois. É como abrir a carteira de alguém: documento, foto, endereço, e às vezes um papel de bala.'],
+        ['otavio', 'Mês passado vimos que o executável começa com MZ. Hoje vamos ver o que vem depois. É como abrir a carteira de alguém: documento, foto, endereço, e às vezes um papel de bala.'],
         ['otavio', 'Um executável não é um monte de código jogado. Ele tem um cabeçalho dizendo ao sistema onde está cada coisa. Sem cabeçalho, o sistema não sabe nem por onde começar.'],
         ['tati', 'Igual planilha sem cabeçalho de coluna.'],
         ['otavio', '(sorrindo pela primeira vez no semestre) Exatamente, Tati.'],
@@ -140,7 +140,7 @@ export const cap03: Capitulo = {
         'Combinações que acendem alerta: `OpenProcess` + `VirtualAllocEx` + `WriteProcessMemory` + `CreateRemoteThread` é a receita clássica de **injeção de código em outro processo** (o malware escreve código na memória de um processo legítimo e o faz rodar lá). `RegCreateKeyExA` + `RegSetValueExA` sugerem **persistência** no registro. `InternetOpenA`, `InternetOpenUrlA`, `HttpSendRequestA` e `URLDownloadToFileA` indicam **comunicação web** ou download. `SetWindowsHookExA` e `GetAsyncKeyState` cheiram a **keylogger**. `CryptEncrypt` ou funções da `bcrypt.dll` em quantidade, somadas a enumeração de arquivos (`FindFirstFileW`, `FindNextFileW`), lembram **ransomware**.',
         'Funções de **antianálise** também aparecem: `IsDebuggerPresent`, `CheckRemoteDebuggerPresent`, `GetTickCount` (para medir se a execução está sendo pausada). E uma combinação curiosa: quando a tabela tem quase nada além de `LoadLibraryA` e `GetProcAddress`, o programa provavelmente **resolve as funções na hora de rodar**, para esconder o que usa. É típico de amostra empacotada.',
         'Cuidado com conclusões: muitos programas legítimos usam essas funções. Antivírus, depuradores e ferramentas de acessibilidade injetam código; instaladores mexem no registro; todo navegador usa a rede. O valor está nas **combinações** e no **contexto**: uma "calculadora" que importa `WriteProcessMemory` e `InternetOpenUrlA` precisa explicar muita coisa.',
-        'Defesa: é por esses mesmos comportamentos que um **EDR** vigia o sistema em tempo real, por exemplo alertando quando um processo escreve na memória de outro e cria uma thread remota. O que vocês leem estaticamente na IAT é o que o Blue Team detecta dinamicamente no 5º ano.',
+        'Defesa: é por esses mesmos comportamentos que um **EDR** vigia o sistema em tempo real, por exemplo alertando quando um processo escreve na memória de outro e cria uma thread remota. O que vocês leem parado na IAT é o mesmo que o Blue Team flagra em tempo real, como vocês viram no 5º ano.',
       ],
       exercicios: [
         {

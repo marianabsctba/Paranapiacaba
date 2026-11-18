@@ -96,7 +96,7 @@ export const cap08: Capitulo = {
       tipo: 'cena',
       lugar: 'patio',
       falas: [
-        ['narrador', 'Sexta-feira, 22h17. As luzes do castelo piscam três vezes e apagam. O nobreak do data center desliga sozinho. Pelo painel. Com a senha que o Gambá de Cookies roubou.'],
+        ['narrador', 'Sexta-feira, 22h17. As luzes do castelo piscam três vezes e apagam. O nobreak do data center desliga sozinho. Pelo painel. Com o cookie de sessão que o Gambá de Cookies roubou.'],
         ['seu_ze', '(pelo rádio) O painel do nobreak foi acessado de fora! Eu troquei a senha, mas o cookie de sessão antigo ainda estava valendo! Eu esqueci de derrubar as sessões!'],
         ['nanda', '(pelo rádio) Plano de memória, agora! Ninguém desliga máquina nenhuma! Coleta primeiro!'],
         ['narrador', 'Pela neblina, do lado do trem de serviço, uma mulher de casaco vermelho escuro atravessa o pátio com um crachá de "Técnica de Nobreak, Energia Serra Ltda." pendurado no pescoço.'],
@@ -108,7 +108,7 @@ export const cap08: Capitulo = {
       lugar: 'datacenter',
       titulo: 'Quem está ligando no escuro',
       antes: [
-        ['tati', 'O nobreak segura só os racks críticos por vinte minutos. Dumpei a memória do servidor do Viveiro com o WinPmem. Hash anotado. Rápido, {nome}, roda o netscan, que a Marlene está indo para algum lugar.'],
+        ['tati', 'Os racks críticos têm bateria própria para vinte minutos. Dumpei a memória do servidor do Viveiro com o WinPmem. Hash anotado. Rápido, {nome}, roda o netscan, que a Marlene está indo para algum lugar.'],
         ['caua', 'E eu prendi a porta do data center com fita isolante. Não vai segurar. Mas é simbólico.'],
       ],
       exercicio: {

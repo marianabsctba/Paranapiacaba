@@ -240,7 +240,7 @@ export const cap08: Capitulo = {
       falas: [
         ['iolanda', 'Mais uma coisa. Uma colega de outra escola, que faz inteligência de ameaças, me mandou isto. Um anúncio num fórum criminoso, de outubro.'],
         ['narrador', 'Na tela, um anúncio frio: "Acesso RDP, escola bruxa, biblioteca, conta de suporte com admin. Preço a combinar." Assinado por um apelido: M.C.'],
-        ['bia', 'Vender acesso inicial. Igual a... a braço direito do Nulo.'],
+        ['bia', 'Vender acesso inicial. Igual ao... ao braço direito do Nulo.'],
         ['iolanda', 'Marlene Cabral. Ex-diretora de TI. Ela compra senhas vazadas, testa, e revende as portas que abrem. Alguém comprou a nossa.'],
         ['a3_dulce', 'Isso é inteligência, não prova. Mas combina com tudo que a linha do tempo mostra. E explica por que só tinha quatro tentativas: ela já sabia o padrão.'],
         ['narrador', 'Você sente um frio na espinha. A neblina lá fora parece mais densa.'],

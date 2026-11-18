@@ -9,7 +9,7 @@ export const cap07: Capitulo = {
       tipo: 'cena',
       lugar: 'a4_arena',
       falas: [
-        ['narrador', 'Segunda-feira, 7h. A Arena está vazia, mas o placar não. Durante a madrugada, o Time Coxilha ganhou 300 pontos. Nenhuma prova aconteceu no fim de semana.'],
+        ['narrador', 'Segunda-feira, 7h. A Arena está vazia, mas o placar não. Numa madrugada do fim de semana, o Time Coxilha ganhou 300 pontos. Não houve prova nenhuma desde sexta.'],
         ['a4_gustavo', '(com a cuia parada no ar) Bah. Bah. Eu sou mentor do Coxilha e eu juro pela erva que ninguém do meu time estava acordado. Eles dormem às nove.'],
         ['a4_caio', 'Três escolas, um placar e trezentos pontos do nada. Já tem gente no alojamento dizendo que foi o Pampa.'],
         ['a4_lia', '(vermelha) A gente não precisa roubar ponto. A gente sabe ganhar.'],

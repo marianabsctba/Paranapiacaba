@@ -220,10 +220,10 @@ export const cap05: Capitulo = {
           '0x2a10:$m: chave_mestra',
           'Nulo_Bemtevi arquivo_morto/2016/nulo_ap_03.exe',
           '0x3f00:$u: cdn-ferrovia.example',
-          'sensor_bemtevi_v1.exe: sem string $u, sem imports de injeção, autor no meta da versão: L.',
+          'sensor_bemtevi_v1.exe: sem string $u, sem imports de injeção; nas informações de versão, autor: L.',
         ],
         corretas: [0, 5],
-        explicacao: 'O sensor de 2015 bate na regra pela chave e pelo nome do projeto, mas não tem URL de C2 nem injeção. E a versão diz autor "L.". É a ferramenta da sua mãe antes do Nulo transformá-la em arma.',
+        explicacao: 'O sensor de 2015 bate na regra pela chave e pelo nome do projeto, mas não tem URL de C2 nem injeção. E as informações de versão dizem autor "L.". É a ferramenta da sua mãe antes do Nulo transformá-la em arma.',
       },
       depois: [
         ['voce', '"sensor_bemtevi_v1". Autor: L. Lena. Era um sensor. Era defesa.'],

@@ -172,7 +172,7 @@ export const cap06: Capitulo = {
       falas: [
         ['narrador', 'Apito às 15h em ponto. As vassouras-drone sobem na neblina. As Bolas de Spam zunem, cheias de "parabéns, você foi selecionado".'],
         ['narrador', 'O Enzo não sai do ar um segundo. Trezentas pessoas na arquibancada veem ele voando atrás da Flag Dourada o tempo todo.'],
-        ['narrador', 'Às 15h30, o placar eletrônico congela. Depois começa a piscar. Um zumbido de marimbondo sai das caixas de som.'],
+        ['narrador', 'Às 15h41, o placar eletrônico congela. Depois começa a piscar. Um zumbido de marimbondo sai das caixas de som.'],
         ['nanda', '(no rádio) O servidor do placar está sendo inundado. Muita conexão pela metade. {nome}, você está perto da cabine. Olha o `ss` dele.'],
       ],
     },
@@ -201,7 +201,7 @@ export const cap06: Capitulo = {
       depois: [
         ['nanda', 'SYN flood vindo da 10.18. Liguei os SYN cookies e bloqueei esse IP no firewall do placar. O marimbondo vai zumbir no vazio.'],
         ['narrador', 'O placar volta. Ninguém perdeu ponto. A Diretora, na arquibancada, anota alguma coisa num post-it.'],
-        ['baltazar', 'Peguei um marimbondo desses grudado na caixa de som. Vai para a gaiola. Já é o terceiro bicho estranho que vem da Rede Antiga.'],
+        ['baltazar', 'Peguei um marimbondo desses grudado na caixa de som. Vai para a gaiola. Já é o segundo bicho estranho que vem da Rede Antiga.'],
       ],
     },
     {

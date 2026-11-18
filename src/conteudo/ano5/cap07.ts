@@ -86,7 +86,7 @@ export const cap07: Capitulo = {
           ],
           exemplo: 'iptables -I INPUT -s 203.0.113.7 -j DROP',
           saida: '(sem saída: regra inserida)\n\nroot@web01:~# iptables -L INPUT -n --line-numbers | head -3\nChain INPUT (policy ACCEPT)\nnum  target  prot opt source        destination\n1    DROP    all  --  203.0.113.7   0.0.0.0/0',
-          dica: '`iptables -I INPUT`, a origem com `-s` e o destino da regra com `-j DROP`.',
+          dica: '`iptables -I INPUT`, a origem com `-s` e a ação com `-j DROP`.',
           explicacao: 'Com `-I` a regra entra na posição 1. Com `-A` ela iria para o fim e poderia nunca ser alcançada se uma regra anterior aceitasse o tráfego. Não esqueça de bloquear também a saída.',
         },
         {
@@ -213,7 +213,7 @@ export const cap07: Capitulo = {
       ],
       derrota: [
         ['a5_thales', 'Viu? Falta maturidade.'],
-        ['nanda', 'Ela tem maturidade de quem estava acordad{o/a/e} às 3h. Você estava em Campos do Jordão.'],
+        ['nanda', 'Maturidade é estar acordad{o/a/e} às 3h, como {nome} estava. Você estava em Campos do Jordão.'],
         ['iolanda', 'Perdeu a discussão, mas ganhou o incidente. Continua a resposta.'],
       ],
       atributo: 'defesa',

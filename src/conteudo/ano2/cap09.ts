@@ -20,7 +20,7 @@ export const cap09: Capitulo = {
         ['ruth', 'Exatamente, Bia. E hoje vocês vão aprender a ver quem está falando nesse grupo.'],
       ],
       explicacao: [
-        'O **Wi-Fi** é rede local por **ondas de rádio**. No lugar do switch com cabos, existe o **ponto de acesso** (AP), que fala com os aparelhos pelo ar e liga todos à rede com fio. Na caixinha de casa, o ponto de acesso vem junto com o roteador. Na camada OSI, o Wi-Fi é física e enlace: o rádio e os MACs.',
+        'O **Wi-Fi** é rede local por **ondas de rádio**. No lugar do switch com cabos, existe o **ponto de acesso** (AP), que fala com os aparelhos pelo ar e liga todos à rede com fio. Na caixinha de casa, o ponto de acesso vem junto com o roteador. No modelo OSI, o Wi-Fi é física e enlace: o rádio e os MACs.',
         'Cada rede tem um **SSID**, que é o nome que aparece na lista ("Castelo_Alunos"), e cada ponto de acesso tem um **BSSID**, que é o MAC do rádio dele. Um castelo grande tem vários APs com o mesmo SSID e BSSIDs diferentes, e o celular troca de um para outro enquanto você anda. Guarde isso: **nome igual não significa aparelho igual**.',
         'O Wi-Fi usa principalmente duas faixas. **2,4 GHz** alcança mais longe e atravessa melhor parede, mas é mais lenta e congestionada, e só tem três canais que não se atrapalham: **1, 6 e 11**. Micro-ondas e babá eletrônica também usam essa faixa, por isso a internet trava quando alguém esquenta a marmita. **5 GHz** é mais rápida e tem muito mais canais, mas alcança menos. O Wi-Fi 6E abriu ainda a faixa de **6 GHz**.',
         'O feitiço **Aetherium Videre**, `nmcli dev wifi list`, mostra as redes ao redor com BSSID, SSID, canal, velocidade, sinal (de 0 a 100) e o tipo de **segurança** (`WPA2`, `WPA3` ou `--`, que quer dizer rede aberta). No Windows, o equivalente é `netsh wlan show networks mode=bssid`.',
@@ -205,7 +205,7 @@ export const cap09: Capitulo = {
         explicacao: 'O verdadeiro Castelo_Alunos tem BSSID do fabricante dos APs do castelo, sinal fraco (está longe) e WPA2/WPA3. O falso tem sinal 97 bem no meio da vila, é aberto e o BSSID começa com 02:4F:AA, o mesmo prefixo inventado da caixa dos túneis. Quem conectar nele entrega tudo para quem está na van.',
       },
       depois: [
-        ['enzo', '(no rádio) Eu passei aí na terça e o meu celular conectou sozinho nessa rede. Achei que era o castelo. Foi assim que copiaram o nome do meu notebook?'],
+        ['enzo', '(no rádio) Eu passei aí na terça com o notebook na mochila e ele conectou sozinho nessa rede. Achei que era o castelo. Foi assim que copiaram o nome do meu notebook?'],
         ['voce', 'Provavelmente. O seu notebook anuncia o nome quando pede IP. Quem estava na rede falsa anotou e copiou.'],
         ['baltazar', 'E o fedor! Tem um gambá pendurado na antena da van, de cabeça para baixo. Esse bicho só nasce onde tem rede falsa. Vou pegar com luva.'],
         ['tati', 'Caixa nos túneis, DHCP falso, DNS falso, Wi-Fi falso. Tudo com MAC 02:4F:AA. Tudo do mesmo dono.'],

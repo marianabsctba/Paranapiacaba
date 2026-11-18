@@ -11,8 +11,8 @@ export const cap04: Capitulo = {
       falas: [
         ['narrador', 'Dezembro. A Cripta de Criptografia está tão fria que os cofres antigos suam. O Prof. Heitor escreve no quadro com uma letra que parece fonte paga.'],
         ['heitor', 'Soube que vocês encontraram uma palavra bonita numa amostra feia. "bemtevi". Que fofo. Hoje vamos descobrir por que ela estava lá. E não, não foi por carinho.'],
-        ['voce', 'Como o senhor soube?'],
-        ['heitor', 'Eu leio as fichas de custódia, {nome}. É o único gênero literário que ainda me surpreende.'],
+        ['voce', 'O senhor estava na porta naquele dia, né?'],
+        ['heitor', 'Também. Mas eu leio as fichas de custódia, {nome}. É o único gênero literário que ainda me surpreende.'],
       ],
     },
     {
